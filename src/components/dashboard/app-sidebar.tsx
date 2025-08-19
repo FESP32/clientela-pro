@@ -4,19 +4,11 @@
 import * as React from "react";
 import {
   AudioWaveform,
-  BookOpen,
-  Bot,
   Command,
-  Frame,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
   Barcode,
-  Settings2,
   SmilePlus,
-  SquareTerminal,
-  UserRoundCheck,
-  Gift
+  Stamp
 } from "lucide-react";
 
 import { NavMain } from "@/components/dashboard/nav-main";
@@ -61,22 +53,15 @@ const data = {
         { title: "Create new survey", url: "/dashboard/surveys/new" },
       ],
     },
-    // {
-    //   title: "Gifts",
-    //   url: "#",
-    //   icon: Gift,
-    //   items: [
-    //     { title: "Introduction", url: "#" },
-    //   ],
-    // },
-    // {
-    //   title: "Referrals",
-    //   url: "#",
-    //   icon: UserRoundCheck,
-    //   items: [
-    //     { title: "General", url: "#" },
-    //   ],
-    // },
+    {
+      title: "Stamps",
+      url: "#",
+      icon: Stamp,
+      items: [
+        { title: "Create new stamp", url: "/dashboard/stamps/new" },
+        { title: "Stamp List", url: "/dashboard/stamps" }
+      ],
+    },
   ],
 };
 

@@ -3,9 +3,8 @@
 import * as React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Gift, CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { QrCode } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface GiftDetails {
   customerName: string;

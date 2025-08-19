@@ -31,7 +31,7 @@ export default function SignOut() {
   return (
     <Button
       onClick={handleSignOut}
-      variant="ghost"
+      variant={"ghost"}
       className="w-full bg-transparent"
       disabled={isLoading}
     >

@@ -1,1 +1,1 @@
-export * from './survey';
+export * from './surveys';

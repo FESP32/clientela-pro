@@ -1,12 +1,7 @@
 "use client"
 
 import {
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
 } from "lucide-react"
 
 import {
@@ -29,7 +24,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import SignOut from "./sign-out"
+import SignOut from "@/components/auth/sign-out"
+import Link from "next/link"
 
 export function NavUser({
   user,
@@ -81,35 +77,20 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/profile">Profile</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup> */}
             {/* <DropdownMenuSeparator /> */}
-            <DropdownMenuItem>
-              
-              <SignOut />
-            </DropdownMenuItem>
+            {/* <DropdownMenuItem> */}
+
+            <SignOut />
+            {/* </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

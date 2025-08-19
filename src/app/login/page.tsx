@@ -1,6 +1,5 @@
 // app/login/page.tsx
-import { LoginForm } from "@/components/services/login-form";
-import { GalleryVerticalEnd } from "lucide-react";
+import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
 import Link from "next/link";
 

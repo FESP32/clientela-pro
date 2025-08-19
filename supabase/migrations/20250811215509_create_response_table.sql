@@ -5,7 +5,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.responses (
   id              uuid primary key default gen_random_uuid(),
   survey_id       uuid not null references public.surveys (id) on delete cascade,
-  respondent_id   uuid references auth.users (id) on delete set null,
+  respondent_id   uuid references public.profiles (user_id) on delete set null,
   rating          smallint not null check (rating between 1 and 5),
   selected_traits text[] not null default '{}',
   comment         text,

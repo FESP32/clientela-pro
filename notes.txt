@@ -1,1 +1,3 @@
 supabase migration new create_todos_table
+supabase db reset --linked
+supabase db push

@@ -1,6 +1,5 @@
 // app/(dashboard)/layout.tsx
 import { ReactNode } from "react";
-import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import {
   AppSidebar,
@@ -47,10 +46,6 @@ export default async function DashboardLayout({
               className="mr-2 data-[orientation=vertical]:h-4"
             />
             <ClientBreadcrumbs
-              labels={{
-                products: "Products",
-                new: "New",
-              }}
             />
           </div>
         </header>

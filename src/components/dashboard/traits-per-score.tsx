@@ -25,7 +25,6 @@ type Row = { label: string; sentiment: Sentiment };
 
 function Section({
   score,
-  label,
   initial = [{ label: "", sentiment: "neutral" as Sentiment }],
 }: {
   score: 1 | 2 | 3 | 4 | 5;

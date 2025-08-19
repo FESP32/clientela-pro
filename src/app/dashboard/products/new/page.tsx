@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createProduct } from "../actions";
+import { createProduct } from "@/actions/products";
 import {
   Card,
   CardHeader,

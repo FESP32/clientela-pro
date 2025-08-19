@@ -19,6 +19,7 @@ export type SurveyRow = {
       }>
     | [];
   is_active: boolean;
+  is_anonymous: boolean;
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
@@ -32,6 +33,9 @@ export type ResponseRow = {
   survey_id: string;
   respondent_id: string | null;
   rating: number;
+  respondent?: {
+    name: string;
+  };
   selected_traits: string[];
   comment: string | null;
   submitted_at: string;
@@ -41,6 +45,7 @@ export type SurveyRecord = {
   id: string;
   title: string;
   description: string | null;
+  is_anonymous: boolean;
   traits: Array<{
     label: string;
     sentiment?: "positive" | "neutral" | "negative";
@@ -48,11 +53,17 @@ export type SurveyRecord = {
   }>;
 };
 
+function getBool(fd: FormData, name: string) {
+  const v = fd.get(name);
+  // handles: "true", "on", "1", true, 1
+  return v === "true" || v === "on" || v === "1";
+}
+
 export async function getSurvey(id: string): Promise<SurveyRecord | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("surveys")
-    .select("id,title,description,traits")
+    .select("id,title,description,traits,is_anonymous")
     .eq("id", id)
     .single();
 
@@ -80,14 +91,16 @@ export async function getSurveyWithResponses(surveyId: string) {
   const { data: responses, error: rErr } = await supabase
     .from("responses")
     .select(
-      "id, survey_id, respondent_id, rating, selected_traits, comment, submitted_at"
+      `id, survey_id, respondent_id, rating, selected_traits, comment, submitted_at,
+       respondent:profiles(name)
+      `
     )
     .eq("survey_id", surveyId)
     .order("submitted_at", { ascending: false });
 
   return {
     survey,
-    responses: (responses ?? []) as ResponseRow[],
+    responses: (responses ?? []) as unknown as ResponseRow[],
     error: rErr?.message ?? null,
   };
 }
@@ -114,9 +127,22 @@ export async function submitResponse(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: survey, error: surveyError } = await supabase
+    .from("surveys")
+    .select("is_anonymous")
+    .eq("id", survey_id)
+    .single();
+
+  if (surveyError || !survey) {
+    return { success: false, message: "Survey not found" };
+  }
+
+  // ── Respect anonymity
+  const respondent_id = survey.is_anonymous ? null : user?.id ?? null;
+
   const { error } = await supabase.from("responses").insert({
     survey_id,
-    respondent_id: user?.id ?? null,
+    respondent_id,
     rating,
     selected_traits,
     comment: comment || null,
@@ -149,7 +175,10 @@ export async function listSurveys() {
     .from("surveys")
     .select(
       `
-      id, owner_id, product_id, title, description, traits, is_active, starts_at, ends_at, created_at, updated_at,
+      id, owner_id,
+      product_id, title, description, 
+      is_anonymous ,traits, is_active, 
+      starts_at, ends_at, created_at, updated_at,
       products!inner ( name )
     `
     )
@@ -180,10 +209,9 @@ function parseLinesToTraits(block: string, score: 1 | 2 | 3 | 4 | 5) {
       .map((s) => s?.trim() ?? "");
     const label = rawLabel.toLowerCase();
     const sentiment = (rawSentiment || "neutral").toLowerCase();
-    const normSentiment = (
-      ["positive", "neutral", "negative"] as const
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ).includes(sentiment as any)
+    const normSentiment = (["positive", "neutral", "negative"] as const)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .includes(sentiment as any)
       ? (sentiment as "positive" | "neutral" | "negative")
       : "neutral";
     return { label, sentiment: normSentiment, score };
@@ -226,9 +254,17 @@ const SurveyFromFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional().default(""),
   is_active: z
-    .enum(["on"])
-    .optional()
-    .transform((v) => !!v),
+    .preprocess(
+      (v) => v === "on" || v === "true" || v === true || v === 1 || v === "1",
+      z.boolean()
+    )
+    .optional(),
+  is_anonymous: z
+    .preprocess(
+      (v) => v === "on" || v === "true" || v === true || v === 1 || v === "1",
+      z.boolean()
+    )
+    .default(false),
   starts_at: z.string().optional(),
   ends_at: z.string().optional(),
   // original textarea fields (still supported as fallback)
@@ -246,11 +282,15 @@ export async function createSurvey(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  console.log(formData);
+
+  // ✅ Include is_anonymous in parsing
   const parsed = SurveyFromFormSchema.safeParse({
     product_id: formData.get("product_id"),
     title: formData.get("title"),
     description: formData.get("description") ?? "",
     is_active: formData.get("is_active") ?? undefined,
+    is_anonymous: formData.get("is_anonymous") ?? "true", // <- NEW
     starts_at: formData.get("starts_at") ?? "",
     ends_at: formData.get("ends_at") ?? "",
     traits_1: formData.get("traits_1") ?? "",
@@ -269,7 +309,6 @@ export async function createSurvey(formData: FormData) {
     product_id,
     title,
     description,
-    is_active,
     starts_at,
     ends_at,
     traits_1,
@@ -304,7 +343,8 @@ export async function createSurvey(formData: FormData) {
     product_id,
     title,
     description,
-    is_active: Boolean(is_active),
+    is_active: getBool(formData, "is_active"),
+    is_anonymous: getBool(formData, "is_anonymous"), // <- NEW
     starts_at: starts_at ? new Date(starts_at).toISOString() : null,
     ends_at: ends_at ? new Date(ends_at).toISOString() : null,
     traits, // [{label, sentiment, score}]

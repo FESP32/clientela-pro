@@ -1,31 +1,12 @@
 // app/(dashboard)/surveys/page.tsx
 import Link from "next/link";
-import { format } from "date-fns";
-import { listSurveys, deleteSurvey } from "./actions";
-
+import { listSurveys, deleteSurvey } from "@/actions/surveys";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import SurveyTable from "@/components/dashboard/surveys-table";
 
 export const dynamic = "force-dynamic";
-
-function fmt(d?: string | null) {
-  if (!d) return "—";
-  try {
-    return format(new Date(d), "PPP");
-  } catch {
-    return "—";
-  }
-}
 
 export default async function SurveysPage() {
   const { user, surveys, error } = await listSurveys();
@@ -91,64 +72,7 @@ export default async function SurveysPage() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[28%]">Title</TableHead>
-                  <TableHead className="w-[22%]">Product</TableHead>
-                  <TableHead className="w-[18%]">Window</TableHead>
-                  <TableHead className="w-[12%]">Traits</TableHead>
-                  <TableHead className="w-[12%]">Status</TableHead>
-                  <TableHead className="w-[8%] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {surveys.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/dashboard/surveys/${s.id}/responses`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {s.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{s.product_name ?? "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {fmt(s.starts_at)} — {fmt(s.ends_at)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{s.traits_count ?? 0}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {s.is_active ? (
-                        <Badge>Active</Badge>
-                      ) : (
-                        <Badge variant="outline">Inactive</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right flex gap-2 justify-end">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={`/services/surveys/${s.id}/respond`}>
-                          Respond
-                        </Link>
-                      </Button>
-                      <Button asChild size="sm">
-                        <Link href={`/dashboard/surveys/${s.id}/responses`}>
-                          View
-                        </Link>
-                      </Button>
-                      {/* Delete button */}
-                      <form action={deleteSurvey.bind(null, s.id)}>
-                        <Button size="sm" variant="destructive" type="submit">
-                          Delete
-                        </Button>
-                      </form>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <SurveyTable surveys={surveys} deleteSurvey={deleteSurvey} />
           )}
         </CardContent>
       </Card>

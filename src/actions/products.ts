@@ -2,28 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
-
-export type ProductRow = {
-  id: string;
-  owner_id: string;
-  name: string;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-  updated_at: string;
-};
-
-const ProductSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  metadata: z
-    .string()
-    .transform((s) => s.trim())
-    .transform((s) => (s ? JSON.parse(s) : {}))
-    .refine((v) => v && typeof v === "object" && !Array.isArray(v), {
-      message: "Metadata must be a JSON object",
-    }),
-});
+import { ProductSchema } from "@/schemas/products";
+import { ProductRow } from "@/types/products";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();

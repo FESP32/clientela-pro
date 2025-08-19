@@ -1,10 +1,11 @@
 // app/profile/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
+import SignOut from "@/components/auth/sign-out";
 
 type ProfileRow = {
   user_id: string;
@@ -81,6 +82,12 @@ export default async function ProfilePage() {
             <p className="text-[13px]">{joined}</p>
           </div>
         </div>
+
+        <Separator />
+
+        <CardFooter>
+          <SignOut />
+        </CardFooter>
       </CardContent>
     </Card>
   );

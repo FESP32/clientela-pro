@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { getSurveyWithResponses } from "../../actions";
+import { getSurveyWithResponses } from "@/actions/surveys";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,11 @@ function fmtDate(d?: string | null) {
 }
 
 export default async function SurveyResponsesPage({
-  params: { id },
+  params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const { survey, responses, error } = await getSurveyWithResponses(id);
 
   if (!survey && !error) {
@@ -102,6 +103,7 @@ export default async function SurveyResponsesPage({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[10%]">Rating</TableHead>
+                  <TableHead className="w-[10%]">Respondent</TableHead>
                   <TableHead className="w-[40%]">Traits</TableHead>
                   <TableHead className="w-[35%]">Comment</TableHead>
                   <TableHead className="w-[15%]">Submitted</TableHead>
@@ -111,6 +113,9 @@ export default async function SurveyResponsesPage({
                 {responses.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.rating}★</TableCell>
+                    <TableCell className="font-medium">
+                      {r.respondent?.name ?? ""}
+                    </TableCell>
                     <TableCell className="text-xs">
                       {r.selected_traits?.length ? (
                         <div className="flex flex-wrap gap-1">

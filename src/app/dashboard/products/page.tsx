@@ -1,7 +1,7 @@
 // app/(dashboard)/dashboard/products/page.tsx
 import Link from "next/link";
 import { format } from "date-fns";
-import { listProducts, deleteProduct } from "./actions";
+import { listProducts, deleteProduct } from "@/actions/products";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, CirclePlay } from "lucide-react";
 import React from "react";
+import Image from "next/image";
 
 const Hero = () => {
   return (
@@ -36,11 +37,13 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Full-width image replacing LogoCloud */}
-      <img
+      <Image
         src="/hero.svg"
         alt="Hero Banner"
+        width={1200}
+        height={500}
         className="mt-6 w-5/6 object-cover max-h-[500px]"
+        priority
       />
     </div>
   );
