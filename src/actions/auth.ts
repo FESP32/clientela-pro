@@ -1,7 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import config from "@/config";
 
 // export const signInWithGoogle = async (
 //   event: React.FormEvent<HTMLFormElement>
@@ -34,7 +33,7 @@ export async function signInWithGoogle() {
     provider: "google",
     options: {
       // after Google consent, Supabase will bounce you back here:
-      redirectTo: `${config.domainName}/auth/callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
     },
   });
   if (error) {
@@ -52,7 +51,7 @@ export async function signInWithFacebook() {
     provider: "facebook",
     options: {
       // after Facebook consent, Supabase will bounce you back here:
-      redirectTo: `${config.domainName}/auth/callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
       // request basic profile + email (adjust if you need fewer/more)
       scopes: "public_profile,email",
     },
