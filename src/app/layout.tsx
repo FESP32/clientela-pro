@@ -4,6 +4,8 @@ import { ThemeProvider } from "next-themes";
 import { Merriweather_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 
 const geistSans = Merriweather_Sans({
@@ -95,18 +97,21 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning lang={locale}>
       <body className={`${geistSans.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TooltipProvider>{children}</TooltipProvider>
-        </ThemeProvider>
-        <Toaster position="top-center" richColors closeButton />
+        <NextIntlClientProvider>  
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TooltipProvider>{children}</TooltipProvider>
+          </ThemeProvider>
+          <Toaster position="top-center" richColors closeButton />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

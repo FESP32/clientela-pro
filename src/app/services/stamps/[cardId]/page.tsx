@@ -1,7 +1,7 @@
 // app/stamps/[cardId]/page.tsx
 import { notFound } from "next/navigation";
 import { getCustomerStampCard } from "@/actions/stamps";
-import StampCard from "@/components/services/stamp-card";
+import StampCard from "@/components/services/stamps/stamp-card";
 
 export const dynamic = "force-dynamic";
 

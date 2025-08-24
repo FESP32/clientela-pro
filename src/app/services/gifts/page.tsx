@@ -1,4 +1,4 @@
-import GiftRedemptionPage from "@/components/services/gift-card";
+import GiftRedemptionPage from "@/components/services/surveys/gift-card";
 
 export default function ReferalPage() {
   return (

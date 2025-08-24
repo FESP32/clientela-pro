@@ -1,4 +1,4 @@
-import IntentClaimCard from "@/components/services/intent-claim-card";
+import IntentClaimCard from "@/components/services/stamps/intent-claim-card";
 
 export const dynamic = "force-dynamic";
 

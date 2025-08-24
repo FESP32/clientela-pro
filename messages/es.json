@@ -1,0 +1,37 @@
+{
+  "LocaleSwitcher": {
+    "es": "Español",
+    "en": "Ingles",
+    "label": "Lenguage"
+  },
+  "HomePage": {
+    "title": "Disfruta recompensas y regalos al apoyar a los negocios que más quieres.",
+    "subtitle": "Automatiza la fidelización, mejora la satisfacción y recompensa a tus clientes con una solución fácil de usar.",
+    "getStarted": "Empezar Ahora"
+  },
+  "Navigation": {
+    "features": "Beneficios",
+    "pricing": "Precios",
+    "FAQ": "FAQ",
+    "testimonials": "Testimonios"
+  },
+  "ServicePage": {
+    "welcome": "Bienvenido de vuelta",
+    "header": {
+      "title": "¿Qué te gustaría hacer?",
+      "subtitle": "Elige una opción a continuación para comenzar"
+    },
+    "services": {
+      "serviceTitle1": "Encuestas",
+      "serviceDescription1": "Dar opinión",
+      "serviceTitle2": "Sellos",
+      "serviceDescription2": "Recompensas de lealtad",
+      "serviceTitle3": "Referidos",
+      "serviceDescription3": "Invita a tus amigos",
+      "serviceTitle4": "Regalos",
+      "serviceDescription4": "Canjear beneficios",
+      "serviceTitle5": "Perfil",
+      "serviceDescription5": "Tu cuenta"
+    }
+  }
+}

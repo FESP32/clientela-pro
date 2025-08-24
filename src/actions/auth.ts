@@ -29,11 +29,14 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function signInWithGoogle() {
   const supabase = await createClient();
+  const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`;
+  console.log(redirectTo);
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       // after Google consent, Supabase will bounce you back here:
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+      redirectTo
     },
   });
   if (error) {

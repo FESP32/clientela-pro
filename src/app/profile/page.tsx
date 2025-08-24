@@ -11,6 +11,7 @@ type ProfileRow = {
   user_id: string;
   name: string | null;
   subscription_plan: "free" | "premium";
+  user_type: string;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -68,6 +69,11 @@ export default async function ProfilePage() {
         <div>
           <p className="text-xs text-muted-foreground">Name</p>
           <p className="text-base">{profile.name ?? "—"}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-muted-foreground">User Type</p>
+          <p className="text-base">{profile.user_type ?? "—"}</p>
         </div>
 
         <Separator />

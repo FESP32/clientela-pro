@@ -1,8 +1,4 @@
-export type ProductRow = {
-  id: string;
-  owner_id: string;
-  name: string;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-  updated_at: string;
-};
+import { Inserts, Tables, Updates } from "@/utils/supabase/helpers";
+export type ProductRow = Tables<"products">;
+export type ProductInsert = Inserts<"products">;
+export type ProductUpdate = Updates<"products">;

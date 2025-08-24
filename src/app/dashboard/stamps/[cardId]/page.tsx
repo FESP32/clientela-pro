@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fmt } from "@/lib/utils";
+import { IntentActionsMenu } from "@/components/dashboard/stamps/intent-actions-menu";
 
 export const dynamic = "force-dynamic";
 
@@ -166,12 +167,12 @@ export default async function CardIntentsPage({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
+
+                    {/* Actions → dropdown with QR modal */}
                     <TableCell className="text-right">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={`/services/stamps/intents/${i.id}`}>
-                          View
-                        </Link>
-                      </Button>
+                      <IntentActionsMenu
+                        href={`/services/stamps/intents/${i.id}`}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

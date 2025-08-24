@@ -1,3 +1,8 @@
 supabase migration new create_todos_table
 supabase db reset --linked
 supabase db push
+
+jcywdajhoqhkvtezqhwj
+
+npx supabase gen types typescript --project-id jcywdajhoqhkvtezqhwj --schema public > database.types.ts
+

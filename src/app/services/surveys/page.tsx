@@ -1,4 +1,4 @@
-import MyResponsesList from "@/components/services/response-list";
+import MyResponsesList from "@/components/services/surveys/response-list";
 
 export default function Page() {
   return (

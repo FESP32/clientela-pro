@@ -1,0 +1,37 @@
+{
+  "LocaleSwitcher": {
+    "es": "Spanish",
+    "en": "English",
+    "label": "Language"
+  },
+  "HomePage": {
+    "title": "Earn benefits and gifts while supporting the businesses you love.",
+    "subtitle": "Automate loyalty, improve satisfaction, and reward your customers with an easy-to-use solution.",
+    "getStarted": "Get Started"
+  },
+  "Navigation": {
+    "features": "Features",
+    "pricing": "Precios",
+    "FAQ": "FAQ",
+    "testimonials": "Testimonials"
+  },
+  "ServicePage": {
+    "welcome": "Welcome Back",
+    "header": {
+      "title": "What would you like to do?",
+      "subtitle": "Choose an option below to get started"
+    },
+    "services": {
+      "serviceTitle1": "Surveys",
+      "serviceDescription1": "Give feedback",
+      "serviceTitle2": "Stamps",
+      "serviceDescription2": "Loyalty rewards",
+      "serviceTitle3": "Gifts",
+      "serviceDescription3": "Redeem perks",
+      "serviceTitle4": "Referrals",
+      "serviceDescription4": "Invite friends",
+      "serviceTitle5": "Profile",
+      "serviceDescription5": "Your account"
+    }
+  }
+}

@@ -1,24 +1,9 @@
 "use server";
 
+import { ResponseRow, ResponseWithSurveyTraits } from "@/types";
 import { createClient } from "@/utils/supabase/server";
 
-export type MyResponse = {
-  id: string;
-  rating: number;
-  selected_traits: string[];
-  comment: string | null;
-  submitted_at: string;
-  survey: {
-    id: string;
-    title: string;
-    product_id: string | null;
-  } | null;
-};
-
-// Internal row type matching our SELECT shape
-type ResponseRow = MyResponse;
-
-export async function getMyResponses(): Promise<MyResponse[]> {
+export async function getMyResponses() {
   const supabase = await createClient();
 
   const {
@@ -47,7 +32,7 @@ export async function getMyResponses(): Promise<MyResponse[]> {
     // 👆 The !responses_survey_id_fkey tells Supabase it's a 1:1 join, not an array
     .eq("respondent_id", user.id)
     .order("submitted_at", { ascending: false })
-    .returns<ResponseRow[]>(); // 👈 Strongly type the result
+    .overrideTypes<ResponseWithSurveyTraits[]>();
 
   if (error) throw new Error(error.message);
   return data ?? [];

@@ -4,19 +4,28 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
-import { ResponseRow, SurveyRecord, SurveyRow } from "@/types";
+import {
+  LatestSurvey,
+  SurveyWithProduct,
+  SurveyInsert,
+  SurveyListItem,
+  SurveyRow,
+  ResponseWithRespondent,
+  SurveyRowWithTraits,
+} from "@/types";
 import { getBool } from "@/lib/utils";
+import { SurveyFromFormSchema } from "@/schemas/surveys";
 
-export async function getSurvey(id: string): Promise<SurveyRecord | null> {
+export async function getSurvey(id: string): Promise<SurveyRowWithTraits | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("surveys")
     .select("id,title,description,traits,is_anonymous")
     .eq("id", id)
-    .single();
+    .single<SurveyRowWithTraits>();
 
   if (error) return null;
-  return data as SurveyRecord;
+  return data;
 }
 
 export async function getSurveyWithResponses(surveyId: string) {
@@ -26,12 +35,12 @@ export async function getSurveyWithResponses(surveyId: string) {
     .from("surveys")
     .select("id, title")
     .eq("id", surveyId)
-    .single();
+    .maybeSingle<Pick<SurveyRow, "id" | "title">>();
 
   if (sErr) {
     return {
       survey: null,
-      responses: [] as ResponseRow[],
+      responses: [] as ResponseWithRespondent[],
       error: sErr.message,
     };
   }
@@ -40,15 +49,16 @@ export async function getSurveyWithResponses(surveyId: string) {
     .from("responses")
     .select(
       `id, survey_id, respondent_id, rating, selected_traits, comment, submitted_at,
-       respondent:profiles(name)
+       respondent:profiles!responses_respondent_id_fkey(name)
       `
     )
     .eq("survey_id", surveyId)
-    .order("submitted_at", { ascending: false });
+    .order("submitted_at", { ascending: false })
+    .overrideTypes<ResponseWithRespondent[]>();
 
   return {
     survey,
-    responses: (responses ?? []) as unknown as ResponseRow[],
+    responses: responses ?? [],
     error: rErr?.message ?? null,
   };
 }
@@ -131,12 +141,12 @@ export async function listSurveys() {
     `
     )
     .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .overrideTypes<SurveyWithProduct[]>(); // <- enforce the row type;
 
   if (error) return { user, surveys: [], error: error.message };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const surveys: SurveyRow[] = (data ?? []).map((row: any) => ({
+  const surveys: SurveyListItem[] = (data ?? []).map((row) => ({
     ...row,
     product_name: row.products?.name ?? "",
     traits_count: Array.isArray(row.traits) ? row.traits.length : 0,
@@ -197,40 +207,12 @@ function collectArrayTraits(formData: FormData, score: 1 | 2 | 3 | 4 | 5) {
   return items;
 }
 
-const SurveyFromFormSchema = z.object({
-  product_id: z.string().uuid({ message: "Select a product." }),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional().default(""),
-  is_active: z
-    .preprocess(
-      (v) => v === "on" || v === "true" || v === true || v === 1 || v === "1",
-      z.boolean()
-    )
-    .optional(),
-  is_anonymous: z
-    .preprocess(
-      (v) => v === "on" || v === "true" || v === true || v === 1 || v === "1",
-      z.boolean()
-    )
-    .default(false),
-  starts_at: z.string().optional(),
-  ends_at: z.string().optional(),
-  // original textarea fields (still supported as fallback)
-  traits_1: z.string().optional().default(""),
-  traits_2: z.string().optional().default(""),
-  traits_3: z.string().optional().default(""),
-  traits_4: z.string().optional().default(""),
-  traits_5: z.string().optional().default(""),
-});
-
 export async function createSurvey(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-
-  console.log(formData);
 
   // ✅ Include is_anonymous in parsing
   const parsed = SurveyFromFormSchema.safeParse({
@@ -286,7 +268,7 @@ export async function createSurvey(formData: FormData) {
     ];
   }
 
-  const insertPayload = {
+  const insertPayload: SurveyInsert = {
     owner_id: user.id,
     product_id,
     title,
@@ -295,7 +277,7 @@ export async function createSurvey(formData: FormData) {
     is_anonymous: getBool(formData, "is_anonymous"), // <- NEW
     starts_at: starts_at ? new Date(starts_at).toISOString() : null,
     ends_at: ends_at ? new Date(ends_at).toISOString() : null,
-    traits, // [{label, sentiment, score}]
+    traits,
   };
 
   const { error } = await supabase.from("surveys").insert(insertPayload);
@@ -303,24 +285,6 @@ export async function createSurvey(formData: FormData) {
 
   revalidatePath("/dashboard/surveys");
   redirect("/dashboard/surveys");
-}
-
-export type ProductOption = { id: string; name: string };
-
-export async function getProductOptions(): Promise<ProductOption[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data } = await supabase
-    .from("products")
-    .select("id,name")
-    .eq("owner_id", user.id)
-    .order("name", { ascending: true });
-
-  return (data ?? []) as ProductOption[];
 }
 
 export async function deleteSurvey(surveyId: string) {
@@ -340,4 +304,22 @@ export async function deleteSurvey(surveyId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard/surveys");
+}
+
+export async function listLatestSurveys(limit = 5) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("surveys")
+    .select("id, title, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .overrideTypes<LatestSurvey[]>();
+
+  if (error) {
+    console.error("Error fetching surveys:", error.message);
+    return [];
+  }
+
+  return data ?? [];
 }

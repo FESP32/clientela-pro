@@ -1,14 +1,14 @@
 // app/(dashboard)/loyalty/cards/new/page.tsx
+import { listProducts } from "@/actions";
 import {
-  getOwnerProducts,
   createStampCard,
 } from "@/actions/stamps";
-import StampCardForm from "@/components/dashboard/stamp-card-form";
+import StampCardForm from "@/components/dashboard/stamps/stamp-card-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewStampCardPage() {
-  const products = await getOwnerProducts();
+  const { products } = await listProducts();
 
   return (
     <div className="p-4">

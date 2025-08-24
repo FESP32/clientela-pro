@@ -1,59 +1,57 @@
 import {
   Blocks,
   Bot,
-  ChartPie,
-  Film,
-  MessageCircle,
-  Settings2,
+  Gift,
+  HeartHandshake,
+  ListChecks,
+  Stamp,
 } from "lucide-react";
 import React from "react";
 
-
 const features = [
   {
-    icon: Settings2,
-    title: "Programas Personalizables",
+    icon: ListChecks,
+    title: "Customer Surveys",
     description:
-      "Crea encuestas, tarjetas de lealtad, y campañas de referidos adaptadas a tu negocio.",
+      "Collect quick feedback with customizable surveys that help you understand your customers better.",
+  },
+  {
+    icon: Stamp,
+    title: "Loyalty Stamp Cards",
+    description:
+      "Reward repeat customers with digital stamp cards they can carry anywhere.",
+  },
+  {
+    icon: Gift,
+    title: "Perks & Gifts",
+    description:
+      "Offer discounts, freebies, and special gifts to surprise and delight your loyal clients.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Referrals Made Easy",
+    description:
+      "Encourage customers to invite friends and reward both sides for growing your community.",
   },
   {
     icon: Blocks,
-    title: "Experiencias Interactivas",
+    title: "Simple to Use",
     description:
-      "Haz que tus clientes participen con encuestas, cupones digitales y dinámicas de recompensas.",
+      "Launch programs in minutes with ready-made templates and an intuitive interface.",
   },
   {
     icon: Bot,
-    title: "Automatización Inteligente",
+    title: "Automated Rewards",
     description:
-      "Envía mensajes, activa recompensas y solicita feedback sin mover un dedo.",
-  },
-  {
-    icon: Film,
-    title: "Integración Multicanal",
-    description:
-      "Conecta con WhatsApp, email o redes sociales para compartir campañas fácilmente.",
-  },
-  {
-    icon: ChartPie,
-    title: "Análisis en Tiempo Real",
-    description:
-      "Monitorea la satisfacción, el uso de recompensas y el crecimiento de tus clientes fieles.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Feedback Bidireccional",
-    description:
-      "Escucha lo que opinan tus clientes y responde con acciones que fortalecen la relación.",
+      "Set it and forget it—rewards and perks are applied automatically as customers engage.",
   },
 ];
-
 
 const Features = () => {
   return (
     <div id="features" className="w-full py-12 xs:py-20 px-6">
       <h2 className="text-3xl xs:text-4xl sm:text-5xl font-bold tracking-tight text-center">
-        Impulsa tu negocio con herramientas inteligentes
+        Everything you need to keep customers coming back
       </h2>
       <div className="w-full max-w-screen-lg mx-auto mt-10 sm:mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {features.map((feature) => (

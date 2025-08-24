@@ -1,7 +1,7 @@
 // app/(dashboard)/surveys/[id]/respond/page.tsx
 import { getSurvey, submitResponse } from "@/actions/surveys";
 import { notFound } from "next/navigation";
-import RespondForm from "@/components/services/respond-form";
+import RespondForm from "@/components/services/surveys/respond-form";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";

@@ -4,7 +4,7 @@ import { listSurveys, deleteSurvey } from "@/actions/surveys";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SurveyTable from "@/components/dashboard/surveys-table";
+import SurveyTable from "@/components/dashboard/surveys/surveys-table";
 
 export const dynamic = "force-dynamic";
 

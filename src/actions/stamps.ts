@@ -2,27 +2,19 @@
 "use server";
 
 import { getBool } from "@/lib/utils";
-import { StampCardRow, StampIntentRow } from "@/types/stamps";
+import {
+  StampCardInsert,
+  StampCardListItem,
+  StampCardProductInsert,
+  StampCardRow,
+  StampCardWithProducts,
+  StampIntentListItem,
+  StampIntentRow,
+  StampIntentWithCustomer,
+} from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-export async function getOwnerProducts() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data, error } = await supabase
-    .from("products")
-    .select("id, name")
-    .eq("owner_id", user.id)
-    .order("name", { ascending: true });
-
-  if (error) return [];
-  return (data ?? []) as { id: string; name: string }[];
-}
 
 export async function createStampCard(formData: FormData) {
   const supabase = await createClient();
@@ -45,18 +37,20 @@ export async function createStampCard(formData: FormData) {
     throw new Error("Stamps required must be an integer ≥ 1");
   }
 
+  const payload: StampCardInsert = {
+    owner_id: user.id,
+    title,
+    goal_text,
+    stamps_required,
+    is_active,
+    valid_from: valid_from ? new Date(valid_from).toISOString() : null,
+    valid_to: valid_to ? new Date(valid_to).toISOString() : null,
+  };
+
   // 1) Create card
   const { data: card, error: cErr } = await supabase
     .from("stamp_cards")
-    .insert({
-      owner_id: user.id,
-      title,
-      goal_text,
-      stamps_required,
-      is_active,
-      valid_from: valid_from ? new Date(valid_from).toISOString() : null,
-      valid_to: valid_to ? new Date(valid_to).toISOString() : null,
-    })
+    .insert(payload)
     .select("id")
     .single();
 
@@ -64,9 +58,9 @@ export async function createStampCard(formData: FormData) {
 
   // 2) Attach products (if any)
   if (product_ids.length > 0) {
-    const rows = product_ids.map((pid) => ({
-      card_id: card!.id,
-      product_id: pid,
+    const rows: StampCardProductInsert[] = product_ids.map((product_id) => ({
+      card_id: card.id,
+      product_id,
     }));
     const { error: cpErr } = await supabase
       .from("stamp_card_products")
@@ -103,14 +97,14 @@ export async function listStampCards() {
     `
     )
     .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .overrideTypes<StampCardWithProducts[]>();
 
   if (error) {
     return { user, cards: [], error: error.message };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cards: StampCardRow[] = (data ?? []).map((row: any) => ({
+  const cards: StampCardListItem[] = (data ?? []).map((row) => ({
     ...row,
     product_count: Array.isArray(row.stamp_card_products)
       ? row.stamp_card_products.length
@@ -371,7 +365,7 @@ export async function listStampIntents(cardId: string) {
     .from("stamp_cards")
     .select("id, title, owner_id")
     .eq("id", cardId)
-    .single();
+    .maybeSingle<Pick<StampCardRow, "id" | "title" | "owner_id">>();    
 
   if (cardErr || !card) {
     return {
@@ -395,21 +389,32 @@ export async function listStampIntents(cardId: string) {
     .from("stamp_intents")
     .select(
       `
-      id, card_id, merchant_id, customer_id, qty, status, note,
-      expires_at, consumed_at, created_at, updated_at
-    `
+        id,
+        card_id,
+        merchant_id,
+        customer_id,
+        qty,
+        status,
+        note,
+        expires_at,
+        consumed_at,
+        created_at,
+        updated_at,
+        customer:profiles!stamp_intents_customer_id_fkey(name)
+      `
     )
     .eq("card_id", cardId)
     .eq("merchant_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .overrideTypes<StampIntentWithCustomer[]>();
 
   if (error) {
-    return { user, card, intents: [], error: error.message };
-  }
+    console.log(error);
+    
+  }    
 
   // Shape rows (flatten customer name)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const intents: StampIntentRow[] = (data ?? []).map((row: any) => ({
+  const intents: StampIntentListItem[] = (data ?? []).map((row) => ({
     id: row.id,
     card_id: row.card_id,
     merchant_id: row.merchant_id,
@@ -543,4 +548,21 @@ export async function getStampIntent(intentId: string) {
   }
 
   return { user, intent, error: null as string | null };
+}
+
+export async function listLatestStamps(limit = 5) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("stamp_cards")
+    .select("id, title, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching stamp cards:", error.message);
+    return [];
+  }
+
+  return data ?? [];
 }

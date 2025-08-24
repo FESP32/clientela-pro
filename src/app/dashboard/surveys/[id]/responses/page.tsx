@@ -1,7 +1,6 @@
 // app/(dashboard)/surveys/[id]/responses/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
 import { getSurveyWithResponses } from "@/actions/surveys";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,18 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { fmt } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-function fmtDate(d?: string | null) {
-  if (!d) return "—";
-  try {
-    return format(new Date(d), "PPP p");
-  } catch {
-    return "—";
-  }
-}
-
 export default async function SurveyResponsesPage({
   params,
 }: {
@@ -71,7 +61,7 @@ export default async function SurveyResponsesPage({
 
   return (
     <div className="p-4">
-      <Card className="mx-auto max-w-6xl">
+      <Card className=" max-w-6xl">
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Responses — {survey?.title ?? "Survey"}</CardTitle>
           <div className="flex gap-2">
@@ -121,7 +111,7 @@ export default async function SurveyResponsesPage({
                         <div className="flex flex-wrap gap-1">
                           {r.selected_traits.map((t, i) => (
                             <Badge key={`${r.id}-t-${i}`} variant="secondary">
-                              {t}
+                              {t as string}
                             </Badge>
                           ))}
                         </div>
@@ -135,7 +125,7 @@ export default async function SurveyResponsesPage({
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {fmtDate(r.submitted_at)}
+                      {fmt(r.submitted_at)}
                     </TableCell>
                   </TableRow>
                 ))}
