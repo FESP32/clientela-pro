@@ -15,6 +15,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getActiveBusiness } from "./businesses";
 
 export async function createStampCard(formData: FormData) {
   const supabase = await createClient();
@@ -37,8 +38,14 @@ export async function createStampCard(formData: FormData) {
     throw new Error("Stamps required must be an integer ≥ 1");
   }
 
+  const { business } = await getActiveBusiness();
+
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const payload: StampCardInsert = {
-    owner_id: user.id,
+    business_id: business?.id,
     title,
     goal_text,
     stamps_required,
@@ -49,7 +56,7 @@ export async function createStampCard(formData: FormData) {
 
   // 1) Create card
   const { data: card, error: cErr } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .insert(payload)
     .select("id")
     .single();
@@ -63,7 +70,7 @@ export async function createStampCard(formData: FormData) {
       product_id,
     }));
     const { error: cpErr } = await supabase
-      .from("stamp_card_products")
+      .from("stamp_card_product")
       .insert(rows);
     if (cpErr) throw new Error(cpErr.message);
   }
@@ -86,17 +93,22 @@ export async function listStampCards() {
     };
   }
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   // Pull cards and related products (to compute product_count)
   const { data, error } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .select(
       `
-      id, owner_id, title, goal_text, stamps_required, is_active,
+      id, business_id, title, goal_text, stamps_required, is_active,
       valid_from, valid_to, created_at, updated_at,
-      stamp_card_products ( product_id )
+      stamp_card_product ( product_id )
     `
     )
-    .eq("owner_id", user.id)
+    .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .overrideTypes<StampCardWithProducts[]>();
 
@@ -122,7 +134,7 @@ export async function deleteStampCard(cardId: string) {
   if (!user) throw new Error("Not authenticated");
 
   const { error } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .delete()
     .eq("id", cardId)
     .eq("owner_id", user.id);
@@ -154,19 +166,19 @@ export async function punchStampCard(formData: FormData) {
     throw new Error("qty must be a positive integer");
   }
 
-  // Optional: ensure the authenticated user owns the card
-  const { data: card, error: cardErr } = await supabase
-    .from("stamp_cards")
-    .select("id, owner_id")
-    .eq("id", card_id)
-    .single();
+  // // Optional: ensure the authenticated user owns the card
+  // const { data: card, error: cardErr } = await supabase
+  //   .from("stamp_cards")
+  //   .select("id, owner_id")
+  //   .eq("id", card_id)
+  //   .single();
 
-  if (cardErr || !card) throw new Error("Card not found");
-  if (card.owner_id !== user.id)
-    throw new Error("Not authorized to punch this card");
+  // if (cardErr || !card) throw new Error("Card not found");
+  // if (card.owner_id !== user.id)
+  //   throw new Error("Not authorized to punch this card");
 
   // Insert punch
-  const { error: pErr } = await supabase.from("stamp_punches").insert({
+  const { error: pErr } = await supabase.from("stamp_punch").insert({
     card_id,
     customer_id,
     qty: qtyNum,
@@ -196,7 +208,7 @@ export async function createStampMembership(formData: FormData) {
 
   // Optional: validate card is active and within validity window
   const { data: card, error: cardErr } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .select("id, is_active, valid_from, valid_to, stamps_required")
     .eq("id", card_id)
     .single();
@@ -210,7 +222,7 @@ export async function createStampMembership(formData: FormData) {
   }
 
   // Upsert membership (unique on card_id + customer_id)
-  const { error } = await supabase.from("stamp_punches").upsert({
+  const { error } = await supabase.from("stamp_punch").upsert({
     card_id,
     customer_id: user.id,
   });
@@ -239,9 +251,9 @@ export async function getCustomerStampCard(cardId: string) {
 
   // Card
   const { data: card, error: cErr } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .select(
-      "id, owner_id, title, goal_text, stamps_required, is_active, valid_from, valid_to, created_at, updated_at"
+      "id, business_id, title, goal_text, stamps_required, is_active, valid_from, valid_to, created_at, updated_at"
     )
     .eq("id", cardId)
     .single();
@@ -257,7 +269,7 @@ export async function getCustomerStampCard(cardId: string) {
 
   // Punches (ONLY qty and created_at)
   const { data: punches, error: pErr } = await supabase
-    .from("stamp_punches")
+    .from("stamp_punch")
     .select("qty, created_at")
     .eq("card_id", cardId)
     .eq("customer_id", user.id)
@@ -319,19 +331,24 @@ export async function createStampIntent(formData: FormData) {
 
   // Ensure the logged-in user owns this card
   const { data: card, error: cardErr } = await supabase
-    .from("stamp_cards")
-    .select("id, owner_id")
+    .from("stamp_card")
+    .select("id, business_id")
     .eq("id", card_id)
     .single();
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   if (cardErr || !card) throw new Error("Card not found");
-  if (card.owner_id !== user.id)
+  if (card.business_id !== business.id)
     throw new Error("Not authorized to create intents for this card");
 
   // Insert the intent (status defaults to 'pending' in the table)
-  const { error: iErr } = await supabase.from("stamp_intents").insert({
+  const { error: iErr } = await supabase.from("stamp_intent").insert({
     card_id,
-    merchant_id: user.id,
+    business_id: business.id,
     customer_id, // can be null for open intents
     qty,
     note,
@@ -347,6 +364,7 @@ export async function createStampIntent(formData: FormData) {
 
 export async function listStampIntents(cardId: string) {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -354,18 +372,19 @@ export async function listStampIntents(cardId: string) {
   if (!user) {
     return {
       user: null,
-      card: null,
-      intents: [] as StampIntentRow[],
+      card: null as { id: string; title: string } | null,
+      intents: [] as StampIntentListItem[],
       error: null as string | null,
     };
   }
 
-  // Ensure the card exists and is owned by the current merchant
+  // Ensure the card exists (id, title, business_id)
   const { data: card, error: cardErr } = await supabase
-    .from("stamp_cards")
-    .select("id, title, owner_id")
+    .from("stamp_card")
+    .select("id, title, business_id")
     .eq("id", cardId)
-    .maybeSingle<Pick<StampCardRow, "id" | "title" | "owner_id">>();    
+    .maybeSingle()
+    .returns<Pick<StampCardRow, "id" | "title" | "business_id"> | null>();
 
   if (cardErr || !card) {
     return {
@@ -375,7 +394,14 @@ export async function listStampIntents(cardId: string) {
       error: cardErr?.message ?? "Card not found",
     };
   }
-  if (card.owner_id !== user.id) {
+
+  // Get the user's active business and authorize
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
+  if (card.business_id !== business!.id) {
     return {
       user,
       card: null,
@@ -386,38 +412,42 @@ export async function listStampIntents(cardId: string) {
 
   // Fetch intents; left-join customer profile name (optional)
   const { data, error } = await supabase
-    .from("stamp_intents")
+    .from("stamp_intent")
     .select(
       `
-        id,
-        card_id,
-        merchant_id,
-        customer_id,
-        qty,
-        status,
-        note,
-        expires_at,
-        consumed_at,
-        created_at,
-        updated_at,
-        customer:profiles!stamp_intents_customer_id_fkey(name)
-      `
+      id,
+      card_id,
+      business_id,
+      customer_id,
+      qty,
+      status,
+      note,
+      expires_at,
+      consumed_at,
+      created_at,
+      updated_at,
+      customer:profile!stamp_intent_customer_id_fk_profile ( name )
+    `
     )
     .eq("card_id", cardId)
-    .eq("merchant_id", user.id)
+    .eq("business_id", business!.id)
     .order("created_at", { ascending: false })
-    .overrideTypes<StampIntentWithCustomer[]>();
+    .returns<StampIntentWithCustomer[]>();
 
   if (error) {
-    console.log(error);
-    
-  }    
+    return {
+      user,
+      card: null,
+      intents: [],
+      error: error.message,
+    };
+  }
 
-  // Shape rows (flatten customer name)
+  // Flatten customer name
   const intents: StampIntentListItem[] = (data ?? []).map((row) => ({
     id: row.id,
     card_id: row.card_id,
-    merchant_id: row.merchant_id,
+    business_id: row.business_id,
     customer_id: row.customer_id ?? null,
     qty: row.qty,
     status: row.status,
@@ -458,8 +488,8 @@ export async function consumeStampIntent(formData: FormData) {
 
   // ...rest of your existing logic...
   const { data: intent, error: iErr } = await supabase
-    .from("stamp_intents")
-    .select("id, card_id, merchant_id, customer_id, qty, status, expires_at")
+    .from("stamp_intent")
+    .select("id, card_id, business_id, customer_id, qty, status, expires_at")
     .eq("id", intent_id)
     .single();
 
@@ -474,7 +504,7 @@ export async function consumeStampIntent(formData: FormData) {
 
   const consumedAt = new Date().toISOString();
   const { data: updated, error: upErr } = await supabase
-    .from("stamp_intents")
+    .from("stamp_intent")
     .update({
       status: "consumed",
       consumed_at: consumedAt,
@@ -488,7 +518,7 @@ export async function consumeStampIntent(formData: FormData) {
   if (upErr || !updated)
     throw new Error("Could not consume intent (maybe already processed)");
 
-  const { error: punchErr } = await supabase.from("stamp_punches").insert({
+  const { error: punchErr } = await supabase.from("stamp_punch").insert({
     card_id: updated.card_id,
     customer_id: updated.customer_id!,
     qty: updated.qty,
@@ -497,7 +527,7 @@ export async function consumeStampIntent(formData: FormData) {
 
   if (punchErr) {
     await supabase
-      .from("stamp_intents")
+      .from("stamp_intent")
       .update({ status: "pending", consumed_at: null })
       .eq("id", updated.id)
       .eq("status", "consumed");
@@ -507,7 +537,7 @@ export async function consumeStampIntent(formData: FormData) {
   revalidatePath(`/stamps/${updated.card_id}`);
   revalidatePath(`/stamps`);
   revalidatePath(`/dashboard/loyalty/cards/${updated.card_id}/intents`);
-  redirect(`services/stamps/${updated.card_id}`);
+  redirect(`/services/stamps/${updated.card_id}`);
 }
 
 export async function getStampIntent(intentId: string) {
@@ -529,11 +559,11 @@ export async function getStampIntent(intentId: string) {
 
   // Fetch intent
   const { data: intent, error: intentError } = await supabase
-    .from("stamp_intents")
+    .from("stamp_intent")
     .select(
       `
-      id, card_id, merchant_id, customer_id, qty, status, note, expires_at, consumed_at, created_at,
-      card:stamp_cards(id, title, stamps_required, is_active, valid_from, valid_to)
+      id, card_id, business_id, customer_id, qty, status, note, expires_at, consumed_at, created_at,
+      card:stamp_card(id, title, stamps_required, is_active, valid_from, valid_to)
     `
     )
     .eq("id", intentId)
@@ -554,7 +584,7 @@ export async function listLatestStamps(limit = 5) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("stamp_cards")
+    .from("stamp_card")
     .select("id, title, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);

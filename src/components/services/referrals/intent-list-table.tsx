@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ExternalLink, Link2 } from "lucide-react";
+import { MoreHorizontal, ExternalLink, Link2, QrCode } from "lucide-react";
 import { ReferralIntentLinkDialog } from "@/components/services/referrals/referral-intent-link-dialog";
 import type { ReferralIntentListMini } from "@/types";
 
@@ -122,8 +122,8 @@ export function IntentListTable({
                             );
                           }}
                         >
-                          <Link2 className="h-4 w-4" />
-                          Show link (URL + QR)
+                          <QrCode className="h-4 w-4" />
+                          Show link
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />

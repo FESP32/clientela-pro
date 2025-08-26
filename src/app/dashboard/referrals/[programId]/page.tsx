@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { listReferralParticipants } from "@/actions/referrals";
 import ReferralParticipantsList from "@/components/dashboard/referrals/referral-participants-list";
+import { getActiveBusiness } from "@/actions/businesses";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +22,18 @@ export default async function ReferralParticipantsPage({
   if (!user)
     redirect(`/login?next=/dashboard/referrals/${programId}`);
 
+  const { business } = await getActiveBusiness();
+
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   // Verify ownership & fetch program info
   const { data: program } = await supabase
     .from("referral_program")
-    .select("id, owner_id, title, code")
+    .select("id, business_id, title, code")
     .eq("id", programId)
-    .eq("owner_id", user.id)
+    .eq("business_id", business.id)
     .maybeSingle();
 
   if (!program) {

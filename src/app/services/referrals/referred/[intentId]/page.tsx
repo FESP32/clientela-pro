@@ -25,7 +25,7 @@ export default async function ReferredIntentPage({
 
   // Fetch intent + program (joined)
   const { data: intent, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select(
       `
       id, status, created_at, expires_at, referrer_id, referred_id,

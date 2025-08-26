@@ -15,6 +15,7 @@ import {
   ReferralProgramInsert,
   ReferralProgramRow,
 } from "@/types";
+import { getActiveBusiness } from "./businesses";
 
 export async function createReferralProgram(formData: FormData) {
   const supabase = await createClient();
@@ -56,9 +57,14 @@ export async function createReferralProgram(formData: FormData) {
     throw new Error("End date must be later than start date.");
   }
 
-  // Build insert payload (same pattern as createSurvey)
+  const { business } = await getActiveBusiness();
+
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const insertPayload: ReferralProgramInsert = {
-    owner_id: user.id,
+    business_id: business?.id,
     title,
     code,
     is_active: is_active ?? getBool(formData, "is_active"),
@@ -99,12 +105,17 @@ export async function listReferralPrograms() {
     return [];
   }
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const { data, error } = await supabase
     .from("referral_program")
     .select(
       `
       id,
-      owner_id,
+      business_id,
       title,
       code,
       is_active,
@@ -116,7 +127,7 @@ export async function listReferralPrograms() {
       updated_at
     `
     )
-    .eq("owner_id", user.id)
+    .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .overrideTypes<ReferralProgramRow[]>();
 
@@ -240,7 +251,7 @@ export async function listJoinedReferralProgramsWithIntents(): Promise<
 
   // 3) Fetch the current user's intents for those programs (as the referrer)
   const { data: intents, error: iErr } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select(
       "id, program_id, status, referred_id, expires_at, created_at, consumed_at"
     )
@@ -334,7 +345,7 @@ export async function createReferralIntent(formData: FormData) {
 
   const expiresAt = expiresAtRaw ? new Date(expiresAtRaw).toISOString() : null;
 
-  const { error: insertErr } = await supabase.from("referral_intents").insert({
+  const { error: insertErr } = await supabase.from("referral_intent").insert({
     program_id: programId,
     referrer_id: user!.id,
     referred_id: null, // always null in this simplified panel
@@ -411,7 +422,7 @@ export async function joinReferralIntent(formData: FormData) {
 
   // Look up intent (with program_id)
   const { data: intent, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select("id, status, expires_at, referred_id, program_id, referrer_id")
     .eq("id", intentId)
     .maybeSingle();
@@ -426,7 +437,7 @@ export async function joinReferralIntent(formData: FormData) {
 
   // Mark as consumed
   const { error: updateErr } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .update({
       referred_id: user!.id,
       status: "consumed",
@@ -451,7 +462,7 @@ export async function markIntentClaimed(formData: FormData) {
 
   // Fetch intent
   const { data: intent, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select("id, status, program_id, referrer_id, referred_id")
     .eq("id", intentId)
     .maybeSingle();
@@ -473,7 +484,7 @@ export async function markIntentClaimed(formData: FormData) {
   }
 
   const { error: updErr } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .update({
       status: "claimed",
     })
@@ -588,7 +599,7 @@ export async function listMyProgramReferralIntents(
 
   // Intents for this program created by current user (referrer)
   const { data, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select("id, status, created_at, expires_at, consumed_at, referred_id")
     .eq("program_id", programId)
     .eq("referrer_id", user.id)
@@ -658,7 +669,7 @@ export async function getMyProgramIntentQuota(
 
   // Count intents *created* by this user for this program
   const { count } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select("id", { head: true, count: "exact" })
     .eq("program_id", programId)
     .eq("referrer_id", user.id);

@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Link2, UserPlus } from "lucide-react";
+import { MoreHorizontal, Eye, Link2, UserPlus, QrCode } from "lucide-react";
 import { ReferralJoinLinkDialog } from "@/components/dashboard/referrals/referral-join-link-dialog";
 import { fmt } from "@/lib/utils";
 import { ReferralProgramRow } from "@/types";
@@ -133,7 +133,7 @@ export function ReferralProgramsTable({ programs }: { programs: ReferralProgramR
                             );
                           }}
                         >
-                          <Link2 className="h-4 w-4" />
+                          <QrCode className="h-4 w-4" />
                           Show join URL
                         </DropdownMenuItem>
 

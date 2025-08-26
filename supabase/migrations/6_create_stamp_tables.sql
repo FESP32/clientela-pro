@@ -1,14 +1,7 @@
--- ==========================================================
--- Stamp Cards: first-time migration (clear naming)
--- Depends on:
---   - public.profiles(user_id)  -- creator & customer
---   - public.products(id)       -- product list
--- ==========================================================
-
 -- 1) A stamp card a merchant creates (defines the goal and how many stamps are needed)
-create table if not exists public.stamp_cards (
+create table if not exists public.stamp_card (
   id               uuid primary key default gen_random_uuid(),
-  owner_id         uuid not null references public.profiles(user_id) on delete cascade,
+  business_id      uuid not null,  -- FK added below
   title            text not null,                 -- e.g., "Coffee Card"
   goal_text        text not null,                 -- e.g., "Free Coffee", "10% off"
   stamps_required  integer not null check (stamps_required >= 1),
@@ -19,45 +12,73 @@ create table if not exists public.stamp_cards (
   updated_at       timestamptz not null default timezone('utc', now())
 );
 
-create index if not exists idx_stamp_cards_owner  on public.stamp_cards(owner_id);
-create index if not exists idx_stamp_cards_active on public.stamp_cards(is_active);
+-- FK
+alter table public.stamp_card
+  add constraint stamp_card_business_id_fk
+  foreign key (business_id) references public.business(id)
+  on delete cascade;
+
+create index if not exists idx_stamp_business_id   on public.stamp_card(business_id);
+create index if not exists idx_stamp_card_active   on public.stamp_card(is_active);
 
 -- 2) Which products the card applies to (many-to-many: card ↔ products)
-create table if not exists public.stamp_card_products (
-  card_id     uuid not null references public.stamp_cards(id) on delete cascade,
-  product_id  uuid not null references public.products(id) on delete cascade,
+create table if not exists public.stamp_card_product (
+  card_id     uuid not null,  -- FKs added below
+  product_id  uuid not null,
   primary key (card_id, product_id)
 );
 
-create index if not exists idx_stamp_card_products_product on public.stamp_card_products(product_id);
+-- FKs
+alter table public.stamp_card_product
+  add constraint stamp_card_product_card_id_fk
+  foreign key (card_id) references public.stamp_card(id)
+  on delete cascade;
+
+alter table public.stamp_card_product
+  add constraint stamp_card_product_product_id_fk
+  foreign key (product_id) references public.product(id)
+  on delete cascade;
+
+create index if not exists idx_stamp_card_products_product on public.stamp_card_product(product_id);
 
 -- 3) A stamp (“punch”) earned by a customer for a specific card
 --    One row = one stamping event; qty lets you add multiple stamps at once.
-create table if not exists public.stamp_punches (
+create table if not exists public.stamp_punch (
   id           uuid primary key default gen_random_uuid(),
-  card_id      uuid not null references public.stamp_cards(id) on delete cascade,
-  customer_id  uuid not null references public.profiles(user_id) on delete cascade,
+  card_id      uuid not null,  -- FKs added below
+  customer_id  uuid not null,
   qty          integer not null default 1 check (qty >= 1),  -- number of stamps added in this event
   note         text,
   created_at   timestamptz not null default timezone('utc', now())
 );
 
-create index if not exists idx_stamp_punches_card           on public.stamp_punches(card_id);
-create index if not exists idx_stamp_punches_customer       on public.stamp_punches(customer_id);
-create index if not exists idx_stamp_punches_card_customer  on public.stamp_punches(card_id, customer_id);
+-- FKs
+alter table public.stamp_punch
+  add constraint stamp_punch_card_id_fk
+  foreign key (card_id) references public.stamp_card(id)
+  on delete cascade;
+
+alter table public.stamp_punch
+  add constraint stamp_punch_customer_id_fk_profile
+  foreign key (customer_id) references public.profile(user_id)
+  on delete cascade;
+
+create index if not exists idx_stamp_punch_card           on public.stamp_punch(card_id);
+create index if not exists idx_stamp_punch_customer       on public.stamp_punch(customer_id);
+create index if not exists idx_stamp_punch_card_customer  on public.stamp_punch(card_id, customer_id);
 
 -- ==========================================================
 -- Stamp Intents: first-time migration
 -- Depends on:
---   - public.stamp_cards(id)
---   - public.profiles(user_id)
+--   - public.stamp_card(id)
+--   - public.profile(user_id)
 -- ==========================================================
 
-create table if not exists public.stamp_intents (
+create table if not exists public.stamp_intent (
   id           uuid primary key default gen_random_uuid(),
-  card_id      uuid not null references public.stamp_cards(id) on delete cascade,
-  merchant_id  uuid not null references public.profiles(user_id) on delete cascade, -- merchant
-  customer_id  uuid references public.profiles(user_id) on delete set null,         -- optional target
+  card_id      uuid not null,  -- FKs added below
+  business_id  uuid not null,
+  customer_id  uuid,           -- optional target; FK added below
   qty          integer not null check (qty >= 1),                                   -- punches to grant
   status       text not null default 'pending'
                check (status in ('pending','consumed','canceled')),
@@ -68,12 +89,27 @@ create table if not exists public.stamp_intents (
   updated_at   timestamptz not null default timezone('utc', now())
 );
 
+-- Explicit FKs
+alter table public.stamp_intent
+  add constraint stamp_intent_card_id_fk
+  foreign key (card_id) references public.stamp_card(id)
+  on delete cascade;
+
+alter table public.stamp_intent
+  add constraint stamp_intent_business_id_fk
+  foreign key (business_id) references public.business(id)
+  on delete cascade;
+
+alter table public.stamp_intent
+  add constraint stamp_intent_customer_id_fk_profile
+  foreign key (customer_id) references public.profile(user_id)
+  on delete set null;
+
 -- Helpful indexes
-create index if not exists idx_stamp_intents_card        on public.stamp_intents(card_id);
-create index if not exists idx_stamp_intents_merchant    on public.stamp_intents(merchant_id);
-create index if not exists idx_stamp_intents_customer    on public.stamp_intents(customer_id);
-create index if not exists idx_stamp_intents_status      on public.stamp_intents(status);
-create index if not exists idx_stamp_intents_expires_at  on public.stamp_intents(expires_at);
+create index if not exists idx_stamp_intent_card        on public.stamp_intent(card_id);
+create index if not exists idx_stamp_intent_customer    on public.stamp_intent(customer_id);
+create index if not exists idx_stamp_intent_status      on public.stamp_intent(status);
+create index if not exists idx_stamp_intent_expires_at  on public.stamp_intent(expires_at);
 
 -- Touch updated_at on update
 create or replace function public.touch_updated_at()
@@ -85,8 +121,7 @@ begin
   return new;
 end$$;
 
-drop trigger if exists trig_touch_stamp_intents on public.stamp_intents;
-create trigger trig_touch_stamp_intents
-before update on public.stamp_intents
+drop trigger if exists trig_touch_stamp_intent on public.stamp_intent;
+create trigger trig_touch_stamp_intent
+before update on public.stamp_intent
 for each row execute procedure public.touch_updated_at();
-

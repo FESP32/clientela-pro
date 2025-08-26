@@ -50,7 +50,7 @@ export default async function StampMembershipCreate({
 
   // Check if the user already has an instance (>= 1 punch on this card)
   const { count } = await supabase
-    .from("stamp_punches")
+    .from("stamp_punch")
     .select("*", { count: "exact", head: true })
     .eq("card_id", cardId)
     .eq("customer_id", user.id);

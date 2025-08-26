@@ -1,4 +1,4 @@
 import { Inserts, Tables, Updates } from "@/utils/supabase/helpers";
-export type ProductRow = Tables<"products">;
-export type ProductInsert = Inserts<"products">;
-export type ProductUpdate = Updates<"products">;
+export type ProductRow = Tables<"product">;
+export type ProductInsert = Inserts<"product">;
+export type ProductUpdate = Updates<"product">;

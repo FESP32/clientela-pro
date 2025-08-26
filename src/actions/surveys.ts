@@ -2,67 +2,76 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import {
-  LatestSurvey,
-  SurveyWithProduct,
   SurveyInsert,
-  SurveyListItem,
   SurveyRow,
-  ResponseWithRespondent,
-  SurveyRowWithTraits,
+  SurveyWithProduct,
+  SurveyWithResponses,
 } from "@/types";
 import { getBool } from "@/lib/utils";
 import { SurveyFromFormSchema } from "@/schemas/surveys";
+import { getActiveBusiness } from "./businesses";
 
-export async function getSurvey(id: string): Promise<SurveyRowWithTraits | null> {
+export async function getSurvey(id: string): Promise<SurveyRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("surveys")
+    .from("survey")
     .select("id,title,description,traits,is_anonymous")
     .eq("id", id)
-    .single<SurveyRowWithTraits>();
+    .single<SurveyRow>();
 
   if (error) return null;
   return data;
 }
 
-export async function getSurveyWithResponses(surveyId: string) {
+export async function getSurveyWithProduct(surveyId: string) {
+  if (!surveyId) throw new Error("Missing survey id");
   const supabase = await createClient();
 
-  const { data: survey, error: sErr } = await supabase
-    .from("surveys")
-    .select("id, title")
-    .eq("id", surveyId)
-    .maybeSingle<Pick<SurveyRow, "id" | "title">>();
-
-  if (sErr) {
-    return {
-      survey: null,
-      responses: [] as ResponseWithRespondent[],
-      error: sErr.message,
-    };
-  }
-
-  const { data: responses, error: rErr } = await supabase
-    .from("responses")
+  const { data, error } = await supabase
+    .from("survey")
     .select(
-      `id, survey_id, respondent_id, rating, selected_traits, comment, submitted_at,
-       respondent:profiles!responses_respondent_id_fkey(name)
       `
+      id, title, description, is_active, is_anonymous, starts_at, ends_at, created_at, business_id, product_id,
+      product:product!survey_product_id_fk ( id, name )
+    `
     )
-    .eq("survey_id", surveyId)
-    .order("submitted_at", { ascending: false })
-    .overrideTypes<ResponseWithRespondent[]>();
+    .eq("id", surveyId)
+    .single()
+    .overrideTypes<SurveyWithProduct>();
 
-  return {
-    survey,
-    responses: responses ?? [],
-    error: rErr?.message ?? null,
-  };
+  if (error) throw new Error(error.message);
+  return data;
 }
 
+export async function getSurveyWithResponses(
+  surveyId: string
+): Promise<SurveyWithResponses> {
+  if (!surveyId) throw new Error("Missing survey id");
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("survey")
+    .select(
+      `
+      id, title, description, is_anonymous, is_active, starts_at, ends_at, created_at,
+      responses:response!response_survey_id_fk (
+        id, rating, selected_traits, comment, submitted_at,
+        respondent:profile!response_respondent_id_fk_profile ( user_id, name )
+      )
+    `
+    )
+    .eq("id", surveyId)
+    .single()
+    .overrideTypes<SurveyWithResponses>(); // <-- use returns<T>(), not overrideTypes
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Survey not found");
+
+  return data;
+}
 export async function submitResponse(formData: FormData) {
   const supabase = await createClient();
 
@@ -86,7 +95,7 @@ export async function submitResponse(formData: FormData) {
   } = await supabase.auth.getUser();
 
   const { data: survey, error: surveyError } = await supabase
-    .from("surveys")
+    .from("survey")
     .select("is_anonymous")
     .eq("id", survey_id)
     .single();
@@ -98,7 +107,7 @@ export async function submitResponse(formData: FormData) {
   // ── Respect anonymity
   const respondent_id = survey.is_anonymous ? null : user?.id ?? null;
 
-  const { error } = await supabase.from("responses").insert({
+  const { error } = await supabase.from("response").insert({
     survey_id,
     respondent_id,
     rating,
@@ -115,44 +124,23 @@ export async function submitResponse(formData: FormData) {
   return { success: true, message: "Response submitted successfully" };
 }
 
-export async function listSurveys() {
+export async function listSurveys(): Promise<SurveyWithProduct[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      user: null,
-      surveys: [] as SurveyRow[],
-      error: null as string | null,
-    };
-  }
 
   const { data, error } = await supabase
-    .from("surveys")
+    .from("survey")
     .select(
       `
-      id, owner_id,
-      product_id, title, description, 
-      is_anonymous ,traits, is_active, 
-      starts_at, ends_at, created_at, updated_at,
-      products!inner ( name )
+      id, title, description, is_active, is_anonymous, starts_at, ends_at, created_at, business_id, product_id,
+      product:product!survey_product_id_fk ( id, name )
     `
     )
-    .eq("owner_id", user.id)
     .order("created_at", { ascending: false })
-    .overrideTypes<SurveyWithProduct[]>(); // <- enforce the row type;
+    .overrideTypes<SurveyWithProduct[]>();
 
-  if (error) return { user, surveys: [], error: error.message };
 
-  const surveys: SurveyListItem[] = (data ?? []).map((row) => ({
-    ...row,
-    product_name: row.products?.name ?? "",
-    traits_count: Array.isArray(row.traits) ? row.traits.length : 0,
-  }));
-
-  return { user, surveys, error: null };
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 /** Parse textarea lines like: "too sweet | negative" */
@@ -268,19 +256,25 @@ export async function createSurvey(formData: FormData) {
     ];
   }
 
+  const { business } = await getActiveBusiness();
+
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const insertPayload: SurveyInsert = {
-    owner_id: user.id,
+    business_id: business.id,
     product_id,
     title,
     description,
     is_active: getBool(formData, "is_active"),
-    is_anonymous: getBool(formData, "is_anonymous"), // <- NEW
+    is_anonymous: getBool(formData, "is_anonymous"),
     starts_at: starts_at ? new Date(starts_at).toISOString() : null,
     ends_at: ends_at ? new Date(ends_at).toISOString() : null,
     traits,
   };
 
-  const { error } = await supabase.from("surveys").insert(insertPayload);
+  const { error } = await supabase.from("survey").insert(insertPayload);
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard/surveys");
@@ -296,7 +290,7 @@ export async function deleteSurvey(surveyId: string) {
   if (!user) throw new Error("Not authenticated");
 
   const { error } = await supabase
-    .from("surveys")
+    .from("survey")
     .delete()
     .eq("id", surveyId)
     .eq("owner_id", user.id);
@@ -310,11 +304,11 @@ export async function listLatestSurveys(limit = 5) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("surveys")
+    .from("survey")
     .select("id, title, created_at")
     .order("created_at", { ascending: false })
     .limit(limit)
-    .overrideTypes<LatestSurvey[]>();
+    .overrideTypes<SurveyRow[]>();
 
   if (error) {
     console.error("Error fetching surveys:", error.message);

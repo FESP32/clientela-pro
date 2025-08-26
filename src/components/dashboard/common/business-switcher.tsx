@@ -18,6 +18,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { BusinessRow } from "@/types/business";
+import { Button } from "@/components/ui/button";
 
 type ActiveBusiness = Pick<BusinessRow, "id" | "name" | "image_url">;
 
@@ -27,7 +28,6 @@ export function BusinessSwitcher({
   activeBusiness: ActiveBusiness | null;
 }) {
   const { isMobile } = useSidebar();
-  if (!activeBusiness) return null;
 
   return (
     <SidebarMenu>
@@ -39,7 +39,7 @@ export function BusinessSwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-sidebar-primary text-sidebar-primary-foreground">
-                {activeBusiness.image_url ? (
+                {activeBusiness && activeBusiness.image_url ? (
                   <Image
                     src={activeBusiness.image_url}
                     alt={activeBusiness.name}
@@ -53,7 +53,7 @@ export function BusinessSwitcher({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {activeBusiness.name}
+                  {activeBusiness ? activeBusiness.name : "Create new business" }
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />

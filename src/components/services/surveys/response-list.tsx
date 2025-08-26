@@ -9,14 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { getMyResponses } from "@/actions";
-
-function formatWhen(ts: string) {
-  try {
-    return new Date(ts).toLocaleString();
-  } catch {
-    return ts;
-  }
-}
+import { fmt } from "@/lib/utils";
 
 export default async function MyResponsesList() {
   const responses = await getMyResponses();
@@ -64,7 +57,7 @@ export default async function MyResponsesList() {
                     <TableCell className="max-w-[360px]">
                       <p className="truncate">{r.comment ?? "—"}</p>
                     </TableCell>
-                    <TableCell>{formatWhen(r.submitted_at)}</TableCell>
+                    <TableCell>{fmt(r.submitted_at)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

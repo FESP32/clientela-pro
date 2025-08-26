@@ -11,9 +11,9 @@ export type ReferralParticipantInsert = Inserts<"referral_program_participant">;
 export type ReferralParticipantUpdate = Updates<"referral_program_participant">;
 
 /** referral_intents */
-export type ReferralIntentRow = Tables<"referral_intents">;
-export type ReferralIntentInsert = Inserts<"referral_intents">;
-export type ReferralIntentUpdate = Updates<"referral_intents">;
+export type ReferralIntentRow = Tables<"referral_intent">;
+export type ReferralIntentInsert = Inserts<"referral_intent">;
+export type ReferralIntentUpdate = Updates<"referral_intent">;
 
 /** Optional: domain helpers reflecting your CHECK constraint */
 export type ReferralIntentStatus =

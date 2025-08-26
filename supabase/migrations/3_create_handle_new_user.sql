@@ -8,9 +8,9 @@ begin
 end
 $$;
 
-drop trigger if exists set_updated_at_profiles on public.profiles;
-create trigger set_updated_at_profiles
-before update on public.profiles
+drop trigger if exists set_updated_at_profiles on public.profile;
+create trigger set_updated_at_profile
+before update on public.profile
 for each row execute function public.tg_set_updated_at();
 
 -- 2) Function that inserts a profile after a user is created
@@ -24,7 +24,7 @@ set search_path = public
 as $$
 begin
   -- Insert a default profile (id matching auth.users.id)
-  insert into public.profiles (user_id, name, subscription_plan, created_at, updated_at)
+  insert into public.profile (user_id, name, subscription_plan, created_at, updated_at)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(coalesce(new.email, ''), '@', 1)),

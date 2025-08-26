@@ -41,7 +41,7 @@ export default async function ReferredIntentsList() {
 
   // fetch intents where I am the referred
   const { data: intents, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select(
       `
       id,

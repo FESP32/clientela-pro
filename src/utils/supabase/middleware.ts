@@ -61,7 +61,7 @@ export async function updateSession(request: NextRequest) {
   let userType: "merchant" | "customer" = "customer";
   if (user) {
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("profile")
       .select("user_type")
       .eq("user_id", user.id)
       .single();

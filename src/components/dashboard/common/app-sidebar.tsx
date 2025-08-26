@@ -1,8 +1,15 @@
-// components/dashboard/app-sidebar.tsx
 "use client";
 
 import * as React from "react";
-import { Barcode, SmilePlus, Stamp, Share2, Gift } from "lucide-react";
+import {
+  Barcode,
+  SmilePlus,
+  Stamp,
+  Share2,
+  Gift,
+  List,
+  Plus,
+} from "lucide-react";
 import { NavMain } from "@/components/dashboard/common/nav-main";
 import { NavUser } from "@/components/dashboard/common/nav-user";
 import {
@@ -28,8 +35,8 @@ const navData = {
       url: "#",
       icon: Barcode,
       items: [
-        { title: "Product list", url: "/dashboard/products" },
-        { title: "Create new product", url: "/dashboard/products/new" },
+        { title: "List", url: "/dashboard/products", icon: List },
+        { title: "New", url: "/dashboard/products/new", icon: Plus },
       ],
     },
     {
@@ -37,8 +44,8 @@ const navData = {
       url: "#",
       icon: SmilePlus,
       items: [
-        { title: "Survey list", url: "/dashboard/surveys" },
-        { title: "Create new survey", url: "/dashboard/surveys/new" },
+        { title: "List", url: "/dashboard/surveys", icon: List },
+        { title: "New", url: "/dashboard/surveys/new", icon: Plus },
       ],
     },
     {
@@ -46,17 +53,17 @@ const navData = {
       url: "#",
       icon: Stamp,
       items: [
-        { title: "Create new stamp", url: "/dashboard/stamps/new" },
-        { title: "Stamp List", url: "/dashboard/stamps" },
+        { title: "List", url: "/dashboard/stamps", icon: List },
+        { title: "New", url: "/dashboard/stamps/new", icon: Plus },
       ],
     },
     {
-      title: "Referral",
+      title: "Referrals",
       url: "#",
       icon: Share2,
       items: [
-        { title: "Create new program", url: "/dashboard/referrals/new" },
-        { title: "Program List", url: "/dashboard/referrals" },
+        { title: "List", url: "/dashboard/referrals", icon: List },
+        { title: "New", url: "/dashboard/referrals/new", icon: Plus },
       ],
     },
     {
@@ -64,15 +71,14 @@ const navData = {
       url: "#",
       icon: Gift,
       items: [
-        { title: "Create new Gift", url: "/dashboard/gifts/new" },
-        { title: "Gift List", url: "/dashboard/gifts" },
+        { title: "List", url: "/dashboard/gifts", icon: List },
+        { title: "New", url: "/dashboard/gifts/new", icon: Plus },
       ],
     },
   ],
 };
 
 // Use only the fields the switcher needs.
-// If your table doesn’t have image_url, drop it from Pick<>.
 type ActiveBusiness = Pick<BusinessRow, "id" | "name" | "image_url">;
 
 export function AppSidebar({
@@ -81,7 +87,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: NavUserData;
-  activeBusiness: ActiveBusiness | null; // Supabase-typed
+  activeBusiness: ActiveBusiness | null;
 }) {
   return (
     <Sidebar collapsible="icon" {...props}>

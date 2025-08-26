@@ -26,7 +26,7 @@ export default async function ClaimIntentPage({
   } = await supabase.auth.getUser();
 
   const { data: intent, error } = await supabase
-    .from("referral_intents")
+    .from("referral_intent")
     .select(
       `
       id, status, created_at, expires_at,

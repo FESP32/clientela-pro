@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function NewBusinessPage() {
   return (
-    <div className="p-4 flex justify-center">
+    <div className="p-4">
       <BusinessCreate action={createBusiness} />
     </div>
   );

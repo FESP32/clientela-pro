@@ -1,89 +1,73 @@
 import { Inserts, Tables, Updates } from "@/utils/supabase/helpers";
 import { ProductRow } from "./products";
+import { ProfileRow } from "./auth";
 
-export type SurveyRow = Tables<"surveys">;
-export type SurveyInsert = Inserts<"surveys">;
-export type SurveyUpdate = Updates<"surveys">;
+export type SurveyRow = Tables<"survey">;
+export type SurveyInsert = Inserts<"survey">;
+export type SurveyUpdate = Updates<"survey">;
 
-export type ResponseRow = Tables<"responses">;
-export type ResponseInsert = Inserts<"responses">;
-export type ResponseUpdate = Updates<"responses">;
-
-export type LatestSurvey = Pick<SurveyRow, "id" | "title" | "created_at">;
-
-export type Sentiment = "positive" | "neutral" | "negative";
-export type Trait = { label: string; sentiment?: Sentiment; score?: number };
-
-export type SurveyRowWithTraits = Omit<SurveyRow, "traits"> & {
-  traits: Trait[] | null; // matches DB nullability; treat null as []
-};
-
-export type ResponseWithSurveyTraits = Omit<
-  ResponseRow,
-  "selected_traits"
-> & {
-  traits: Trait[] | null; // keep nullability from DB
-};
-
-export type ResponseListItem = Pick<
-  ResponseRow,
-  | "id"
-  | "survey_id"
-  | "respondent_id"
-  | "rating"
-  | "selected_traits"
-  | "comment"
-  | "submitted_at"
-> & {
-  respondent_name: string;
-};
+export type ResponseRow = Tables<"response">;
+export type ResponseInsert = Inserts<"response">;
+export type ResponseUpdate = Updates<"response">;
 
 export type ResponseWithRespondent = Pick<
   ResponseRow,
-  | "id"
-  | "survey_id"
-  | "respondent_id"
-  | "rating"
-  | "selected_traits"
-  | "comment"
-  | "submitted_at"
+  "id" | "rating" | "comment" | "submitted_at"
 > & {
-  respondent?: { name: string | null } | null;
+  selected_traits: ReadonlyArray<string>;
+  respondent: Pick<ProfileRow, "user_id" | "name"> | null;
+};
+
+/* Nested shape: survey with its responses */
+export type SurveyWithResponses = Pick<
+  SurveyRow,
+  | "id"
+  | "title"
+  | "description"
+  | "is_anonymous"
+  | "is_active"
+  | "starts_at"
+  | "ends_at"
+  | "created_at"
+> & {
+  responses: ResponseWithRespondent[];
 };
 
 export type SurveyWithProduct = Pick<
   SurveyRow,
   | "id"
-  | "owner_id"
-  | "product_id"
   | "title"
   | "description"
-  | "is_anonymous"
-  | "traits"
   | "is_active"
+  | "is_anonymous"
   | "starts_at"
   | "ends_at"
   | "created_at"
-  | "updated_at"
+  | "business_id"
+  | "product_id"
 > & {
-  products: Pick<ProductRow, "name"> | null;
+  product: Pick<ProductRow, "id" | "name"> | null;
 };
 
-export type SurveyListItem = Pick<
-  SurveyRow,
-  | "id"
-  | "owner_id"
-  | "product_id"
-  | "title"
-  | "description"
-  | "is_anonymous"
-  | "traits"
-  | "is_active"
-  | "starts_at"
-  | "ends_at"
-  | "created_at"
-  | "updated_at"
+export type ResponseWithSurvey = Pick<
+  ResponseRow,
+  "id" | "rating" | "comment" | "submitted_at"
 > & {
-  product_name: string;
-  traits_count: number;
+  selected_traits: ReadonlyArray<string>; // <- readonly fixes the mismatch
+  survey: Pick<SurveyRow, "title"> | null;
+};
+
+export type Sentiment = "positive" | "neutral" | "negative";
+
+export type Trait = {
+  /** Short human label, e.g. "Fast delivery" */
+  label: string;
+  /** Optional sentiment tag */
+  sentiment?: Sentiment;
+  /** Optional numeric score (your scale, e.g. 0–1 or 0–100) */
+  score?: number;
+};
+
+export type SurveyWithTraits = Omit<SurveyRow, "traits"> & {
+  traits: ReadonlyArray<Trait>;
 };

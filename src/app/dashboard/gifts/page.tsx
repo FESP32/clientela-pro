@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { listMerchantGifts } from "@/actions/gifts";
+import { listBusinessGifts } from "@/actions/gifts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -17,12 +17,12 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function GiftsPage() {
-  const { user, gifts, error } = await listMerchantGifts();
+  const { user, gifts, error } = await listBusinessGifts();
 
   if (!user) {
     return (
-      <div className="p-4 flex justify-center">
-        <Card className="w-full max-w-3xl">
+      <div className="p-4">
+        <Card className="w-full max-w-6xl">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Your gifts</CardTitle>
             <Button asChild>
@@ -41,8 +41,8 @@ export default async function GiftsPage() {
 
   if (error) {
     return (
-      <div className="p-4 flex justify-center">
-        <Card className="w-full max-w-3xl">
+      <div className="p-4">
+        <Card className="w-full max-w-6xl">
           <CardHeader>
             <CardTitle>Your gifts</CardTitle>
           </CardHeader>
@@ -58,7 +58,7 @@ export default async function GiftsPage() {
 
   return (
     <div className="p-4">
-      <Card className="w-full max-w-5xl">
+      <Card className="w-full max-w-6xl">
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle>Your gifts</CardTitle>
           <div className="flex items-center gap-2">
@@ -81,7 +81,6 @@ export default async function GiftsPage() {
                   <TableRow>
                     <TableHead className="min-w-[80px]">Image</TableHead>
                     <TableHead className="min-w-[220px]">Title</TableHead>
-                    <TableHead className="min-w-[160px]">Assigned To</TableHead>
                     <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -107,19 +106,10 @@ export default async function GiftsPage() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{g.title}</TableCell>
-                      <TableCell className="text-xs">
-                        {g.customer_id ? (
-                          <code className="font-mono">{g.customer_id}</code>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Unassigned
-                          </span>
-                        )}
-                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button asChild variant="outline" size="sm">
-                            <Link href={`/services/gifts/${g.id}`}>Open</Link>
+                            <Link href={`/dashboard/gifts/${g.id}`}>Open</Link>
                           </Button>
                           <Button asChild variant="ghost" size="sm">
                             <Link href={`/dashboard/gifts/${g.id}/edit`}>

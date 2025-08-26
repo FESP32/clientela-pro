@@ -1,152 +1,193 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Store } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  MoreHorizontal,
+  CheckCircle2,
+  ExternalLink,
+  Users,
+  ToggleLeft,
+  Eye,
+} from "lucide-react";
+import type { BusinessWithMembership } from "@/types";
+import { fmt } from "@/lib/utils";
+import RoleBadge from "./role-badge";
+import { StatusBadge } from "./status-badge";
+import { toggleBusinessIsActive } from "@/actions/businesses";
 
-type ListMyBusinessesAction = () => Promise<{
-  error?: string;
-  data: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    website_url: string | null;
-    instagram_url: string | null;
-    facebook_url: string | null;
-    image_path: string | null;
-    image_url: string | null;
-    is_active: boolean; // if your column is is_active, map it in the action to `active`
-    owner_id: string;
-    created_at: string;
-  }>;
-}>;
+type SetActiveAction = (formData: FormData) => Promise<void>;
 
-type SetActiveBusinessAction = (fd: FormData) => Promise<void>;
-
-/** Server Component */
-export default async function BusinessList({
-  action,
+export default function BusinessList({
+  items,
   setActiveAction,
-  title = "My Businesses",
 }: {
-  action: ListMyBusinessesAction;
-  setActiveAction: SetActiveBusinessAction;
-  title?: string;
+  items: BusinessWithMembership[]; // <-- your type, now includes image_url
+  setActiveAction: SetActiveAction;
 }) {
-  const { error, data } = await action();
+  if (!items.length) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-10 text-center">
+          <p className="mb-4 text-sm text-muted-foreground">
+            You don’t belong to any business yet.
+          </p>
+          <Button asChild>
+            <Link href="/dashboard/businesses/new">
+              Create your first business
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>{title}</CardTitle>
-        <Badge variant="secondary">
-          {data.length} {data.length === 1 ? "item" : "items"}
-        </Badge>
-      </CardHeader>
+    <div className="overflow-x-auto rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-[260px]">Name</TableHead>
+            <TableHead className="min-w-[200px]">Description</TableHead>
+            <TableHead className="w-[110px]">Role</TableHead>
+            <TableHead className="w-[110px]">Status</TableHead>
+            <TableHead className="w-[140px]">Joined</TableHead>
+            <TableHead className="w-[140px]">Created</TableHead>
+            <TableHead className="w-[60px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((b) => {
+            const me = b.membership?.[0];
+            const img = b.image_url ?? null;
 
-      <CardContent>
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No businesses found.</p>
-        ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.map((b) => (
-              <li key={b.id} className="space-y-3">
-                {/* Clickable area: form + button submits to setActiveAction */}
-                <form action={setActiveAction}>
-                  <input type="hidden" name="business_id" value={b.id} />
-                  <button
-                    type="submit"
-                    className="group block w-full rounded-lg border overflow-hidden text-left hover:ring-2 hover:ring-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition"
-                    aria-label={`Set ${b.name} as active`}
-                    disabled={b.is_active}
-                  >
-                    <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
-                      {b.image_url ? (
+            return (
+              <TableRow key={b.id} className="align-top">
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-md bg-muted">
+                      {img ? (
                         <Image
-                          src={
-                            b.image_url
-                          }
-                          alt={b.name}
-                          width={640}
-                          height={360}
-                          className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                          src={img}
+                          alt={`${b.name} logo`}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
                         />
                       ) : (
-                        <div className="h-full w-full grid place-items-center text-muted-foreground text-sm">
-                          <Store className="size-16 sm:size-24" />
-                        </div>
+                        <span className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          {b.name?.[0]?.toUpperCase() ?? "?"}
+                        </span>
                       )}
                     </div>
-
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold line-clamp-1">{b.name}</h3>
-                        <Badge variant={b.is_active ? "default" : "secondary"}>
-                          {b.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-
-                      {b.description ? (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {b.description}
-                        </p>
-                      ) : null}
-
-                      <p className="text-xs text-muted-foreground">
-                        {b.is_active
-                          ? "This is your active business."
-                          : "Click to set as active."}
-                      </p>
-                    </div>
-                  </button>
-                </form>
-
-                {/* External links and details remain as normal links (not part of the submit button) */}
-                <div className="flex flex-wrap gap-2 pt-1 text-xs">
-                  {b.website_url && (
                     <Link
-                      href={b.website_url}
-                      className="underline underline-offset-4"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/dashboard/businesses/${b.id}`}
+                      className="hover:underline"
                     >
-                      Website
+                      {b.name}
                     </Link>
-                  )}
-                  {b.instagram_url && (
-                    <Link
-                      href={b.instagram_url}
-                      className="underline underline-offset-4"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Instagram
-                    </Link>
-                  )}
-                  {b.facebook_url && (
-                    <Link
-                      href={b.facebook_url}
-                      className="underline underline-offset-4"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Facebook
-                    </Link>
-                  )}
-                  <Link
-                    href={`/dashboard/businesses/${b.id}`}
-                    className="underline underline-offset-4"
-                  >
-                    View details
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+                  </div>
+                </TableCell>
+
+                <TableCell className="text-muted-foreground">
+                  {b.description ?? "—"}
+                </TableCell>
+
+                <TableCell>
+                  <RoleBadge role={me?.role} />
+                </TableCell>
+
+                <TableCell>
+                  <StatusBadge active={Boolean(b.is_active)} />
+                </TableCell>
+
+                <TableCell>{fmt(me?.created_at)}</TableCell>
+                <TableCell>{fmt(b.created_at)}</TableCell>
+
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Open actions"
+                        className="hover:bg-muted"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/businesses/${b.id}`}>
+                        <Eye className="mr-2 h-4 w-4"/>
+                          View
+                        </Link>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem asChild>
+                        <form
+                          action={toggleBusinessIsActive}
+                          className="w-full"
+                        >
+                          <input
+                            type="hidden"
+                            name="business_id"
+                            value={b.id}
+                          />
+                          <button
+                            type="submit"
+                            className="flex w-full items-center"
+                          >
+                            <ToggleLeft className="mr-2 h-4 w-4" />
+                            Toggle active
+                          </button>
+                        </form>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem asChild>
+                        <form action={setActiveAction} className="w-full">
+                          <input
+                            type="hidden"
+                            name="business_id"
+                            value={b.id}
+                          />
+                          <button
+                            type="submit"
+                            className="flex w-full items-center"
+                          >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Set as current
+                          </button>
+                        </form>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

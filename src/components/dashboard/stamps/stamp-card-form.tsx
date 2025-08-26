@@ -38,7 +38,7 @@ export default function StampCardForm({
   };
 
   return (
-    <Card className="max-w-3xl">
+    <Card className="max-w-6xl">
       <form action={onSubmit} className="contents">
         <CardHeader>
           <CardTitle>Create Stamp Card</CardTitle>

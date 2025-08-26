@@ -27,13 +27,13 @@ export default async function MyStampCardsPage() {
 
   // Fetch all punches for this user, with the joined card info
   const { data: punches, error } = await supabase
-    .from("stamp_punches")
+    .from("stamp_punch")
     .select(
       `
       card_id,
       qty,
       created_at,
-      card:stamp_cards(
+      card:stamp_card(
         id, title, goal_text, stamps_required, is_active, valid_from, valid_to
       )
     `

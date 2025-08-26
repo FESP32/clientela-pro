@@ -30,7 +30,7 @@ export default async function RespondPage({
   if (!survey.is_anonymous && isAuthenticated) {
     // For non-anonymous surveys we can check by respondent_id
     const { count, error } = await supabase
-      .from("responses")
+      .from("response")
       .select("id", { count: "exact", head: true })
       .eq("survey_id", survey.id)
       .eq("respondent_id", user!.id);

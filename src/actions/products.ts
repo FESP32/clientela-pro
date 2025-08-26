@@ -4,10 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { ProductSchema } from "@/schemas/products";
-import { Database } from "@/types/database.types";
 import { BusinessRow } from "@/types/business";
-
-type ProductRow = Database["public"]["Tables"]["products"]["Row"];
+import { getActiveBusiness } from "./businesses";
+import { ProductRow } from "@/types/products";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
@@ -18,22 +17,10 @@ export async function createProduct(formData: FormData) {
 
   if (!user) redirect("/login");
 
-  const { data: business, error: bizErr } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_id", user.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle<Pick<BusinessRow, "id">>();
+  const { business } = await getActiveBusiness();
 
-  if (bizErr) {
-    throw new Error(bizErr.message);
-  }
   if (!business) {
-    throw new Error(
-      "You don’t have an active business. Create/activate one first."
-    );
+    redirect("/dashboard/businesses/missing");
   }
 
   // 2) Validate inputs (inject business_id resolved above)
@@ -51,8 +38,7 @@ export async function createProduct(formData: FormData) {
   const { name, metadata, business_id } = parsed.data;
 
   // 3) Insert product
-  const { error } = await supabase.from("products").insert({
-    owner_id: user.id,
+  const { error } = await supabase.from("product").insert({
     business_id,
     name,
     metadata, // already a JSON object from the schema’s transform
@@ -82,28 +68,17 @@ export async function listProducts() {
     };
   }
 
-   const { data: business, error: bizErr } = await supabase
-     .from("businesses")
-     .select("id")
-     .eq("owner_id", user.id)
-     .eq("is_active", true)
-     .order("created_at", { ascending: true })
-     .limit(1)
-     .maybeSingle<Pick<BusinessRow, "id">>();
+  const { business } = await getActiveBusiness();
 
-  if (bizErr) {
-    throw new Error(bizErr.message);
-  }
   if (!business) {
-    throw new Error(
-      "You don’t have an active business. Create/activate one first."
-    );
+    redirect("/dashboard/businesses/missing");
   }
 
   const { data, error } = await supabase
-    .from("products")
-    .select<"id, owner_id, business_id, name, metadata, created_at, updated_at">()
-    .eq("owner_id", user.id)
+    .from("product")
+    .select(
+      "id, business_id, name, metadata, created_at, updated_at"
+    )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
 
@@ -127,7 +102,7 @@ export async function deleteProduct(formData: FormData) {
 
   // RLS should allow delete only for the owner; the extra filter is a safety belt.
   const { error } = await supabase
-    .from("products")
+    .from("product")
     .delete()
     .eq("id", id)
     .eq("owner_id", user.id);

@@ -12,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useTransition, useState } from "react";
 import { toast } from "sonner";
-import { SurveyRow, SurveyRowWithTraits } from "@/types";
+import { SurveyRow, SurveyWithTraits, Trait } from "@/types";
 
 type Props = {
-  survey: SurveyRowWithTraits;
+  survey: SurveyRow;
   isAuthenticated: boolean;
   hasResponded: boolean;
   onSubmit: (
@@ -82,7 +82,7 @@ export default function RespondForm({
             {!hasResponded && survey.traits && (
               <SmileyRespond
                 surveyTitle={survey.title}
-                traits={survey.traits}
+                traits={survey.traits as Trait[]}
               />
             )}
 

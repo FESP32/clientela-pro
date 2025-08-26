@@ -4,765 +4,970 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
-  }
+    PostgrestVersion: "12.2.12 (cd3cf9e)";
+  };
   public: {
     Tables: {
-      businesses: {
+      business: {
         Row: {
-          created_at: string
-          description: string | null
-          facebook_url: string | null
-          id: string
-          image_path: string | null
-          image_url: string | null
-          instagram_url: string | null
-          is_active: boolean
-          name: string
-          owner_id: string
-          updated_at: string
-          website_url: string | null
-        }
+          created_at: string;
+          description: string | null;
+          facebook_url: string | null;
+          id: string;
+          image_path: string | null;
+          image_url: string | null;
+          instagram_url: string | null;
+          is_active: boolean;
+          name: string;
+          owner_id: string;
+          updated_at: string;
+          website_url: string | null;
+        };
         Insert: {
-          created_at?: string
-          description?: string | null
-          facebook_url?: string | null
-          id?: string
-          image_path?: string | null
-          image_url?: string | null
-          instagram_url?: string | null
-          is_active?: boolean
-          name: string
-          owner_id: string
-          updated_at?: string
-          website_url?: string | null
-        }
+          created_at?: string;
+          description?: string | null;
+          facebook_url?: string | null;
+          id?: string;
+          image_path?: string | null;
+          image_url?: string | null;
+          instagram_url?: string | null;
+          is_active?: boolean;
+          name: string;
+          owner_id: string;
+          updated_at?: string;
+          website_url?: string | null;
+        };
         Update: {
-          created_at?: string
-          description?: string | null
-          facebook_url?: string | null
-          id?: string
-          image_path?: string | null
-          image_url?: string | null
-          instagram_url?: string | null
-          is_active?: boolean
-          name?: string
-          owner_id?: string
-          updated_at?: string
-          website_url?: string | null
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          description?: string | null;
+          facebook_url?: string | null;
+          id?: string;
+          image_path?: string | null;
+          image_url?: string | null;
+          instagram_url?: string | null;
+          is_active?: boolean;
+          name?: string;
+          owner_id?: string;
+          updated_at?: string;
+          website_url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_owner_id_fk_profile";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      business_active: {
+        Row: {
+          business_id: string;
+          set_at: string;
+          user_id: string;
+        };
+        Insert: {
+          business_id: string;
+          set_at?: string;
+          user_id: string;
+        };
+        Update: {
+          business_id?: string;
+          set_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_active_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "business_active_user_id_fk_profile";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      business_invite: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          email: string | null;
+          id: string;
+          invited_by: string | null;
+          invited_user: string | null;
+          role: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          invited_by?: string | null;
+          invited_user?: string | null;
+          role?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          invited_by?: string | null;
+          invited_user?: string | null;
+          role?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_invite_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "business_invite_invited_by_fk_profile";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "business_invite_invited_user_fk_profile";
+            columns: ["invited_user"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      business_user: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          role: string;
+          user_id: string;
+        };
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          role?: string;
+          user_id: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          role?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_user_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "business_user_user_id_fk_profile";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
       gift: {
         Row: {
-          created_at: string
-          customer_id: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          owner_id: string
-          title: string
-          updated_at: string
-        }
+          business_id: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          image_url: string | null;
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          customer_id?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          owner_id: string
-          title: string
-          updated_at?: string
-        }
+          business_id: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          image_url?: string | null;
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          customer_id?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          owner_id?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      products: {
-        Row: {
-          business_id: string
-          created_at: string
-          id: string
-          metadata: Json
-          name: string
-          owner_id: string
-          updated_at: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name: string
-          owner_id: string
-          updated_at?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name?: string
-          owner_id?: string
-          updated_at?: string
-        }
+          business_id?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          image_url?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "products_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
+            foreignKeyName: "gift_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      gift_intent: {
         Row: {
-          created_at: string
-          name: string | null
-          subscription_plan: string | null
-          updated_at: string
-          user_id: string
-          user_type: string
-        }
+          consumed_at: string | null;
+          created_at: string;
+          customer_id: string | null;
+          expires_at: string | null;
+          gift_id: string;
+          id: string;
+          issuer_id: string;
+          status: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          name?: string | null
-          subscription_plan?: string | null
-          updated_at?: string
-          user_id: string
-          user_type?: string
-        }
+          consumed_at?: string | null;
+          created_at?: string;
+          customer_id?: string | null;
+          expires_at?: string | null;
+          gift_id: string;
+          id?: string;
+          issuer_id: string;
+          status?: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          name?: string | null
-          subscription_plan?: string | null
-          updated_at?: string
-          user_id?: string
-          user_type?: string
-        }
-        Relationships: []
-      }
-      referral_intents: {
-        Row: {
-          consumed_at: string | null
-          created_at: string
-          expires_at: string | null
-          id: string
-          program_id: string
-          referred_id: string | null
-          referrer_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          consumed_at?: string | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          program_id: string
-          referred_id?: string | null
-          referrer_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          consumed_at?: string | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          program_id?: string
-          referred_id?: string | null
-          referrer_id?: string
-          status?: string
-          updated_at?: string
-        }
+          consumed_at?: string | null;
+          created_at?: string;
+          customer_id?: string | null;
+          expires_at?: string | null;
+          gift_id?: string;
+          id?: string;
+          issuer_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "referral_intents_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "referral_program"
-            referencedColumns: ["id"]
+            foreignKeyName: "gift_intent_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "referral_intents_referred_id_fkey"
-            columns: ["referred_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "gift_intent_gift_id_fkey";
+            columns: ["gift_id"];
+            isOneToOne: false;
+            referencedRelation: "gift";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "referral_intents_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "gift_intent_issuer_id_fkey";
+            columns: ["issuer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      product: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      profile: {
+        Row: {
+          created_at: string;
+          name: string | null;
+          subscription_plan: string | null;
+          updated_at: string;
+          user_id: string;
+          user_type: string;
+        };
+        Insert: {
+          created_at?: string;
+          name?: string | null;
+          subscription_plan?: string | null;
+          updated_at?: string;
+          user_id: string;
+          user_type?: string;
+        };
+        Update: {
+          created_at?: string;
+          name?: string | null;
+          subscription_plan?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          user_type?: string;
+        };
+        Relationships: [];
+      };
+      referral_intent: {
+        Row: {
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          program_id: string;
+          referred_id: string | null;
+          referrer_id: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          program_id: string;
+          referred_id?: string | null;
+          referrer_id: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          program_id?: string;
+          referred_id?: string | null;
+          referrer_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "referral_intent_program_id_fk";
+            columns: ["program_id"];
+            isOneToOne: false;
+            referencedRelation: "referral_program";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+          {
+            foreignKeyName: "referral_intent_referred_id_fk_profile";
+            columns: ["referred_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "referral_intent_referrer_id_fk_profile";
+            columns: ["referrer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
       referral_program: {
         Row: {
-          code: string
-          created_at: string
-          id: string
-          is_active: boolean
-          owner_id: string
-          per_referrer_cap: number | null
-          referred_reward: string | null
-          referrer_reward: string | null
-          title: string
-          updated_at: string
-          valid_from: string | null
-          valid_to: string | null
-        }
+          business_id: string;
+          code: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          per_referrer_cap: number | null;
+          referred_reward: string | null;
+          referrer_reward: string | null;
+          title: string;
+          updated_at: string;
+          valid_from: string | null;
+          valid_to: string | null;
+        };
         Insert: {
-          code: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          owner_id: string
-          per_referrer_cap?: number | null
-          referred_reward?: string | null
-          referrer_reward?: string | null
-          title: string
-          updated_at?: string
-          valid_from?: string | null
-          valid_to?: string | null
-        }
+          business_id: string;
+          code: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          per_referrer_cap?: number | null;
+          referred_reward?: string | null;
+          referrer_reward?: string | null;
+          title: string;
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
         Update: {
-          code?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          owner_id?: string
-          per_referrer_cap?: number | null
-          referred_reward?: string | null
-          referrer_reward?: string | null
-          title?: string
-          updated_at?: string
-          valid_from?: string | null
-          valid_to?: string | null
-        }
+          business_id?: string;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          per_referrer_cap?: number | null;
+          referred_reward?: string | null;
+          referrer_reward?: string | null;
+          title?: string;
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "referral_program_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
+            foreignKeyName: "referral_program_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       referral_program_participant: {
         Row: {
-          created_at: string
-          customer_id: string
-          id: string
-          note: string | null
-          program_id: string
-          referred_qty: number
-          updated_at: string
-        }
+          created_at: string;
+          customer_id: string;
+          id: string;
+          note: string | null;
+          program_id: string;
+          referred_qty: number;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          customer_id: string
-          id?: string
-          note?: string | null
-          program_id: string
-          referred_qty?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          note?: string | null;
+          program_id: string;
+          referred_qty?: number;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          customer_id?: string
-          id?: string
-          note?: string | null
-          program_id?: string
-          referred_qty?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          note?: string | null;
+          program_id?: string;
+          referred_qty?: number;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "referral_program_participant_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "referral_program_participant_customer_id_fk_profile";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "referral_program_participant_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "referral_program"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      responses: {
+            foreignKeyName: "referral_program_participant_program_id_fk";
+            columns: ["program_id"];
+            isOneToOne: false;
+            referencedRelation: "referral_program";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      response: {
         Row: {
-          comment: string | null
-          id: string
-          rating: number
-          respondent_id: string | null
-          selected_traits: string[]
-          submitted_at: string
-          survey_id: string
-        }
+          comment: string | null;
+          id: string;
+          rating: number;
+          respondent_id: string | null;
+          selected_traits: string[];
+          submitted_at: string;
+          survey_id: string;
+        };
         Insert: {
-          comment?: string | null
-          id?: string
-          rating: number
-          respondent_id?: string | null
-          selected_traits?: string[]
-          submitted_at?: string
-          survey_id: string
-        }
+          comment?: string | null;
+          id?: string;
+          rating: number;
+          respondent_id?: string | null;
+          selected_traits?: string[];
+          submitted_at?: string;
+          survey_id: string;
+        };
         Update: {
-          comment?: string | null
-          id?: string
-          rating?: number
-          respondent_id?: string | null
-          selected_traits?: string[]
-          submitted_at?: string
-          survey_id?: string
-        }
+          comment?: string | null;
+          id?: string;
+          rating?: number;
+          respondent_id?: string | null;
+          selected_traits?: string[];
+          submitted_at?: string;
+          survey_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "responses_respondent_id_fkey"
-            columns: ["respondent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "response_respondent_id_fk_profile";
+            columns: ["respondent_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "responses_survey_id_fkey"
-            columns: ["survey_id"]
-            isOneToOne: false
-            referencedRelation: "surveys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stamp_card_products: {
+            foreignKeyName: "response_survey_id_fk";
+            columns: ["survey_id"];
+            isOneToOne: false;
+            referencedRelation: "survey";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      stamp_card: {
         Row: {
-          card_id: string
-          product_id: string
-        }
+          business_id: string;
+          created_at: string;
+          goal_text: string;
+          id: string;
+          is_active: boolean;
+          stamps_required: number;
+          title: string;
+          updated_at: string;
+          valid_from: string | null;
+          valid_to: string | null;
+        };
         Insert: {
-          card_id: string
-          product_id: string
-        }
+          business_id: string;
+          created_at?: string;
+          goal_text: string;
+          id?: string;
+          is_active?: boolean;
+          stamps_required: number;
+          title: string;
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
         Update: {
-          card_id?: string
-          product_id?: string
-        }
+          business_id?: string;
+          created_at?: string;
+          goal_text?: string;
+          id?: string;
+          is_active?: boolean;
+          stamps_required?: number;
+          title?: string;
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "stamp_card_products_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "stamp_cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stamp_card_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stamp_cards: {
+            foreignKeyName: "stamp_card_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      stamp_card_product: {
         Row: {
-          created_at: string
-          goal_text: string
-          id: string
-          is_active: boolean
-          owner_id: string
-          stamps_required: number
-          title: string
-          updated_at: string
-          valid_from: string | null
-          valid_to: string | null
-        }
+          card_id: string;
+          product_id: string;
+        };
         Insert: {
-          created_at?: string
-          goal_text: string
-          id?: string
-          is_active?: boolean
-          owner_id: string
-          stamps_required: number
-          title: string
-          updated_at?: string
-          valid_from?: string | null
-          valid_to?: string | null
-        }
+          card_id: string;
+          product_id: string;
+        };
         Update: {
-          created_at?: string
-          goal_text?: string
-          id?: string
-          is_active?: boolean
-          owner_id?: string
-          stamps_required?: number
-          title?: string
-          updated_at?: string
-          valid_from?: string | null
-          valid_to?: string | null
-        }
+          card_id?: string;
+          product_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "stamp_cards_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "stamp_card_product_card_id_fk";
+            columns: ["card_id"];
+            isOneToOne: false;
+            referencedRelation: "stamp_card";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-      stamp_intents: {
+          {
+            foreignKeyName: "stamp_card_product_product_id_fk";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "product";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      stamp_intent: {
         Row: {
-          card_id: string
-          consumed_at: string | null
-          created_at: string
-          customer_id: string | null
-          expires_at: string | null
-          id: string
-          merchant_id: string
-          note: string | null
-          qty: number
-          status: string
-          updated_at: string
-        }
+          business_id: string;
+          card_id: string;
+          consumed_at: string | null;
+          created_at: string;
+          customer_id: string | null;
+          expires_at: string | null;
+          id: string;
+          note: string | null;
+          qty: number;
+          status: string;
+          updated_at: string;
+        };
         Insert: {
-          card_id: string
-          consumed_at?: string | null
-          created_at?: string
-          customer_id?: string | null
-          expires_at?: string | null
-          id?: string
-          merchant_id: string
-          note?: string | null
-          qty: number
-          status?: string
-          updated_at?: string
-        }
+          business_id: string;
+          card_id: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          customer_id?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          note?: string | null;
+          qty: number;
+          status?: string;
+          updated_at?: string;
+        };
         Update: {
-          card_id?: string
-          consumed_at?: string | null
-          created_at?: string
-          customer_id?: string | null
-          expires_at?: string | null
-          id?: string
-          merchant_id?: string
-          note?: string | null
-          qty?: number
-          status?: string
-          updated_at?: string
-        }
+          business_id?: string;
+          card_id?: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          customer_id?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          note?: string | null;
+          qty?: number;
+          status?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "stamp_intents_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "stamp_cards"
-            referencedColumns: ["id"]
+            foreignKeyName: "stamp_intent_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "stamp_intents_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            foreignKeyName: "stamp_intent_card_id_fk";
+            columns: ["card_id"];
+            isOneToOne: false;
+            referencedRelation: "stamp_card";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "stamp_intents_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      stamp_punches: {
+            foreignKeyName: "stamp_intent_customer_id_fk_profile";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      stamp_punch: {
         Row: {
-          card_id: string
-          created_at: string
-          customer_id: string
-          id: string
-          note: string | null
-          qty: number
-        }
+          card_id: string;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          note: string | null;
+          qty: number;
+        };
         Insert: {
-          card_id: string
-          created_at?: string
-          customer_id: string
-          id?: string
-          note?: string | null
-          qty?: number
-        }
+          card_id: string;
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          note?: string | null;
+          qty?: number;
+        };
         Update: {
-          card_id?: string
-          created_at?: string
-          customer_id?: string
-          id?: string
-          note?: string | null
-          qty?: number
-        }
+          card_id?: string;
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          note?: string | null;
+          qty?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "stamp_punches_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "stamp_cards"
-            referencedColumns: ["id"]
+            foreignKeyName: "stamp_punch_card_id_fk";
+            columns: ["card_id"];
+            isOneToOne: false;
+            referencedRelation: "stamp_card";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "stamp_punches_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      surveys: {
+            foreignKeyName: "stamp_punch_customer_id_fk_profile";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      survey: {
         Row: {
-          created_at: string
-          description: string | null
-          ends_at: string | null
-          id: string
-          is_active: boolean
-          is_anonymous: boolean
-          owner_id: string
-          product_id: string
-          settings: Json
-          starts_at: string | null
-          title: string
-          traits: Json
-          updated_at: string
-        }
+          business_id: string;
+          created_at: string;
+          description: string | null;
+          ends_at: string | null;
+          id: string;
+          is_active: boolean;
+          is_anonymous: boolean;
+          product_id: string;
+          settings: Json;
+          starts_at: string | null;
+          title: string;
+          traits: Json;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          is_active?: boolean
-          is_anonymous?: boolean
-          owner_id: string
-          product_id: string
-          settings?: Json
-          starts_at?: string | null
-          title: string
-          traits?: Json
-          updated_at?: string
-        }
+          business_id: string;
+          created_at?: string;
+          description?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_anonymous?: boolean;
+          product_id: string;
+          settings?: Json;
+          starts_at?: string | null;
+          title: string;
+          traits?: Json;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          is_active?: boolean
-          is_anonymous?: boolean
-          owner_id?: string
-          product_id?: string
-          settings?: Json
-          starts_at?: string | null
-          title?: string
-          traits?: Json
-          updated_at?: string
-        }
+          business_id?: string;
+          created_at?: string;
+          description?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_anonymous?: boolean;
+          product_id?: string;
+          settings?: Json;
+          starts_at?: string | null;
+          title?: string;
+          traits?: Json;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "surveys_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
+            foreignKeyName: "survey_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+          {
+            foreignKeyName: "survey_product_id_fk";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "product";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
+        Args: { "": unknown };
+        Returns: unknown;
+      };
       gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
+        Args: { "": unknown };
+        Returns: unknown;
+      };
       gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
+        Args: { "": unknown };
+        Returns: unknown;
+      };
       gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
+        Args: { "": unknown };
+        Returns: undefined;
+      };
       gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
+        Args: { "": unknown };
+        Returns: unknown;
+      };
       set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
+        Args: { "": number };
+        Returns: number;
+      };
       show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
-    }
+        Args: { "": string };
+        Returns: string[];
+      };
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+      DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R;
+    }
+    ? R
     : never
+  : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I;
+    }
+    ? I
     : never
+  : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U;
+    }
+    ? U
     : never
+  : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never = never
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never = never
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never;
 
 export const Constants = {
   public: {
     Enums: {},
   },
-} as const
+} as const;

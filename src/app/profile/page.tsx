@@ -30,7 +30,7 @@ export default async function ProfilePage() {
 
   // Fetch the profile subject to RLS (user can only see their own)
   const { data: profile, error } = await supabase
-    .from("profiles")
+    .from("profile")
     .select("*")
     .eq("user_id", user.id)
     .single<ProfileRow>();
