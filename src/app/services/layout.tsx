@@ -6,7 +6,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Page content */}
-      <main className="flex-1">{children}</main>
+      <main className="">{children}</main>
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 border-t bg-background">

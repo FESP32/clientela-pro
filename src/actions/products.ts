@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { ProductSchema } from "@/schemas/products";
-import { BusinessRow } from "@/types/business";
 import { getActiveBusiness } from "./businesses";
 import { ProductRow } from "@/types/products";
 

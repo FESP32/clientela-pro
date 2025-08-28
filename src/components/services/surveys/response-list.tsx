@@ -22,7 +22,7 @@ export default async function MyResponsesList() {
       <CardContent>
         {responses.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            You haven’t submitted any responses yet.
+            You have not submitted any responses yet.
           </p>
         ) : (
           <div className="rounded-md border overflow-x-auto">

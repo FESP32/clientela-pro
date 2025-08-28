@@ -3,6 +3,8 @@
 
 import { getBool } from "@/lib/utils";
 import {
+  PunchesGroupedByCard,
+  PunchWithCardBusiness,
   StampCardInsert,
   StampCardListItem,
   StampCardProductInsert,
@@ -39,7 +41,6 @@ export async function createStampCard(formData: FormData) {
   }
 
   const { business } = await getActiveBusiness();
-
   if (!business) {
     redirect("/dashboard/businesses/missing");
   }
@@ -118,8 +119,8 @@ export async function listStampCards() {
 
   const cards: StampCardListItem[] = (data ?? []).map((row) => ({
     ...row,
-    product_count: Array.isArray(row.stamp_card_products)
-      ? row.stamp_card_products.length
+    product_count: Array.isArray(row.stamp_card_product)
+      ? row.stamp_card_product.length
       : 0,
   }));
 
@@ -133,21 +134,22 @@ export async function deleteStampCard(cardId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const { error } = await supabase
     .from("stamp_card")
     .delete()
     .eq("id", cardId)
-    .eq("owner_id", user.id);
+    .eq("business_id", business.id);
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard/stamps");
 }
 
-/**
- * Punch a stamp card for a customer.
- * Expects form fields: card_id, customer_id, qty (optional, default 1), note (optional).
- */
 export async function punchStampCard(formData: FormData) {
   const supabase = await createClient();
   const {
@@ -166,17 +168,6 @@ export async function punchStampCard(formData: FormData) {
     throw new Error("qty must be a positive integer");
   }
 
-  // // Optional: ensure the authenticated user owns the card
-  // const { data: card, error: cardErr } = await supabase
-  //   .from("stamp_cards")
-  //   .select("id, owner_id")
-  //   .eq("id", card_id)
-  //   .single();
-
-  // if (cardErr || !card) throw new Error("Card not found");
-  // if (card.owner_id !== user.id)
-  //   throw new Error("Not authorized to punch this card");
-
   // Insert punch
   const { error: pErr } = await supabase.from("stamp_punch").insert({
     card_id,
@@ -186,8 +177,7 @@ export async function punchStampCard(formData: FormData) {
   });
 
   if (pErr) throw new Error(pErr.message);
-
-  // Revalidate the list and (optionally) a detail page if you have one
+  
   revalidatePath("/dashboard/stamps");
   // revalidatePath(`/dashboard/stamps/${card_id}`); // if you create a detail page later
 }
@@ -384,7 +374,7 @@ export async function listStampIntents(cardId: string) {
     .select("id, title, business_id")
     .eq("id", cardId)
     .maybeSingle()
-    .returns<Pick<StampCardRow, "id" | "title" | "business_id"> | null>();
+    .overrideTypes<Pick<StampCardRow, "id" | "title" | "business_id"> | null>();
 
   if (cardErr || !card) {
     return {
@@ -432,7 +422,7 @@ export async function listStampIntents(cardId: string) {
     .eq("card_id", cardId)
     .eq("business_id", business!.id)
     .order("created_at", { ascending: false })
-    .returns<StampIntentWithCustomer[]>();
+    .overrideTypes<StampIntentWithCustomer[]>();
 
   if (error) {
     return {
@@ -595,4 +585,93 @@ export async function listLatestStamps(limit = 5) {
   }
 
   return data ?? [];
+}
+
+export async function listMyStampPunches(): Promise<PunchWithCardBusiness[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("stamp_punch")
+    .select(
+      `
+      id, qty, note, created_at,
+      card:stamp_card!stamp_punch_card_id_fk(
+        id, title, stamps_required,
+        business:business!stamp_card_business_id_fk(id, name, image_url)
+      )
+    `
+    )
+    .eq("customer_id", user.id)
+    .order("created_at", { ascending: false })
+    .overrideTypes<PunchWithCardBusiness[]>();
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function listMyStampPunchesGroupedInCode(): Promise<
+  PunchesGroupedByCard[]
+> {
+  const punches = await listMyStampPunches();
+
+  const map = new Map<string, PunchesGroupedByCard>();
+
+  for (const p of punches) {
+    if (!p.card) continue;
+    const key = p.card.id;
+
+    const stampsRequired = Math.max(1, p.card.stamps_required ?? 1);
+
+    if (!map.has(key)) {
+      map.set(key, {
+        card: {
+          id: p.card.id,
+          title: p.card.title,
+          stamps_required: stampsRequired,
+        },
+        business: p.card.business
+          ? {
+              id: p.card.business.id,
+              name: p.card.business.name ?? null,
+              image_url: p.card.business.image_url ?? null,
+            }
+          : null,
+        total_qty: 0,
+        last_at: null,
+        pct: 0,
+        punches: [],
+      });
+    }
+
+    const agg = map.get(key)!;
+    agg.total_qty += p.qty ?? 0;
+    agg.last_at =
+      !agg.last_at || new Date(p.created_at) > new Date(agg.last_at)
+        ? p.created_at
+        : agg.last_at;
+
+    agg.punches.push({
+      id: p.id,
+      qty: p.qty,
+      note: p.note,
+      created_at: p.created_at,
+    });
+
+    const clamped = Math.min(agg.total_qty, stampsRequired);
+    agg.pct = Math.round((clamped / stampsRequired) * 100);
+  }
+
+  // Sort by most recent activity
+  const result = Array.from(map.values()).sort((a, b) => {
+    const ta = a.last_at ? +new Date(a.last_at) : 0;
+    const tb = b.last_at ? +new Date(b.last_at) : 0;
+    return tb - ta;
+  });
+
+  return result;
 }

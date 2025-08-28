@@ -138,7 +138,6 @@ export async function listSurveys(): Promise<SurveyWithProduct[]> {
     .order("created_at", { ascending: false })
     .overrideTypes<SurveyWithProduct[]>();
 
-
   if (error) throw new Error(error.message);
   return data ?? [];
 }
@@ -289,11 +288,16 @@ export async function deleteSurvey(surveyId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   const { error } = await supabase
     .from("survey")
     .delete()
     .eq("id", surveyId)
-    .eq("owner_id", user.id);
+    .eq("business_id", business.id);
 
   if (error) throw new Error(error.message);
 

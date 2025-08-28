@@ -19,14 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  MoreHorizontal,
-  CheckCircle2,
-  ExternalLink,
-  Users,
-  ToggleLeft,
-  Eye,
-} from "lucide-react";
+import { MoreHorizontal, CheckCircle2, ToggleLeft, Eye } from "lucide-react";
 import type { BusinessWithMembership } from "@/types";
 import { fmt } from "@/lib/utils";
 import RoleBadge from "./role-badge";
@@ -39,7 +32,7 @@ export default function BusinessList({
   items,
   setActiveAction,
 }: {
-  items: BusinessWithMembership[]; // <-- your type, now includes image_url
+  items: BusinessWithMembership[];
   setActiveAction: SetActiveAction;
 }) {
   if (!items.length) {
@@ -60,29 +53,20 @@ export default function BusinessList({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[260px]">Name</TableHead>
-            <TableHead className="min-w-[200px]">Description</TableHead>
-            <TableHead className="w-[110px]">Role</TableHead>
-            <TableHead className="w-[110px]">Status</TableHead>
-            <TableHead className="w-[140px]">Joined</TableHead>
-            <TableHead className="w-[140px]">Created</TableHead>
-            <TableHead className="w-[60px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((b) => {
-            const me = b.membership?.[0];
-            const img = b.image_url ?? null;
-
-            return (
-              <TableRow key={b.id} className="align-top">
-                <TableCell className="font-medium">
+    <>
+      {/* Mobile: cards */}
+      <div className="md:hidden space-y-3">
+        {items.map((b) => {
+          const me = b.membership?.[0];
+          const img = b.image_url ?? null;
+          const initial = b.name?.[0]?.toUpperCase() ?? "?";
+          return (
+            <div key={b.id} className="rounded-lg border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                {/* Left: avatar + title */}
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10 overflow-hidden rounded-md bg-muted">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-md bg-muted shrink-0">
                       {img ? (
                         <Image
                           src={img}
@@ -93,101 +77,234 @@ export default function BusinessList({
                         />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                          {b.name?.[0]?.toUpperCase() ?? "?"}
+                          {initial}
                         </span>
                       )}
                     </div>
-                    <Link
-                      href={`/dashboard/businesses/${b.id}`}
-                      className="hover:underline"
-                    >
-                      {b.name}
-                    </Link>
-                  </div>
-                </TableCell>
 
-                <TableCell className="text-muted-foreground">
-                  {b.description ?? "—"}
-                </TableCell>
-
-                <TableCell>
-                  <RoleBadge role={me?.role} />
-                </TableCell>
-
-                <TableCell>
-                  <StatusBadge active={Boolean(b.is_active)} />
-                </TableCell>
-
-                <TableCell>{fmt(me?.created_at)}</TableCell>
-                <TableCell>{fmt(b.created_at)}</TableCell>
-
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Open actions"
-                        className="hover:bg-muted"
+                    <div className="min-w-0">
+                      <Link
+                        href={`/dashboard/businesses/${b.id}`}
+                        className="block truncate font-medium hover:underline"
                       >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
+                        {b.name}
+                      </Link>
+                      <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {b.description ?? "—"}
+                      </div>
+                    </div>
+                  </div>
 
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/businesses/${b.id}`}>
-                        <Eye className="mr-2 h-4 w-4"/>
-                          View
-                        </Link>
-                      </DropdownMenuItem>
+                  {/* Meta */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <RoleBadge role={me?.role} />
+                    <StatusBadge active={Boolean(b.is_active)} />
+                  </div>
 
-                      <DropdownMenuSeparator />
+                  <div className="mt-2 grid grid-cols-2 gap-x-3 text-xs text-muted-foreground">
+                    <div>
+                      <span className="mr-1">Joined:</span>
+                      {fmt(me?.created_at)}
+                    </div>
+                    <div>
+                      <span className="mr-1">Created:</span>
+                      {fmt(b.created_at)}
+                    </div>
+                  </div>
+                </div>
 
-                      <DropdownMenuItem asChild>
-                        <form
-                          action={toggleBusinessIsActive}
-                          className="w-full"
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Open actions"
+                      className="shrink-0 hover:bg-muted"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/dashboard/businesses/${b.id}`}
+                        className="flex items-center"
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem asChild>
+                      <form action={toggleBusinessIsActive} className="w-full">
+                        <input type="hidden" name="business_id" value={b.id} />
+                        <button
+                          type="submit"
+                          className="flex w-full items-center"
                         >
-                          <input
-                            type="hidden"
-                            name="business_id"
-                            value={b.id}
-                          />
-                          <button
-                            type="submit"
-                            className="flex w-full items-center"
-                          >
-                            <ToggleLeft className="mr-2 h-4 w-4" />
-                            Toggle active
-                          </button>
-                        </form>
-                      </DropdownMenuItem>
+                          <ToggleLeft className="mr-2 h-4 w-4" />
+                          Toggle active
+                        </button>
+                      </form>
+                    </DropdownMenuItem>
 
-                      <DropdownMenuItem asChild>
-                        <form action={setActiveAction} className="w-full">
-                          <input
-                            type="hidden"
-                            name="business_id"
-                            value={b.id}
+                    <DropdownMenuItem asChild>
+                      <form action={setActiveAction} className="w-full">
+                        <input type="hidden" name="business_id" value={b.id} />
+                        <button
+                          type="submit"
+                          className="flex w-full items-center"
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Set as current
+                        </button>
+                      </form>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block overflow-x-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-[260px]">Name</TableHead>
+              <TableHead className="min-w-[200px]">Description</TableHead>
+              <TableHead className="w-[110px]">Role</TableHead>
+              <TableHead className="w-[110px]">Status</TableHead>
+              <TableHead className="w-[140px]">Joined</TableHead>
+              <TableHead className="w-[140px]">Created</TableHead>
+              <TableHead className="w-[60px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((b) => {
+              const me = b.membership?.[0];
+              const img = b.image_url ?? null;
+
+              return (
+                <TableRow key={b.id} className="align-top">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-md bg-muted">
+                        {img ? (
+                          <Image
+                            src={img}
+                            alt={`${b.name} logo`}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
                           />
-                          <button
-                            type="submit"
-                            className="flex w-full items-center"
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                            {b.name?.[0]?.toUpperCase() ?? "?"}
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href={`/dashboard/businesses/${b.id}`}
+                        className="hover:underline"
+                      >
+                        {b.name}
+                      </Link>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-muted-foreground">
+                    {b.description ?? "—"}
+                  </TableCell>
+
+                  <TableCell>
+                    <RoleBadge role={me?.role} />
+                  </TableCell>
+
+                  <TableCell>
+                    <StatusBadge active={Boolean(b.is_active)} />
+                  </TableCell>
+
+                  <TableCell>{fmt(me?.created_at)}</TableCell>
+                  <TableCell>{fmt(b.created_at)}</TableCell>
+
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Open actions"
+                          className="hover:bg-muted"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href={`/dashboard/businesses/${b.id}`}
+                            className="flex items-center"
                           >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Set as current
-                          </button>
-                        </form>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem asChild>
+                          <form
+                            action={toggleBusinessIsActive}
+                            className="w-full"
+                          >
+                            <input
+                              type="hidden"
+                              name="business_id"
+                              value={b.id}
+                            />
+                            <button
+                              type="submit"
+                              className="flex w-full items-center"
+                            >
+                              <ToggleLeft className="mr-2 h-4 w-4" />
+                              Toggle active
+                            </button>
+                          </form>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <form action={setActiveAction} className="w-full">
+                            <input
+                              type="hidden"
+                              name="business_id"
+                              value={b.id}
+                            />
+                            <button
+                              type="submit"
+                              className="flex w-full items-center"
+                            >
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Set as current
+                            </button>
+                          </form>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }

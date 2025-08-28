@@ -1,18 +1,9 @@
 // app/(dashboard)/dashboard/products/page.tsx
 import Link from "next/link";
-import { format } from "date-fns";
 import { listProducts, deleteProduct } from "@/actions/products";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import ProductsTable from "@/components/dashboard/products/products-table";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +50,7 @@ export default async function ProductsPage() {
 
   return (
     <div className="p-4">
-      <Card className=" max-w-6xl">
+      <Card className="max-w-6xl">
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Your Products</CardTitle>
           <Button asChild>
@@ -80,41 +71,7 @@ export default async function ProductsPage() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[36%]">Name</TableHead>
-                  <TableHead className="w-[34%]">Metadata</TableHead>
-                  <TableHead className="w-[18%]">Created</TableHead>
-                  <TableHead className="w-[12%]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {p.metadata && Object.keys(p.metadata).length > 0
-                        ? JSON.stringify(p.metadata)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {p.created_at
-                        ? format(new Date(p.created_at), "PPP")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <form action={deleteProduct}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <Button type="submit" variant="destructive" size="sm">
-                          Delete
-                        </Button>
-                      </form>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ProductsTable products={products} deleteProduct={deleteProduct} />
           )}
         </CardContent>
       </Card>

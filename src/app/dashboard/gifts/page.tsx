@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { format } from "date-fns";
-import { listBusinessGifts } from "@/actions/gifts";
+import { listGifts } from "@/actions/gifts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -17,7 +16,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function GiftsPage() {
-  const { user, gifts, error } = await listBusinessGifts();
+  const { user, gifts, error } = await listGifts();
 
   if (!user) {
     return (

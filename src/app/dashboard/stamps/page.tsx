@@ -35,7 +35,7 @@ export default async function LoyaltyCardsPage() {
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Loyalty Cards</CardTitle>
           <Button asChild>
-            <Link href="/dashboard/loyalty/cards/new">New Card</Link>
+            <Link href="/dashboard/stamps/new">New Card</Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -51,7 +51,7 @@ export default async function LoyaltyCardsPage() {
         <CardHeader className="flex items-center justify-between">
           <CardTitle>Your Loyalty Cards</CardTitle>
           <Button asChild>
-            <Link href="/dashboard/loyalty/cards/new">New Card</Link>
+            <Link href="/dashboard/stamps/new">New Card</Link>
           </Button>
         </CardHeader>
         <CardContent>

@@ -1,7 +1,6 @@
 // app/login/page.tsx
 import { LoginForm } from "@/components/auth/login-form";
 import { Logo } from "@/components/navbar/logo";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function LoginPage() {

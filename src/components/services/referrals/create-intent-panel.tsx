@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import {
   Card,
@@ -14,9 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   createReferralIntent,
   listMyProgramReferralIntents,
-  getMyProgramIntentQuota,  
+  getMyProgramIntentQuota,
 } from "@/actions/referrals";
-import Link from "next/link";
 import type { ReferralProgramRow } from "@/types";
 import { IntentListTable } from "./intent-list-table";
 
@@ -62,11 +62,13 @@ export default async function CreateIntentPanel({
     : null;
 
   return (
-    <Card className="max-w-6xl">
+    <Card className="w-full max-w-2xl md:max-w-6xl">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{title}</CardTitle>
-          <div className="flex items-center gap-2">
+        {/* Mobile-first header: stack content; spread on md+ */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <CardTitle className="text-lg md:text-xl">{title}</CardTitle>
+
+          <div className="flex flex-wrap items-center gap-2">
             {cap !== null ? (
               <Badge variant={reachedCap ? "outline" : "secondary"}>
                 {createdIntents} / {cap}
@@ -79,8 +81,9 @@ export default async function CreateIntentPanel({
             ) : null}
           </div>
         </div>
+
         {program.title ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-1 text-xs md:text-sm text-muted-foreground">
             Program: {program.title}
           </p>
         ) : null}
@@ -93,7 +96,7 @@ export default async function CreateIntentPanel({
             <p className="text-sm text-muted-foreground">
               Sign in to create invites.
             </p>
-            <Button asChild>
+            <Button asChild className="w-full md:w-auto">
               <Link
                 href={`/login?next=/services/referrals/referrer/${programId}`}
               >
@@ -116,12 +119,19 @@ export default async function CreateIntentPanel({
             <input type="hidden" name="program_id" value={programId} />
             <div className="space-y-2">
               <Label htmlFor="expires_at">Expires at (optional)</Label>
-              <Input id="expires_at" name="expires_at" type="datetime-local" />
+              <Input
+                id="expires_at"
+                name="expires_at"
+                type="datetime-local"
+                className="w-full"
+              />
               <p className="text-xs text-muted-foreground">
                 Leave empty to create an invite with no expiry.
               </p>
             </div>
-            <Button type="submit">{cta}</Button>
+            <Button type="submit" className="w-full md:w-auto">
+              {cta}
+            </Button>
           </form>
         )}
 
@@ -139,7 +149,10 @@ export default async function CreateIntentPanel({
               No invites created yet.
             </p>
           ) : (
-            <IntentListTable intents={intents} />
+            // Ensure the table within IntentListTable can scroll on small screens
+            <div className="w-full overflow-x-auto">
+              <IntentListTable intents={intents} />
+            </div>
           )}
         </div>
       </CardContent>

@@ -1,5 +1,6 @@
 import { Inserts, Tables, Updates } from "@/utils/supabase/helpers";
 import { ProfileRow } from "./auth";
+import { BusinessRow } from "./business";
 
 /** stamp_cards */
 export type StampCardRow = Tables<"stamp_card">;
@@ -52,7 +53,7 @@ export type StampCardWithProducts = Pick<
   | "updated_at"
 > & {
   // stamp_card_products returns an array with product_id only
-  stamp_card_products: { product_id: string }[] | null;
+  stamp_card_product: { product_id: string }[] | null;
 };
 
 export type StampIntentWithCustomer = Pick<
@@ -87,4 +88,26 @@ export type StampIntentListItem = Pick<
   | "updated_at"
 > & {
   customer_name: string | null;
+};
+
+export type PunchWithCardBusiness = Pick<
+  StampPunchRow,
+  "id" | "qty" | "note" | "created_at"
+> & {
+  card:
+    | (Pick<StampCardRow, "id" | "title" | "stamps_required"> & {
+        business: Pick<BusinessRow, "id" | "name" | "image_url"> | null;
+      })
+    | null;
+};
+
+export type PunchesGroupedByCard = {
+  card: Pick<StampCardRow, "id" | "title" | "stamps_required">;
+  business: Pick<BusinessRow, "id" | "name" | "image_url"> | null;
+  total_qty: number;
+  last_at: string | null;
+  pct: number; // 0–100, clamped by stamps_required
+  punches: Array<
+    Pick<PunchWithCardBusiness, "id" | "qty" | "note" | "created_at">
+  >;
 };

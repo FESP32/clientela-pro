@@ -20,30 +20,124 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Link2, UserPlus, QrCode } from "lucide-react";
+import { MoreHorizontal, Eye, UserPlus, QrCode } from "lucide-react";
 import { ReferralJoinLinkDialog } from "@/components/dashboard/referrals/referral-join-link-dialog";
 import { fmt } from "@/lib/utils";
-import { ReferralProgramRow } from "@/types";
+import type { ReferralProgramRow } from "@/types";
 
-export function ReferralProgramsTable({ programs }: { programs: ReferralProgramRow[] }) {
+export function ReferralProgramsTable({
+  programs,
+}: {
+  programs: ReferralProgramRow[];
+}) {
   const [dlg, setDlg] = useState<{ title: string; path: string } | null>(null);
 
   return (
     <>
-      {/* Conditionally render the dialog only when open (prevents inert issues) */}
+      {/* Dialog only mounts when needed */}
       {dlg && (
         <ReferralJoinLinkDialog
           open
           onOpenChange={(open) => !open && setDlg(null)}
           programTitle={dlg.title}
           joinPath={dlg.path}
-          // If you ever see the page inert after close, toggle modal={false}
-          // modal={false}
         />
       )}
 
-      <div className="w-full overflow-x-auto">
-        <Table className="min-w-[900px] md:min-w-0">
+      {/* Mobile: cards */}
+      <div className="md:hidden space-y-3">
+        {programs.map((p) => {
+          const viewPath = `/dashboard/referrals/${p.id}`;
+          const joinPath = `/services/referrals/referrer/${p.id}`;
+
+          return (
+            <div key={p.id} className="rounded-lg border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{p.title}</div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">{p.code}</Badge>
+                    {p.is_active ? (
+                      <Badge>Active</Badge>
+                    ) : (
+                      <Badge variant="outline">Inactive</Badge>
+                    )}
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-1 gap-1 text-xs">
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Referrer:</span>
+                      <span className="text-foreground">
+                        {p.referrer_reward ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Referred:</span>
+                      <span className="text-foreground">
+                        {p.referred_reward ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Created {fmt(p.created_at)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Open actions"
+                      className="shrink-0"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+                    <DropdownMenuItem asChild>
+                      <Link href={viewPath} className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        View details
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem asChild>
+                      <Link href={joinPath} className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Join as referrer
+                      </Link>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      className="flex items-center gap-2"
+                      onSelect={() =>
+                        setTimeout(
+                          () => setDlg({ title: p.title, path: joinPath }),
+                          0
+                        )
+                      }
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Show join URL
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block w-full overflow-x-auto">
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[26%]">Title</TableHead>
@@ -84,9 +178,7 @@ export function ReferralProgramsTable({ programs }: { programs: ReferralProgramR
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {typeof fmt === "function"
-                      ? fmt(p.created_at)
-                      : new Date(p.created_at).toLocaleString()}
+                    {fmt(p.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -122,23 +214,21 @@ export function ReferralProgramsTable({ programs }: { programs: ReferralProgramR
                           </Link>
                         </DropdownMenuItem>
 
-                        {/* Open controlled dialog via state; no Dialog nested inside menu */}
                         <DropdownMenuItem
                           className="flex items-center gap-2"
-                          onSelect={() => {
-                            // Let menu close before mounting the dialog (avoids focus quirks)
+                          onSelect={() =>
                             setTimeout(
                               () => setDlg({ title: p.title, path: joinPath }),
                               0
-                            );
-                          }}
+                            )
+                          }
                         >
                           <QrCode className="h-4 w-4" />
                           Show join URL
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />
-                        {/* Add more items here if needed (Edit, Deactivate, etc.) */}
+                        {/* Place more actions here if needed */}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

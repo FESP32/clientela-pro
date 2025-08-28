@@ -11,7 +11,6 @@ import {
   ReferralIntentRow,
   ReferralParticipantJoinedQuery,
   ReferralParticipantListItem,
-  ReferralParticipantRow,
   ReferralProgramInsert,
   ReferralProgramRow,
 } from "@/types";

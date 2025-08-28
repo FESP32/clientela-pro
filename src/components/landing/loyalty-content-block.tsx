@@ -1,4 +1,4 @@
-import { Gift, ListChecks, Sparkles, Stamp, Share2 } from "lucide-react";
+import { Gift, Stamp, Share2 } from "lucide-react";
 
 export default function LoyaltyContentBlock() {
   return (

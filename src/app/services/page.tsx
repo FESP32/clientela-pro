@@ -51,9 +51,9 @@ export default function CustomerMenu() {
   const t = useTranslations("ServicePage");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/40 via-black/35 to-black/40 backdrop-blur-3xl p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/40 via-black/35 to-black/40 backdrop-blur-3xl ">
       {/* Card */}
-      <div className="relative w-full max-w-md rounded-3xl bg-white/90 shadow-2xl ring-1 ring-black/5 dark:bg-neutral-900/90">
+      <div className="relative rounded-3xl bg-white/90 shadow-2xl ring-1 ring-black/5 dark:bg-neutral-900/90">
         {/* Brand bar with logo + theme toggle */}
         <div className="flex items-center justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ export default function CustomerMenu() {
         </div>
 
         {/* Header */}
-        <div className="px-6 pt-3 pb-2 text-center">
+        <div className="px-6 pt-3 pb-2 text-center ">
           <h2 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
             {t("header.title")}
           </h2>

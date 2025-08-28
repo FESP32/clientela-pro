@@ -14,16 +14,16 @@ const ThemeToggle = () => {
   }, []);
 
   if (!mounted) {
-    return <Button variant="outline" size="icon" />;
+    return <Button variant="ghost" size="icon" />;
   }
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="icon"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {resolvedTheme === "dark" ? <SunIcon /> : <MoonIcon />}
+      {resolvedTheme === "dark" ? <SunIcon className="size-6" /> : <MoonIcon />}
     </Button>
   );
 };

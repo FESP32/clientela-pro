@@ -28,17 +28,18 @@ export default function LocaleSwitcherSelect({
   }
 
   return (
-    <div className="relative z-30">
+    <div className="relative z-30 ">
       <Select.Root defaultValue={defaultValue} onValueChange={onChange}>
         <Select.Trigger
           aria-label={label}
+          
           className={clsx(
-            "rounded-sm p-2 transition-colors hover:bg-slate-200 z-30",
+            "rounded-full p-2 transition-colors hover:bg-slate-700 z-30",
             isPending && "pointer-events-none opacity-60"
           )}
         >
           <Select.Icon>
-            <LanguagesIcon className="h-6 w-6 text-slate-600 transition-colors group-hover:text-slate-900" />
+            <LanguagesIcon className="size-6 text-slate-800 dark:text-white transition-colors group-hover:text-slate-900" />
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>

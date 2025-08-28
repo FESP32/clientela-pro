@@ -10,6 +10,7 @@ import {
   List,
   Plus,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { NavMain } from "@/components/dashboard/common/nav-main";
 import { NavUser } from "@/components/dashboard/common/nav-user";
 import {
@@ -18,9 +19,10 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar, // ⬅️ import the hook
 } from "@/components/ui/sidebar";
 import { BusinessSwitcher } from "@/components/dashboard/common/business-switcher";
-import type { BusinessRow } from "@/types/business"; // <-- Supabase-derived type
+import type { BusinessRow } from "@/types/business";
 
 export type NavUserData = {
   name: string;
@@ -78,7 +80,6 @@ const navData = {
   ],
 };
 
-// Use only the fields the switcher needs.
 type ActiveBusiness = Pick<BusinessRow, "id" | "name" | "image_url">;
 
 export function AppSidebar({
@@ -89,6 +90,13 @@ export function AppSidebar({
   user: NavUserData;
   activeBusiness: ActiveBusiness | null;
 }) {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  React.useEffect(() => {
+    setOpenMobile?.(false);
+  }, [pathname, setOpenMobile]);
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

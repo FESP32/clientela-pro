@@ -18,7 +18,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { BusinessRow } from "@/types/business";
-import { Button } from "@/components/ui/button";
 
 type ActiveBusiness = Pick<BusinessRow, "id" | "name" | "image_url">;
 
