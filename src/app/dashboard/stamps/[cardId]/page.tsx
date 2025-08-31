@@ -1,20 +1,22 @@
+// app/dashboard/stamps/[cardId]/intents/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listStampIntents, createStampIntent } from "@/actions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { fmt } from "@/lib/utils";
-import { IntentActionsMenu } from "@/components/dashboard/stamps/intent-actions-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import SubmitButton from "@/components/dashboard/common/submit-button";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantStampIntentsTable from "@/components/dashboard/stamps/merchant-stamp-intent-table";
+import { CalendarClock, Hash, Info, StickyNote } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -24,163 +26,139 @@ export default async function CardIntentsPage({
   params: Promise<{ cardId: string }>;
 }) {
   const { cardId } = await params;
+  const { card, intents } = await listStampIntents(cardId);
 
-  const { user, card, intents, error } = await listStampIntents(cardId);
-
-  if (!user) {
+  if (!card) {
     notFound();
-  }
-
-  if (error || !card) {
-    return (
-      <Card className="mx-auto mt-10 max-w-3xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Card Intents</CardTitle>
-          <Button asChild>
-            <Link href="/services/cards">Back to Cards</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive">
-            Failed to load: {error ?? "Unknown error"}
-          </p>
-        </CardContent>
-      </Card>
-    );
   }
 
   const pending = intents.filter((i) => i.status === "pending").length;
 
   return (
-    <div className="p-4">
-      <Card className="max-w-6xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>
-            Intents — {card.title}{" "}
-            <span className="ml-2 align-middle">
-              <Badge variant="secondary">{intents.length} total</Badge>
-              <span className="mx-1" />
-              <Badge>{pending} pending</Badge>
-            </span>
-          </CardTitle>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/stamps">Back to Cards</Link>
-          </Button>
-        </CardHeader>
+    <MerchantListSection
+      title={
+        <div className="flex flex-wrap items-center gap-2">
+          <span>Intents — {card.title}</span>
+          <Badge variant="secondary">{intents.length} total</Badge>
+          <Badge>{pending} pending</Badge>
+        </div>
+      }
+      subtitle="Create, manage and track usage windows for this card."
+    >
+      {/* Create form */}
+      <TooltipProvider>
+        <form
+          action={createStampIntent}
+          className="mb-4 grid w-full grid-cols-1 gap-3 md:grid-cols-[auto_auto_minmax(180px,1fr)_minmax(220px,1fr)_auto] md:items-end"
+        >
+          <input type="hidden" name="card_id" value={cardId} />
 
-        <CardContent>
-          <form
-            action={createStampIntent}
-            className="mb-4 flex flex-wrap items-end gap-2"
-          >
-            <input type="hidden" name="card_id" value={cardId} />
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Qty</label>
+          {/* Qty */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="qty">Qty</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  How many intents (codes) to create.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <Hash className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id="qty"
                 type="number"
                 name="qty"
                 min={1}
                 defaultValue={1}
-                className="h-8 w-20"
-                aria-label="Intent quantity"
+                inputMode="numeric"
+                className="h-9 w-24 pl-8"
+                aria-describedby="qty-tip"
               />
             </div>
-            <Input
-              type="text"
-              name="customer_id"
-              placeholder="Customer UUID (optional)"
-              className="h-8 w-56"
-            />
-            <Input
-              type="datetime-local"
-              name="expires_at"
-              className="h-8"
-              aria-label="Expires at"
-            />
-            <Input
-              type="text"
-              name="note"
-              placeholder="Note (optional)"
-              className="h-8 w-64"
-            />
-            <Button size="sm" type="submit" variant="secondary">
-              Create Intent
-            </Button>
-          </form>
+            <p id="qty-tip" className="text-xs text-muted-foreground">
+              Minimum 1. You can create more later.
+            </p>
+          </div>
 
-          {intents.length === 0 ? (
-            <div className="rounded-lg border p-6">
-              <p className="mb-1 font-medium">No intents yet</p>
-              <p className="text-sm text-muted-foreground">
-                Use the form above to create a new intent for this card.
-              </p>
+          {/* Expires at */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="expires_at">Expires at</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Optional. Leave blank for no expiration.
+                </TooltipContent>
+              </Tooltip>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[12%]">Created</TableHead>
-                  <TableHead className="w-[10%]">Qty</TableHead>
-                  <TableHead className="w-[12%]">Status</TableHead>
-                  <TableHead className="w-[18%]">Customer</TableHead>
-                  <TableHead className="w-[18%]">Expires</TableHead>
-                  <TableHead className="w-[18%]">Consumed</TableHead>
-                  <TableHead className="w-[12%]">Note</TableHead>
-                  <TableHead className="w-[10%] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {intents.map((i) => (
-                  <TableRow key={i.id}>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {fmt(i.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{i.qty}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {i.status === "pending" ? (
-                        <Badge>Pending</Badge>
-                      ) : i.status === "consumed" ? (
-                        <Badge variant="secondary">Consumed</Badge>
-                      ) : (
-                        <Badge variant="outline">Canceled</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {i.customer_name ? (
-                        i.customer_name
-                      ) : i.customer_id ? (
-                        i.customer_id
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {fmt(i.expires_at)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {fmt(i.consumed_at)}
-                    </TableCell>
-                    <TableCell className="max-w-[14rem] truncate text-sm">
-                      {i.note ?? (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
+            <div className="relative">
+              <CalendarClock className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="expires_at"
+                type="datetime-local"
+                name="expires_at"
+                className="h-9 pl-8"
+                aria-describedby="exp-tip"
+              />
+            </div>
+            <p id="exp-tip" className="text-xs text-muted-foreground">
+              Uses your local time. You can edit later.
+            </p>
+          </div>
 
-                    {/* Actions → dropdown with QR modal */}
-                    <TableCell className="text-right">
-                      <IntentActionsMenu
-                        href={`/services/stamps/intents/${i.id}`}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          {/* Note */}
+          <div className="space-y-1.5 md:col-span-2">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="note">Note</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Optional. Internal note to help you identify this batch.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <StickyNote className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="note"
+                type="text"
+                name="note"
+                placeholder="e.g. Promo weekend, VIP customers, etc."
+                className="h-9 w-full pl-8"
+                aria-describedby="note-tip"
+              />
+            </div>
+            <p id="note-tip" className="text-xs text-muted-foreground">
+              Visible to your team only.
+            </p>
+          </div>
+
+          {/* Submit */}
+          <div className="flex items-end">
+            <SubmitButton />
+          </div>
+        </form>
+      </TooltipProvider>
+
+      <Separator className="my-2" />
+
+      {/* Table */}
+      <MerchantStampIntentsTable intents={intents} />
+
+      {/* Optional back action */}
+      <div className="mt-3">
+        <Button asChild variant="outline">
+          <Link href="/dashboard/stamps">Back to Cards</Link>
+        </Button>
+      </div>
+    </MerchantListSection>
   );
 }

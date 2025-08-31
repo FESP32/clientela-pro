@@ -1,80 +1,53 @@
-// app/(dashboard)/dashboard/products/page.tsx
-import Link from "next/link";
-import { listProducts, deleteProduct } from "@/actions/products";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ProductsTable from "@/components/dashboard/products/products-table";
+// app/dashboard/products/page.tsx
+import { listProducts, deleteProduct } from "@/actions";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MonoIcon from "@/components/dashboard/common/mono-icon";
+import ProductsExplorer from "@/components/dashboard/products/products-explorer";
+import { Badge } from "@/components/ui/badge";
+import { Package2, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
-  const { user, products, error } = await listProducts();
-
-  if (!user) {
-    return (
-      <Card className="mx-auto mt-10 max-w-xl">
-        <CardHeader>
-          <CardTitle>Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            You must be signed in to view your products.
-          </p>
-          <div className="mt-4">
-            <Button asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="mx-auto mt-10 max-w-6xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Products</CardTitle>
-          <Button asChild>
-            <Link href="/dashboard/products/new">New Product</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive">
-            Failed to load products: {error}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  const { data = [] } = await listProducts();
   return (
-    <div className="p-4">
-      <Card className="max-w-6xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Your Products</CardTitle>
-          <Button asChild>
-            <Link href="/dashboard/products/new">New Product</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {products.length === 0 ? (
-            <div className="flex items-center justify-between rounded-lg border p-6">
-              <div>
-                <p className="font-medium">No products yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Create your first product to get started.
-                </p>
-              </div>
-              <Button asChild>
-                <Link href="/dashboard/products/new">Create Product</Link>
-              </Button>
-            </div>
-          ) : (
-            <ProductsTable products={products} deleteProduct={deleteProduct} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <MerchantListSection
+      title={
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <MonoIcon>
+              <Package2
+                className="h-4 w-4 text-foreground/80"
+                aria-hidden="true"
+              />
+            </MonoIcon>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Products
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1.5">
+              {data.length} total
+            </Badge>
+          </div>
+        </div>
+      }
+      subtitle={
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Curate a clean, consistent catalog with smart metadata.
+          </span>
+        </div>
+      }
+      className="pt-2"
+      headerClassName="mb-4"
+      contentClassName="space-y-4"
+    >
+      {/* Hairline divider for subtle structure */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <ProductsExplorer products={data} deleteProduct={deleteProduct} />
+    </MerchantListSection>
   );
 }

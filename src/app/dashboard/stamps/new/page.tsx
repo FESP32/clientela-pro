@@ -2,17 +2,17 @@
 import { listProducts } from "@/actions";
 import {
   createStampCard,
-} from "@/actions/stamps";
+} from "@/actions";
 import StampCardForm from "@/components/dashboard/stamps/stamp-card-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewStampCardPage() {
-  const { products } = await listProducts();
+  const { data } = await listProducts();
 
   return (
     <div className="p-4">
-      <StampCardForm products={products} onSubmit={createStampCard} />
+      <StampCardForm products={data} onSubmit={createStampCard} />
     </div>
   );
 }

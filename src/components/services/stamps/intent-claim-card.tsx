@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { consumeStampIntent, getStampIntent } from "@/actions/stamps";
+import { consumeStampIntent, getStampIntent } from "@/actions";
 import {
   Card,
   CardContent,

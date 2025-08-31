@@ -1,22 +1,15 @@
-// components/loyalty/loyalty-card-form.tsx
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
 import { ProductRow } from "@/types/products";
+import SubmitButton from "../common/submit-button";
+import { Stamp, Gift, CalendarClock, CheckSquare } from "lucide-react";
 
 export default function StampCardForm({
   products,
@@ -38,15 +31,38 @@ export default function StampCardForm({
   };
 
   return (
-    <Card className="max-w-6xl">
-      <form action={onSubmit} className="contents">
-        <CardHeader>
-          <CardTitle>Create Stamp Card</CardTitle>
-        </CardHeader>
+    <form action={onSubmit} >
+      <div className="mx-auto w-full max-w-6xl">
+        {/* Header */}
+        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Stamp className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h1 className="text-2xl font-semibold leading-none tracking-tight">
+                Create Stamp Card
+              </h1>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-4">
+              <span className="inline-flex items-center gap-1">
+                <Gift className="h-4 w-4" aria-hidden="true" />
+                Define the reward your customers earn.
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <CalendarClock className="h-4 w-4" aria-hidden="true" />
+                Set active window & status.
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <CheckSquare className="h-4 w-4" aria-hidden="true" />
+                Choose which products apply.
+              </span>
+            </p>
+          </div>
+        </header>
 
-        <CardContent className="space-y-6">
+        {/* Body */}
+        <section className="rounded-lg border bg-card p-6 space-y-6">
           {/* Basics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
@@ -80,10 +96,11 @@ export default function StampCardForm({
           </div>
 
           {/* Status & window */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="is_active">Active</Label>
               <div className="flex items-center gap-3">
+                {/* Note: shadcn <Switch> doesn't submit a value by default; keeping your original usage */}
                 <Switch id="is_active" name="is_active" />
                 <span className="text-sm text-muted-foreground">
                   Card is active
@@ -117,30 +134,32 @@ export default function StampCardForm({
                 {selectAll ? "Unselect all" : "Select all"}
               </Button>
             </div>
+
             {products.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 You don’t have products yet. Add some first to target this card.
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {products.map((p) => (
                   <label
                     key={p.id}
-                    className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted cursor-pointer"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-muted"
                   >
-                    <Checkbox name="product_ids[]" value={p.id} />
+                    <Checkbox name="product_ids[]" value={String(p.id)} />
                     <span className="text-sm">{p.name}</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
-        </CardContent>
+        </section>
 
-        <CardFooter className="justify-end gap-2">
-          <Button type="submit">Create Card</Button>
-        </CardFooter>
-      </form>
-    </Card>
+        {/* Footer */}
+        <div className="mt-4 flex justify-end gap-2">
+          <SubmitButton />
+        </div>
+      </div>
+    </form>
   );
 }

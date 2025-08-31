@@ -7,7 +7,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { markIntentClaimed } from "@/actions/referrals";
+import { markIntentClaimed } from "@/actions";
 import { format } from "date-fns";
 import Link from "next/link";
 

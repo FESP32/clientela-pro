@@ -1,6 +1,6 @@
 // app/stamps/[cardId]/join/page.tsx
 import StampMembershipCreate from "@/components/dashboard/stamps/stamp-membership-create";
-import { createStampMembership } from "@/actions/stamps";
+import { createStampMembership } from "@/actions";
 
 export const dynamic = "force-dynamic";
 

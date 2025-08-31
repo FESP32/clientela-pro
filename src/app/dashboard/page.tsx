@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, ClipboardList, Stamp, Share2, Gift, Store } from "lucide-react";
-import { listLatestSurveys } from "@/actions/surveys";
+import { listLatestSurveys } from "@/actions";
 import { listLatestStamps } from "@/actions";
 import { fmt } from "@/lib/utils";
 

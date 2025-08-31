@@ -1,7 +1,7 @@
 // components/dashboard/gifts/gift-intents-panel.tsx
 import Image from "next/image";
 import Link from "next/link";
-import { listGiftIntents, createGiftIntent } from "@/actions/gifts";
+import { listGiftIntents, createGiftIntent } from "@/actions";
 
 import {
   Card,

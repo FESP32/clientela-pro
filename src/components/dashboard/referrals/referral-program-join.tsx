@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import CreateIntentPanel from "@/components/services/referrals/create-intent-panel";
-import { createReferralIntent, getProgramJoinData } from "@/actions/referrals";
+import { createReferralIntent, getProgramJoinData } from "@/actions";
 
 type Props = {
   programId: string;

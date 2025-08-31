@@ -2,16 +2,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { RefreshCw, Megaphone, Users, Gift } from "lucide-react";
+import SubmitButton from "@/components/dashboard/common/submit-button";
 
 type ReferralProgramFormProps = {
   onSubmit: (fd: FormData) => void | Promise<void>;
@@ -19,25 +17,11 @@ type ReferralProgramFormProps = {
   errorMessage?: string | null;
 };
 
-function SubmitButton({ className }: { className?: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      size="lg"
-      className={cn(className)}
-      disabled={pending}
-    >
-      {pending ? "Creating…" : "Create Program"}
-    </Button>
-  );
-}
-
 // Simple random code generator (avoids ambiguous chars)
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no O/0/I/1
   let code = "";
-  for (let i = 0; i < 8; i++) 
+  for (let i = 0; i < 8; i++)
     code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
@@ -48,25 +32,41 @@ export default function NewReferralProgramForm({
 }: ReferralProgramFormProps) {
   const [code, setCode] = useState("");
 
-   useEffect(() => {
-     setCode(generateCode());
-   }, []);
-
+  useEffect(() => {
+    setCode(generateCode());
+  }, []);
 
   return (
-    <Card className="overflow-hidden max-w-6xl">
-      <form action={onSubmit} className="contents">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Create Referral Program</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Configure the code, rewards, and availability for your
-            invite-and-earn program.
-          </p>
-        </CardHeader>
+    <form action={onSubmit} className="p-4">
+      <div className="mx-auto w-full max-w-6xl">
+        {/* Header */}
+        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h1 className="text-2xl font-semibold leading-none tracking-tight">
+                Create Referral Program
+              </h1>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-4">
+              <span className="inline-flex items-center gap-1">
+                <Users className="h-4 w-4" aria-hidden="true" />
+                Grow via invites
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Gift className="h-4 w-4" aria-hidden="true" />
+                Reward advocates & friends
+              </span>
+            </p>
+          </div>
 
-        <Separator />
+          <Button asChild variant="outline">
+            <Link href="/dashboard/referrals">Cancel</Link>
+          </Button>
+        </header>
 
-        <CardContent className="space-y-10">
+        {/* Body */}
+        <section className="rounded-lg border bg-card p-6 space-y-10">
           {/* Program details */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground/80">
@@ -198,16 +198,16 @@ export default function NewReferralProgramForm({
               {errorMessage}
             </div>
           ) : null}
-        </CardContent>
+        </section>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 px-6 pb-6">
+        <div className="mt-4 flex items-center justify-end gap-3">
           <Button asChild variant="outline">
             <Link href="/dashboard/referrals">Cancel</Link>
           </Button>
           <SubmitButton />
         </div>
-      </form>
-    </Card>
+      </div>
+    </form>
   );
 }

@@ -1,7 +1,7 @@
 // app/referrals/joined/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { listJoinedReferralProgramsWithIntents } from "@/actions/referrals";
+import { listJoinedReferralProgramsWithIntents } from "@/actions";
 import JoinedReferralProgramsList from "@/components/dashboard/referrals/joined-programs-list";
 
 export const dynamic = "force-dynamic";

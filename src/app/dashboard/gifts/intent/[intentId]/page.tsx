@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { markGiftIntentClaimed } from "@/actions/gifts";
+import { markGiftIntentClaimed } from "@/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

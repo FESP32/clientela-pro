@@ -1,5 +1,4 @@
-// app/(dashboard)/surveys/[id]/respond/page.tsx
-import { getSurvey, submitResponse } from "@/actions/surveys";
+import { getSurvey, submitResponse } from "@/actions";
 import { notFound } from "next/navigation";
 import RespondForm from "@/components/services/surveys/respond-form";
 import { createClient } from "@/utils/supabase/server";

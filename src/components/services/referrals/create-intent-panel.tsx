@@ -16,7 +16,7 @@ import {
   createReferralIntent,
   listMyProgramReferralIntents,
   getMyProgramIntentQuota,
-} from "@/actions/referrals";
+} from "@/actions";
 import type { ReferralProgramRow } from "@/types";
 import { IntentListTable } from "./intent-list-table";
 

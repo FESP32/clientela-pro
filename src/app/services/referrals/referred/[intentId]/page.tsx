@@ -7,7 +7,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { joinReferralIntent } from "@/actions/referrals";
+import { joinReferralIntent } from "@/actions";
 import { format } from "date-fns";
 import Link from "next/link";
 // Client QR component

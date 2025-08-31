@@ -1,4 +1,4 @@
-import { createGift } from "@/actions/gifts";
+import { createGift } from "@/actions";
 import GiftCreate from "@/components/dashboard/gifts/gift-create";
 
 export const dynamic = "force-dynamic";

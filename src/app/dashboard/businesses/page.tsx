@@ -1,46 +1,71 @@
 // app/dashboard/businesses/page.tsx
-import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import BusinessList from "@/components/dashboard/businesses/business-list";
-import { listMyBusinesses, setActiveBusiness } from "@/actions/businesses";
+import { listMyBusinesses, setActiveBusiness } from "@/actions";
 import type { BusinessWithMembership } from "@/types";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import BusinessesExplorer from "@/components/dashboard/businesses/business-explorer";
+import { Badge } from "@/components/ui/badge";
+import { Building2, CheckCircle2, ShieldCheck } from "lucide-react";
+import MonoIcon from "@/components/dashboard/common/mono-icon";
 
 export const dynamic = "force-dynamic";
 
 export default async function BusinessesPage() {
-  const { data, error } = await listMyBusinesses();
+  const { data = [] } = await listMyBusinesses();
+  const items = data as BusinessWithMembership[];
+
+  const total = items.length;
+  const active = items.filter((b) => Boolean(b.is_active)).length;
+  const managed = items.filter((b) => {
+    const role = b.membership?.[0]?.role ?? "";
+    return role === "owner" || role === "admin";
+  }).length;
 
   return (
-    <div className=" w-full max-w-6xl p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            My Businesses
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            These are the businesses you belong to (owner, admin, or member).
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/businesses/new">Create business</Link>
-        </Button>
-      </div>
+    <MerchantListSection
+      title={
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <MonoIcon>
+              <Building2
+                className="h-4 w-4 text-foreground/80"
+                aria-hidden="true"
+              />
+            </MonoIcon>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Your businesses
+            </h1>
+          </div>
 
-      <Separator className="my-4" />
-
-      {error ? (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm">
-          {typeof error === "string"
-            ? error
-            : "Something went wrong loading your businesses."}
+          {/* Badges (same pattern as Gifts page) */}
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1.5">
+              <Building2 className="h-3.5 w-3.5" />
+              {total} total
+            </Badge>
+            <Badge className="gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {active} active
+            </Badge>
+            <Badge variant="outline" className="gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {managed} managed
+            </Badge>
+          </div>
         </div>
-      ) : (
-        <BusinessList
-          items={(data ?? []) as BusinessWithMembership[]}
-          setActiveAction={setActiveBusiness}
-        />
-      )}
-    </div>
+      }
+      subtitle={
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          Search, filter, and switch your current business context.
+        </div>
+      }
+      className="pt-2"
+      headerClassName="mb-4"
+      contentClassName="space-y-4"
+    >
+      {/* Hairline divider for subtle structure */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <BusinessesExplorer items={items} setActiveAction={setActiveBusiness} />
+    </MerchantListSection>
   );
 }

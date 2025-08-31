@@ -1,4 +1,4 @@
-import { createBusiness } from "@/actions/businesses";
+import { createBusiness } from "@/actions";
 import BusinessCreate from "@/components/dashboard/businesses/business-create";
 
 export const dynamic = "force-dynamic";

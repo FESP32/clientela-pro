@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { listReferralParticipants } from "@/actions/referrals";
-import ReferralParticipantsList from "@/components/dashboard/referrals/referral-participants-list";
-import { getActiveBusiness } from "@/actions/businesses";
+import { listReferralParticipants } from "@/actions";
+import ReferralParticipantsTable from "@/components/dashboard/referrals/referral-participants-table";
+import { getActiveBusiness } from "@/actions";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,7 @@ export default async function ReferralParticipantsPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    redirect(`/login?next=/dashboard/referrals/${programId}`);
+  if (!user) redirect(`/login?next=/dashboard/referrals/${programId}`);
 
   const { business } = await getActiveBusiness();
 
@@ -44,12 +44,8 @@ export default async function ReferralParticipantsPage({
   const items = await listReferralParticipants(programId);
 
   return (
-    <div className="p-4">
-      <ReferralParticipantsList
-        programTitle={program.title}
-        programCode={program.code ?? undefined}
-        items={items}
-      />
-    </div>
+    <MerchantListSection title={program.title} subtitle={program.code}>
+      <ReferralParticipantsTable items={items} />
+    </MerchantListSection>
   );
 }

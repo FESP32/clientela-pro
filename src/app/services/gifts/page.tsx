@@ -1,7 +1,7 @@
 // app/dashboard/gifts/my/page.tsx
 import Image from "next/image";
 import Link from "next/link";
-import { listMyGiftIntents } from "@/actions/gifts";
+import { listMyGiftIntents } from "@/actions";
 import {
   Card,
   CardContent,

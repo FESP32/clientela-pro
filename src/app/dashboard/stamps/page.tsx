@@ -1,77 +1,72 @@
-import Link from "next/link";
+// app/dashboard/stamps/page.tsx
 import { listStampCards, deleteStampCard } from "@/actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StampCardsTable } from "@/components/dashboard/stamps/stamp-cards-table";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MonoIcon from "@/components/dashboard/common/mono-icon";
+import StampCardsExplorer from "@/components/dashboard/stamps/stamp-cards-explorer";
+import { Badge } from "@/components/ui/badge";
+import { StampCardListItem } from "@/types";
+import { Stamp, Sparkles, Timer } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoyaltyCardsPage() {
-  const { user, cards, error } = await listStampCards();
+  const { cards = [] } = await listStampCards();
 
-  if (!user) {
-    return (
-      <Card className="mt-10 max-w-6xl">
-        <CardHeader>
-          <CardTitle>Loyalty Cards</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            You must be signed in to view your loyalty cards.
-          </p>
-          <div className="mt-4">
-            <Button asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="mx-auto mt-10 max-w-3xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Loyalty Cards</CardTitle>
-          <Button asChild>
-            <Link href="/dashboard/stamps/new">New Card</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive">Failed to load: {error}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const now = Date.now();
+  const total = cards.length;
+  const active = cards.filter((c: StampCardListItem) => c.is_active).length;
+  const liveNow = cards.filter((c: StampCardListItem) => {
+    const start = c.valid_from ? new Date(c.valid_from).getTime() : undefined;
+    const end = c.valid_to ? new Date(c.valid_to).getTime() : undefined;
+    const afterStart = start === undefined || now >= start;
+    const beforeEnd = end === undefined || now <= end;
+    return afterStart && beforeEnd;
+  }).length;
 
   return (
-    <div className="p-4">
-      <Card className="max-w-6xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Your Loyalty Cards</CardTitle>
-          <Button asChild>
-            <Link href="/dashboard/stamps/new">New Card</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {cards.length === 0 ? (
-            <div className="flex items-center justify-between rounded-lg border p-6">
-              <div>
-                <p className="font-medium">No loyalty cards yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Create your first stamp card to get started.
-                </p>
-              </div>
-              <Button asChild>
-                <Link href="/dashboard/loyalty/cards/new">Create Card</Link>
-              </Button>
-            </div>
-          ) : (
-            <StampCardsTable cards={cards} deleteStampCard={deleteStampCard} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <MerchantListSection
+      title={
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <MonoIcon>
+              <Stamp
+                className="h-4 w-4 text-foreground/80"
+                aria-hidden="true"
+              />
+            </MonoIcon>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Cards
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1.5">
+              {total} total
+            </Badge>
+            <Badge variant="secondary" className="gap-1.5">
+              {active} active
+            </Badge>
+            <Badge variant="secondary" className="gap-1.5">
+              {liveNow} live now
+            </Badge>
+          </div>
+        </div>
+      }
+      subtitle={
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Reward loyalty with clear goals and windows.
+          </span>
+        </div>
+      }
+      className="pt-2"
+      headerClassName="mb-4"
+      contentClassName="space-y-4"
+    >
+      {/* Hairline divider for subtle structure */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <StampCardsExplorer cards={cards} deleteStampCard={deleteStampCard} />
+    </MerchantListSection>
   );
 }

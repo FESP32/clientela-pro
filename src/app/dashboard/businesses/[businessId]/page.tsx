@@ -8,7 +8,7 @@ import {
   getBusinessInvites,
   setActiveBusiness,
   deleteBusiness,
-} from "@/actions/businesses";
+} from "@/actions";
 import { createClient } from "@/utils/supabase/server";
 import type { BusinessDetail } from "@/types";
 

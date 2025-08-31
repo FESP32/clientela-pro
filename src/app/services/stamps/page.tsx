@@ -1,5 +1,5 @@
 // components/services/stamps/my-stamp-punches.tsx (server)
-import { listMyStampPunchesGroupedInCode } from "@/actions/stamps";
+import { listMyStampPunchesGroupedInCode } from "@/actions";
 import StampPunchesTable from "@/components/services/stamps/stamp-punch-table";
 
 export default async function MyStampPunches() {

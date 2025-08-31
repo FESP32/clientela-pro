@@ -1,4 +1,4 @@
-import { createProduct } from "@/actions/products";
+import { createProduct } from "@/actions";
 import ProductForm from "@/components/dashboard/products/product-form";
 
 export const dynamic = "force-dynamic";

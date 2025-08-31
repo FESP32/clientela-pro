@@ -1,4 +1,3 @@
-// app/(dashboard)/layout.tsx
 import { ReactNode } from "react";
 import { createClient } from "@/utils/supabase/server";
 import {
@@ -14,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import ClientBreadcrumbs from "@/components/dashboard/common/client-breadcrumbs";
 import ThemeToggle from "@/components/dashboard/common/theme-toggle";
 import LocaleSwitcher from "@/components/i18n/locale-switcher";
-import { getActiveBusiness } from "@/actions/businesses";
+import { getActiveBusiness } from "@/actions";
+import Background from "@/components/dashboard/common/background";
 
 export default async function DashboardLayout({
   children,
@@ -42,7 +42,12 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar user={userForNav} activeBusiness={business} />
       <SidebarInset>
-        <header className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <Background />
+
+        <header
+          className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
+                           sticky top-0 z-10 border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md"
+        >
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator

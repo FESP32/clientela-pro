@@ -1,5 +1,5 @@
 import ProgramJoin from "@/components/dashboard/referrals/referral-program-join";
-import { joinReferralProgram } from "@/actions/referrals";
+import { joinReferralProgram } from "@/actions";
 
 export const dynamic = "force-dynamic";
 
