@@ -65,7 +65,7 @@ export default function ReferralsHomePage() {
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button asChild className="flex-1">
                   <Link href="/services/referrals/referred">
-                    Continue
+                    Continue as Referred
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -100,7 +100,7 @@ export default function ReferralsHomePage() {
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button asChild className="flex-1">
                   <Link href="/services/referrals/referrer">
-                    Open Referrer
+                    Continue as Referrer
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

@@ -1,9 +1,25 @@
-import MyResponsesList from "@/components/services/surveys/response-list";
+// components/customer/responses/my-responses-list.tsx
+import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerMyResponsesTable, {
+  type CustomerResponseItem,
+} from "@/components/services/surveys/customer-response-table";
+import { getMyResponses } from "@/actions";
 
-export default function Page() {
+export default async function MyResponsesList() {
+  const responses = await getMyResponses();
+
   return (
-    <div className="container mx-auto p-4">
-      <MyResponsesList />
-    </div>
+    <CustomerListSection
+      kicker="Your feedback"
+      title="My Survey Responses"
+      subtitle="Here are the responses you’ve submitted. Thanks for helping us improve."
+      headerMax="3xl"
+      contentMax="4xl"
+      divider
+    >
+      <CustomerMyResponsesTable
+        items={responses as unknown as CustomerResponseItem[]}
+      />
+    </CustomerListSection>
   );
 }

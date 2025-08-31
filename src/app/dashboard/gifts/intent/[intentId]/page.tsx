@@ -10,8 +10,6 @@ import { Separator } from "@/components/ui/separator";
 
 export const dynamic = "force-dynamic";
 
-
-
 export default async function GiftIntentPage({
   params,
 }: {

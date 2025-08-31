@@ -1,157 +1,159 @@
 // components/dashboard/gifts/gift-intents-panel.tsx
-import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { listGiftIntents, createGiftIntent } from "@/actions";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import GiftIntentsTable from "./gift-intents-table";
+import { Separator } from "@/components/ui/separator";
+import SubmitButton from "@/components/dashboard/common/submit-button";
+import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantGiftIntentsTable from "@/components/dashboard/gifts/merchant-gift-intents-table"; // responsive list+table version
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { CalendarClock, Hash, Info, User } from "lucide-react";
 
 export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
-  const { user, gift, intents, error } = await listGiftIntents(giftId);
+  const { gift, intents } = await listGiftIntents(giftId);
 
-  if (!user) {
-    return (
-      <Card className="max-w-4xl">
-        <CardHeader>
-          <CardTitle>Gift Intents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            You must be signed in to view this gift.
-          </p>
-          <div className="mt-4">
-            <Button asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  if (!gift) {
+    notFound();
   }
 
-  if (error || !gift) {
-    return (
-      <Card className="max-w-4xl">
-        <CardHeader>
-          <CardTitle>Gift Intents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive">
-            {error ?? "Gift not found."}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const pending = intents.filter((i) => i.status === "pending").length;
 
   return (
-    <Card className="max-w-5xl">
-      <CardHeader className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="relative h-12 w-12 overflow-hidden rounded bg-muted">
-            {gift.image_url ? (
-              <Image
-                src={gift.image_url}
-                alt={`${gift.title} image`}
-                fill
-                sizes="48px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                {gift.title?.[0]?.toUpperCase() ?? "?"}
-              </span>
-            )}
-          </div>
-          <div>
-            <CardTitle className="leading-tight">{gift.title}</CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {gift.description ?? "No description provided."}
-            </p>
-          </div>
+    <MerchantListSection
+      title={
+        <div className="flex flex-wrap items-center gap-2">
+          <span>Intents — {gift.title}</span>
+          <Badge variant="secondary">{intents.length} total</Badge>
+          <Badge>{pending} pending</Badge>
         </div>
+      }
+      subtitle="Create, manage, and track usage windows for this gift."
+      contentClassName="space-y-4"
+    >
+      {/* Create form (icon-labeled, with tips) */}
+      <TooltipProvider>
+        <form
+          action={createGiftIntent}
+          className="mb-2 grid w-full grid-cols-1 gap-3 md:grid-cols-[auto_minmax(220px,1fr)_minmax(220px,1fr)_auto] md:items-end"
+        >
+          <input type="hidden" name="gift_id" value={gift.id} />
 
-        <Badge variant="secondary" className="shrink-0 self-start">
-          Gift ID: {gift.id}
-        </Badge>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Create intents */}
-        <div className="rounded-lg border p-4">
-          <h3 className="text-sm font-medium">Create new gift intents</h3>
-          <p className="text-xs text-muted-foreground">
-            Generate one or more intents for this gift. You can optionally set
-            an expiry or assign a customer upfront.
-          </p>
-
-          <form
-            action={createGiftIntent}
-            className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3"
-          >
-            <input type="hidden" name="gift_id" value={gift.id} />
-
-            <div className="space-y-2">
-              <Label htmlFor="qty">Quantity</Label>
+          {/* Qty */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="qty">Qty</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  How many intents (codes) to create.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <Hash className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="qty"
-                name="qty"
                 type="number"
+                name="qty"
                 min={1}
                 defaultValue={1}
+                inputMode="numeric"
+                className="h-9 w-24 pl-8"
+                aria-describedby="qty-tip"
               />
             </div>
+            <p id="qty-tip" className="text-xs text-muted-foreground">
+              Minimum 1. You can create more later.
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="expires_at">Expires at (optional)</Label>
-              <Input id="expires_at" name="expires_at" type="datetime-local" />
+          {/* Expires at */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="expires_at">Expires at</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Optional. Leave blank for no expiration.
+                </TooltipContent>
+              </Tooltip>
             </div>
+            <div className="relative">
+              <CalendarClock className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="expires_at"
+                type="datetime-local"
+                name="expires_at"
+                className="h-9 pl-8"
+                aria-describedby="exp-tip"
+              />
+            </div>
+            <p id="exp-tip" className="text-xs text-muted-foreground">
+              Uses your local time. You can edit later.
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="customer_id">Customer ID (optional)</Label>
+          {/* Customer ID */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="customer_id">Customer ID</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Optional. Pre-assign to a customer (profile.user_id).
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="customer_id"
                 name="customer_id"
                 placeholder="profile.user_id"
+                className="h-9 pl-8"
+                aria-describedby="cust-tip"
               />
             </div>
-
-            <div className="sm:col-span-3">
-              <Button type="submit">Create intents</Button>
-            </div>
-          </form>
-        </div>
-
-        <Separator />
-
-        {/* List intents */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">Intents</h3>
-          {intents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No intents created yet.
+            <p id="cust-tip" className="text-xs text-muted-foreground">
+              Leave empty to allow anyone to claim.
             </p>
-          ) : (
-            <GiftIntentsTable intents={intents} />
-          )}
-        </div>
-      </CardContent>
+          </div>
 
-      <CardFooter className="text-xs text-muted-foreground">
-        Tip: You can share intent IDs externally and build a claim flow that
-        marks them as <code>claimed</code> or <code>consumed</code>.
-      </CardFooter>
-    </Card>
+          {/* Submit */}
+          <div className="flex items-end">
+            <SubmitButton />
+          </div>
+        </form>
+      </TooltipProvider>
+
+      <Separator className="my-2" />
+
+      {/* List intents (responsive list/table) */}
+      <MerchantGiftIntentsTable intents={intents} />
+
+      {/* Optional back action */}
+      <div className="mt-3">
+        <Button asChild variant="outline">
+          <Link href="/dashboard/gifts">Back to Gifts</Link>
+        </Button>
+      </div>
+    </MerchantListSection>
   );
 }

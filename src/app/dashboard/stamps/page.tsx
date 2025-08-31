@@ -5,7 +5,7 @@ import MonoIcon from "@/components/dashboard/common/mono-icon";
 import StampCardsExplorer from "@/components/dashboard/stamps/stamp-cards-explorer";
 import { Badge } from "@/components/ui/badge";
 import { StampCardListItem } from "@/types";
-import { Stamp, Sparkles, Timer } from "lucide-react";
+import { Stamp, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

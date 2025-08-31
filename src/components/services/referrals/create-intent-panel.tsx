@@ -1,12 +1,6 @@
+// components/services/referrals/create-intent-panel.tsx
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +12,8 @@ import {
   getMyProgramIntentQuota,
 } from "@/actions";
 import type { ReferralProgramRow } from "@/types";
-import { IntentListTable } from "./intent-list-table";
+import ReferrerIntentTable from "./referrer-intent-table";
+import SubmitButton from "@/components/dashboard/common/submit-button";
 
 type Props = {
   program: Pick<
@@ -33,7 +28,6 @@ type Props = {
 export default async function CreateIntentPanel({
   program,
   title = "Invite a friend",
-  cta = "Create intent",
   action = createReferralIntent,
 }: Props) {
   const programId = program.id;
@@ -62,40 +56,38 @@ export default async function CreateIntentPanel({
     : null;
 
   return (
-    <Card className="w-full max-w-2xl md:max-w-6xl">
-      <CardHeader>
-        {/* Mobile-first header: stack content; spread on md+ */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <CardTitle className="text-lg md:text-xl">{title}</CardTitle>
+    <section className="w-full mx-auto max-w-2xl md:max-w-6xl space-y-6">
+      {/* Header */}
+      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-lg md:text-xl font-semibold">{title}</h2>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {cap !== null ? (
-              <Badge variant={reachedCap ? "outline" : "secondary"}>
-                {createdIntents} / {cap}
-              </Badge>
-            ) : (
-              <Badge variant="secondary">Created: {createdIntents}</Badge>
-            )}
-            {program.code ? (
-              <Badge variant="secondary">Code: {program.code}</Badge>
-            ) : null}
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {cap !== null ? (
+            <Badge variant={reachedCap ? "outline" : "secondary"}>
+              {createdIntents} / {cap}
+            </Badge>
+          ) : (
+            <Badge variant="secondary">Created: {createdIntents}</Badge>
+          )}
+          {program.code ? (
+            <Badge variant="secondary">Code: {program.code}</Badge>
+          ) : null}
         </div>
+      </header>
 
-        {program.title ? (
-          <p className="mt-1 text-xs md:text-sm text-muted-foreground">
-            Program: {program.title}
-          </p>
-        ) : null}
-      </CardHeader>
+      {program.title ? (
+        <div className="text-xs md:text-sm text-muted-foreground">
+          Program: {program.title}
+        </div>
+      ) : null}
 
-      <CardContent className="space-y-6">
-        {/* Create intent form */}
+      {/* Create intent form / auth states */}
+      <div className="space-y-4">
         {!user ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+          <>
+            <div className="text-sm text-muted-foreground">
               Sign in to create invites.
-            </p>
+            </div>
             <Button asChild className="w-full md:w-auto">
               <Link
                 href={`/login?next=/services/referrals/referrer/${programId}`}
@@ -103,17 +95,17 @@ export default async function CreateIntentPanel({
                 Sign in
               </Link>
             </Button>
-          </div>
+          </>
         ) : reachedCap ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+          <>
+            <div className="text-sm text-muted-foreground">
               You’ve reached the maximum number of invites you can create for
               this program.
-            </p>
+            </div>
             <Button disabled className="w-full">
               Cap reached
             </Button>
-          </div>
+          </>
         ) : (
           <form action={action} className="space-y-4">
             <input type="hidden" name="program_id" value={programId} />
@@ -125,41 +117,39 @@ export default async function CreateIntentPanel({
                 type="datetime-local"
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Leave empty to create an invite with no expiry.
-              </p>
+              </div>
             </div>
-            <Button type="submit" className="w-full md:w-auto">
-              {cta}
-            </Button>
+            <SubmitButton />
           </form>
         )}
+      </div>
 
-        <Separator />
+      <Separator />
 
-        {/* Intents list */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">Your invites</h3>
-          {!user ? (
-            <p className="text-sm text-muted-foreground">
-              Sign in to view your invites.
-            </p>
-          ) : !intents || intents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No invites created yet.
-            </p>
-          ) : (
-            // Ensure the table within IntentListTable can scroll on small screens
-            <div className="w-full overflow-x-auto">
-              <IntentListTable intents={intents} />
-            </div>
-          )}
-        </div>
-      </CardContent>
+      {/* Intents list */}
+      <section className="space-y-2">
+        <h3 className="text-sm font-medium">Your invites</h3>
+        {!user ? (
+          <div className="text-sm text-muted-foreground">
+            Sign in to view your invites.
+          </div>
+        ) : !intents || intents.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            No invites created yet.
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <ReferrerIntentTable intents={intents} />
+          </div>
+        )}
+      </section>
 
-      <CardFooter className="text-xs text-muted-foreground">
+      {/* Footer note */}
+      <div className="text-xs text-muted-foreground">
         You can assign a customer to an invite later.
-      </CardFooter>
-    </Card>
+      </div>
+    </section>
   );
 }

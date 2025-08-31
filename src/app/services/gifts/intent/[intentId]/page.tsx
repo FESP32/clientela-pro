@@ -268,22 +268,6 @@ export default async function GiftConsumePage({
               </div>
             </>
           )}
-
-          {/* Helpful links */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            {gift?.id ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/services/gifts/${gift.id}`}>View gift</Link>
-              </Button>
-            ) : null}
-            {business?.id ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/dashboard/businesses/${business.id}`}>
-                  View business
-                </Link>
-              </Button>
-            ) : null}
-          </div>
         </CardContent>
       </Card>
     </div>

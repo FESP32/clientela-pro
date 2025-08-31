@@ -150,9 +150,7 @@ export default async function CardIntentsPage({
 
       <Separator className="my-2" />
 
-      {/* Table */}
       <MerchantStampIntentsTable intents={intents} />
-
       {/* Optional back action */}
       <div className="mt-3">
         <Button asChild variant="outline">

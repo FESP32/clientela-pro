@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,10 +42,13 @@ function GiftActions({ id }: { id: string }) {
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/gifts/${id}`}>Open</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/dashboard/gifts/${id}/edit`}>Edit</Link>
+          <Link
+            href={`/dashboard/gifts/${id}`}
+            className="flex items-center gap-2"
+          >
+            <UserPlus className="size-4" />
+            Give gift
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <form action={deleteGift}>

@@ -382,4 +382,54 @@ export async function getMyProgramIntentQuota(
   return { cap, createdIntents, remainingCreatable, reachedCap };
 }
 
+export type ReferredIntentRow = {
+  id: string;
+  status: string;
+  created_at: string | null;
+  consumed_at: string | null;
+  expires_at: string | null;
+  program_id: string | null;
+  referral_program: { id: string; title: string | null } | null;
+};
+
+export async function listMyReferredIntents() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      user: null,
+      items: [] as ReferredIntentRow[],
+      error: null as string | null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("referral_intent")
+    .select(
+      `
+      id,
+      status,
+      created_at,
+      consumed_at,
+      expires_at,
+      program_id,
+      referral_program ( id, title )
+    `
+    )
+    .eq("referred_id", user.id)
+    .order("consumed_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  return {
+    user,
+    items: (data ?? []) as ReferredIntentRow[],
+    error: error?.message ?? null,
+  };
+}
+
 

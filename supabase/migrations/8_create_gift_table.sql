@@ -21,6 +21,11 @@ create table if not exists public.gift (
   updated_at   timestamptz not null default timezone('utc', now())
 );
 
+alter table public.gift
+  add constraint gift_business_id_fk
+  foreign key (business_id) references public.business(id)
+  on delete cascade;
+
 create index if not exists idx_gift_business_id on public.gift(business_id);
 
 drop trigger if exists trig_touch_gift on public.gift;
@@ -35,7 +40,7 @@ create table if not exists public.gift_intent (
   id           uuid primary key default gen_random_uuid(),
 
   gift_id      uuid not null references public.gift(id) on delete cascade,
-  issuer_id    uuid not null references public.profile(user_id) on delete cascade, -- creator
+  business_id  uuid not null references public.business(id) on delete cascade,
   customer_id  uuid     references public.profile(user_id) on delete set null,     -- claimant (NULL until claimed)
 
   status       text not null default 'pending'
@@ -46,6 +51,11 @@ create table if not exists public.gift_intent (
   created_at   timestamptz not null default timezone('utc', now()),
   updated_at   timestamptz not null default timezone('utc', now())
 );
+
+alter table public.gift
+  add constraint gift_intent_business_id_fk
+  foreign key (business_id) references public.business(id)
+  on delete cascade;
 
 create index if not exists idx_gift_intent_gift     on public.gift_intent(gift_id);
 create index if not exists idx_gift_intent_issuer   on public.gift_intent(issuer_id);
