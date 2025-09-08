@@ -5,7 +5,7 @@ import { NavMenu } from "./nav-menu";
 import { NavigationSheet } from "./navigation-sheet";
 import Link from "next/link";
 
-import ThemeToggle from "../dashboard/common/theme-toggle";
+import ThemeToggle from "../common/theme-toggle";
 import LocaleSwitcher from "../i18n/locale-switcher";
 import { Logo } from "./logo";
 import { useTranslations } from "next-intl";

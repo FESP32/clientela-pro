@@ -3,18 +3,18 @@ import { createClient } from "@/utils/supabase/server";
 import {
   AppSidebar,
   type NavUserData,
-} from "@/components/dashboard/common/app-sidebar";
+} from "@/components/common/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import ClientBreadcrumbs from "@/components/dashboard/common/client-breadcrumbs";
-import ThemeToggle from "@/components/dashboard/common/theme-toggle";
+import ClientBreadcrumbs from "@/components/common/client-breadcrumbs";
+import ThemeToggle from "@/components/common/theme-toggle";
 import LocaleSwitcher from "@/components/i18n/locale-switcher";
 import { getActiveBusiness } from "@/actions";
-import Background from "@/components/dashboard/common/background";
+import Background from "@/components/common/background";
 
 export default async function DashboardLayout({
   children,

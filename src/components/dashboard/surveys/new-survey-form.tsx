@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import SubmitButton from "@/components/dashboard/common/submit-button";
+import SubmitButton from "@/components/common/submit-button";
 import { ProductRow } from "@/types/products";
 import {
   ClipboardList,
@@ -21,29 +21,68 @@ import {
   CalendarClock,
   Shield,
   Sparkles,
+  CalendarRange,
+  Sun,
+  Clock3,
+  CalendarPlus,
+  Eraser,
 } from "lucide-react";
+import MonoIcon from "../../common/mono-icon";
+import { useRef } from "react";
+import { format, addDays, endOfDay } from "date-fns";
 
 interface NewSurveyFormProps {
   products: ProductRow[];
   action: (formData: FormData) => Promise<void>;
 }
 
+function fmtLocal(dt: Date) {
+  // For <input type="datetime-local"> (no seconds)
+  return format(dt, "yyyy-MM-dd'T'HH:mm");
+}
+
 export default function NewSurveyForm({
   products,
   action,
 }: NewSurveyFormProps) {
+  const startRef = useRef<HTMLInputElement>(null);
+  const endRef = useRef<HTMLInputElement>(null);
+
+  const applyRange = (start: Date | null, end: Date | null) => {
+    if (startRef.current) {
+      startRef.current.value = start ? fmtLocal(start) : "";
+      // Dispatch input event to notify any listeners (helpful when mixing with form libs)
+      startRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (endRef.current) {
+      endRef.current.value = end ? fmtLocal(end) : "";
+      endRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  };
+
+  const now = () => {
+    const d = new Date();
+    d.setSeconds(0, 0);
+    return d;
+  };
+
+  const setToday = () => applyRange(now(), endOfDay(now()));
+  const setPlus1d = () => applyRange(now(), addDays(now(), 1));
+  const setPlus7d = () => applyRange(now(), addDays(now(), 7));
+  const setPlus30d = () => applyRange(now(), addDays(now(), 30));
+  const clearRange = () => applyRange(null, null);
+
   return (
-    <form action={action} className="p-4">
+    <form action={action}>
       <div className="mx-auto w-full max-w-6xl">
         {/* Header */}
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <ClipboardList
-                className="h-5 w-5 text-primary"
-                aria-hidden="true"
-              />
-              <h1 className="text-2xl font-semibold leading-none tracking-tight">
+              <MonoIcon>
+                <ClipboardList className="size-4" aria-hidden="true" />
+              </MonoIcon>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
                 Create Survey
               </h1>
             </div>
@@ -62,16 +101,10 @@ export default function NewSurveyForm({
               </span>
             </p>
           </div>
-
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link href="/dashboard/surveys">Cancel</Link>
-            </Button>
-          </div>
         </header>
 
         {/* Details */}
-        <section className="rounded-lg border bg-card p-6 space-y-6">
+        <section className="rounded-lg space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="product_id">Product</Label>
@@ -124,12 +157,91 @@ export default function NewSurveyForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="starts_at">Starts at</Label>
-              <Input id="starts_at" name="starts_at" type="datetime-local" />
+              <Input
+                id="starts_at"
+                name="starts_at"
+                type="datetime-local"
+                ref={startRef}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="ends_at">Ends at</Label>
-              <Input id="ends_at" name="ends_at" type="datetime-local" />
+              <Input
+                id="ends_at"
+                name="ends_at"
+                type="datetime-local"
+                ref={endRef}
+              />
+            </div>
+
+            {/* Quick range presets */}
+            <div className="md:col-span-2">
+              <div
+                className="flex flex-wrap items-center gap-2"
+                aria-label="Quick time range"
+              >
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <CalendarRange className="h-4 w-4" aria-hidden="true" />
+                  Quick range:
+                </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setToday}
+                  aria-describedby="range-help"
+                >
+                  <Sun className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Today
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus1d}
+                >
+                  <Clock3 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +1 day
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus7d}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +7 days
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus30d}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +30 days
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearRange}
+                  className="text-muted-foreground"
+                >
+                  <Eraser className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Clear
+                </Button>
+              </div>
+              <p id="range-help" className="mt-2 text-xs text-muted-foreground">
+                Presets set both start and end. You can still fine-tune the
+                times above.
+              </p>
             </div>
 
             {/* Active */}
@@ -165,8 +277,7 @@ export default function NewSurveyForm({
 
             <p className="text-sm text-muted-foreground md:col-span-2">
               When enabled, this survey is intended to collect responses without
-              identifying the respondent. Ensure your server action/DB layer
-              avoids storing user identifiers for responses to this survey.
+              identifying the respondent.
             </p>
           </div>
 

@@ -4,17 +4,19 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import SubmitButton from "../common/submit-button";
+import SubmitButton from "../../common/submit-button";
 import CreateIntentPanel from "@/components/services/referrals/create-intent-panel";
 import { createReferralIntent, getProgramJoinData } from "@/actions";
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerListSection from "@/components/common/customer-list-section";
 import {
   BadgePercent,
   Users,
   Clock3,
   ShieldCheck,
   KeySquare,
+  LogIn,
 } from "lucide-react";
+import { createClient } from "@/utils/supabase/server"; // ⬅️ early auth gate
 
 type Props = {
   programId: string;
@@ -24,6 +26,38 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function ProgramJoin({ programId, action }: Props) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const loginNext = `/services/referrals/referrer/${programId}/join`;
+
+  if (!user) {
+    // Minimal, premium prompt asking the user to sign in (no program query yet)
+    return (
+      <CustomerListSection
+        kicker="Referrals"
+        title="Join program"
+        subtitle="Please sign in to view and join this referral program."
+        divider
+        actions={
+          <Button asChild size="sm">
+            <Link href={`/login?next=${encodeURIComponent(loginNext)}`}>
+              <LogIn className="mr-1.5 h-4 w-4" />
+              Sign in to continue
+            </Link>
+          </Button>
+        }
+      >
+        <p className="text-sm text-muted-foreground text-center">
+          You’ll return here after signing in.
+        </p>
+      </CustomerListSection>
+    );
+  }
+
+  // 2) 👇 User is authenticated — now it’s safe to fetch program & participant info
   const res = await getProgramJoinData(programId);
 
   if (!res.ok) {
@@ -41,7 +75,7 @@ export default async function ProgramJoin({ programId, action }: Props) {
     );
   }
 
-  const { userId, program, participantCount, alreadyJoined } = res;
+  const { program, participantCount, alreadyJoined } = res;
   const isActive = !!program.is_active;
 
   const validity =
@@ -144,50 +178,31 @@ export default async function ProgramJoin({ programId, action }: Props) {
 
           <Separator />
 
-          {/* Participants + auth hint */}
+          {/* Participants + state hint */}
           <div className="flex flex-col items-start justify-between gap-2 text-sm sm:flex-row sm:items-center">
             <div className="text-muted-foreground">
               <span>Participants: </span>
               <span className="font-medium">{participantCount}</span>
             </div>
 
-            {!userId ? (
-              <div className="text-muted-foreground">
-                <span>Please </span>
-                <Link
-                  href={`/login?next=/referrals/${programId}/join`}
-                  className="underline underline-offset-4"
-                >
-                  sign in
-                </Link>
-                <span> to join.</span>
-              </div>
-            ) : alreadyJoined ? (
+            {alreadyJoined ? (
               <div className="text-green-600">
                 You’re already a participant.
               </div>
             ) : null}
           </div>
 
-          {/* Submit / Sign in */}
+          {/* Submit */}
           <div className="flex justify-end">
-            {!userId ? (
-              <Button asChild>
-                <Link href={`/login?next=/referrals/${programId}/join`}>
-                  Sign in
-                </Link>
-              </Button>
-            ) : (
-              <form action={action}>
-                <input type="hidden" name="program_id" value={programId} />
-                <SubmitButton disabled={!isActive || alreadyJoined} />
-              </form>
-            )}
+            <form action={action}>
+              <input type="hidden" name="program_id" value={programId} />
+              <SubmitButton disabled={!isActive || alreadyJoined} />
+            </form>
           </div>
         </div>
       )}
 
-      {userId && alreadyJoined ? (
+      {alreadyJoined ? (
         <CreateIntentPanel
           program={program}
           action={createReferralIntent}

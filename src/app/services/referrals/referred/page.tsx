@@ -1,7 +1,7 @@
 // app/services/referrals/referred/page.tsx  (adjust path if needed)
 import { redirect } from "next/navigation";
 import { listMyReferredIntents } from "@/actions";
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerListSection from "@/components/common/customer-list-section";
 import ReferredIntentsResponsive from "@/components/services/referrals/referred-intents-table";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";

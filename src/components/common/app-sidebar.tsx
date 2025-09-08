@@ -2,17 +2,17 @@
 
 import * as React from "react";
 import {
-  Barcode,
-  SmilePlus,
   Stamp,
-  Share2,
   Gift,
   List,
   Plus,
+  Megaphone,
+  ClipboardList,
+  Package2,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { NavMain } from "@/components/dashboard/common/nav-main";
-import { NavUser } from "@/components/dashboard/common/nav-user";
+import { NavMain } from "@/components/common/nav-main";
+import { NavUser } from "@/components/common/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,7 @@ import {
   SidebarRail,
   useSidebar, // ⬅️ import the hook
 } from "@/components/ui/sidebar";
-import { BusinessSwitcher } from "@/components/dashboard/common/business-switcher";
+import { BusinessSwitcher } from "@/components/common/business-switcher";
 import type { BusinessRow } from "@/types/business";
 
 export type NavUserData = {
@@ -35,7 +35,7 @@ const navData = {
     {
       title: "Products",
       url: "#",
-      icon: Barcode,
+      icon: Package2,
       items: [
         { title: "List", url: "/dashboard/products", icon: List },
         { title: "New", url: "/dashboard/products/new", icon: Plus },
@@ -44,7 +44,7 @@ const navData = {
     {
       title: "Surveys",
       url: "#",
-      icon: SmilePlus,
+      icon: ClipboardList,
       items: [
         { title: "List", url: "/dashboard/surveys", icon: List },
         { title: "New", url: "/dashboard/surveys/new", icon: Plus },
@@ -62,7 +62,7 @@ const navData = {
     {
       title: "Referrals",
       url: "#",
-      icon: Share2,
+      icon: Megaphone,
       items: [
         { title: "List", url: "/dashboard/referrals", icon: List },
         { title: "New", url: "/dashboard/referrals/new", icon: Plus },

@@ -1,9 +1,9 @@
 // app/dashboard/referrals/page.tsx
 import { listReferralPrograms } from "@/actions";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantListSection from "@/components/common/merchant-list-section";
 import ReferralProgramsExplorer from "@/components/dashboard/referrals/referral-programs-explorer";
 import { Badge } from "@/components/ui/badge";
-import { Users, Gift, Tag } from "lucide-react";
+import { Users, Gift, Tag, Megaphone } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +31,7 @@ export default async function ReferralProgramsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <MonoIcon>
-              <Users
-                className="h-4 w-4 text-foreground/80"
-                aria-hidden="true"
-              />
+              <Megaphone className="size-4" aria-hidden="true" />
             </MonoIcon>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
               Referral Programs
@@ -66,7 +63,6 @@ export default async function ReferralProgramsPage() {
           </span>
         </div>
       }
-      className="pt-2"
       headerClassName="mb-4"
       contentClassName="space-y-4"
     >

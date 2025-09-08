@@ -13,7 +13,7 @@ import {
 } from "@/actions";
 import type { ReferralProgramRow } from "@/types";
 import ReferrerIntentTable from "./referrer-intent-table";
-import SubmitButton from "@/components/dashboard/common/submit-button";
+import SubmitButton from "@/components/common/submit-button";
 
 type Props = {
   program: Pick<
@@ -109,18 +109,6 @@ export default async function CreateIntentPanel({
         ) : (
           <form action={action} className="space-y-4">
             <input type="hidden" name="program_id" value={programId} />
-            <div className="space-y-2">
-              <Label htmlFor="expires_at">Expires at (optional)</Label>
-              <Input
-                id="expires_at"
-                name="expires_at"
-                type="datetime-local"
-                className="w-full"
-              />
-              <div className="text-xs text-muted-foreground">
-                Leave empty to create an invite with no expiry.
-              </div>
-            </div>
             <SubmitButton />
           </form>
         )}

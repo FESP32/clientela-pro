@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import {
@@ -68,7 +68,10 @@ export async function getSurveyWithResponses(
     .single()
     .overrideTypes<SurveyWithResponses>(); // <-- use returns<T>(), not overrideTypes
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("Error fetching surveys:", error.message);
+    notFound();
+  }
   if (!data) throw new Error("Survey not found");
 
   return data;
@@ -77,9 +80,10 @@ export async function getSurveyWithResponses(
 export async function listSurveys(): Promise<SurveyWithProduct[]> {
   const supabase = await createClient();
 
+
   const { business } = await getActiveBusiness();
   if (!business) {
-    throw new Error("No active business selected.");
+    redirect("/dashboard/businesses/missing");
   }
 
   const { data, error } = await supabase

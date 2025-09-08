@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { listJoinedReferralProgramsWithIntents } from "@/actions";
 
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerListSection from "@/components/common/customer-list-section";
 import JoinedReferralProgramsList from "@/components/services/referrals/joined-programs-list";
 import { Badge } from "@/components/ui/badge";
 import { Users, BadgePercent } from "lucide-react";

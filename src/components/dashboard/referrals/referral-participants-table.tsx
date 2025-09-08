@@ -7,7 +7,7 @@ import type { ReferralParticipantListItem } from "@/types";
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 
 export default function ReferralParticipantsTable({
   items,

@@ -50,8 +50,8 @@ export async function setActiveBusiness(formData: FormData) {
     );
   }
 
-  // Upsert into active_business
-  const { error } = await supabase.from("business_active").upsert(
+  // Upsert into business_current
+  const { error } = await supabase.from("business_current").upsert(
     {
       user_id: user.id,
       business_id: id,

@@ -11,7 +11,7 @@ export default async function NewStampCardPage() {
   const { data } = await listProducts();
 
   return (
-    <div className="p-4">
+    <div className="px-5 sm:px-6 lg:px-16 mt-8 mb-16">
       <StampCardForm products={data} onSubmit={createStampCard} />
     </div>
   );

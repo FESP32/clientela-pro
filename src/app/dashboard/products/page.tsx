@@ -1,7 +1,7 @@
 // app/dashboard/products/page.tsx
 import { listProducts, deleteProduct } from "@/actions";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
-import MonoIcon from "@/components/dashboard/common/mono-icon";
+import MerchantListSection from "@/components/common/merchant-list-section";
+import MonoIcon from "@/components/common/mono-icon";
 import ProductsExplorer from "@/components/dashboard/products/products-explorer";
 import { Badge } from "@/components/ui/badge";
 import { Package2, Sparkles } from "lucide-react";
@@ -17,7 +17,7 @@ export default async function ProductsPage() {
           <div className="flex items-center gap-2">
             <MonoIcon>
               <Package2
-                className="h-4 w-4 text-foreground/80"
+                className="size-4"
                 aria-hidden="true"
               />
             </MonoIcon>
@@ -40,11 +40,9 @@ export default async function ProductsPage() {
           </span>
         </div>
       }
-      className="pt-2"
       headerClassName="mb-4"
       contentClassName="space-y-4"
     >
-      {/* Hairline divider for subtle structure */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
       <ProductsExplorer products={data} deleteProduct={deleteProduct} />

@@ -16,7 +16,7 @@ import {
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { deleteGift } from "@/actions";
 
 type GiftListItem = {
@@ -40,7 +40,6 @@ function GiftActions({ id }: { id: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
             href={`/dashboard/gifts/${id}`}

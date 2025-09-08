@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import ThemeToggle from "@/components/dashboard/common/theme-toggle";
+import ThemeToggle from "@/components/common/theme-toggle";
 import { ListChecks, Stamp, Gift, Share2, User, Home } from "lucide-react";
 import { useTranslations } from "next-intl";
 import LocaleSwitcher from "@/components/i18n/locale-switcher";

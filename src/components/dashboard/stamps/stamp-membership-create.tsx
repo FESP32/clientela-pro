@@ -1,21 +1,14 @@
-// components/dashboard/stamp-membership-create.tsx
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { Sparkles, Stamp } from "lucide-react";
+import CustomerJoinStamp from "./customer-join-stamp";
 
 export default async function StampMembershipCreate({
   cardId,
   title = "Add this card to my account",
   cta = "Create my card",
-  action
+  action,
 }: {
   cardId: string;
   title?: string;
@@ -27,28 +20,30 @@ export default async function StampMembershipCreate({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If your middleware already forces auth, this is just a guard.
+  // Not signed in → friendly prompt (no cards)
   if (!user) {
     return (
-      <Card className="max-w-md">
-        <CardHeader>
-          <CardTitle>Sign in required</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Please sign in to add this stamp card to your account.
-          </p>
-        </CardContent>
-        <CardFooter className="justify-end">
+      <section aria-labelledby="join-stamp-title" className="space-y-3">
+        <h2
+          id="join-stamp-title"
+          className="text-xl font-semibold flex items-center gap-2"
+        >
+          <Stamp className="h-5 w -5 text-primary" aria-hidden />
+          Sign in required
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Please sign in to add this stamp card to your account.
+        </p>
+        <div className="flex justify-end">
           <Button asChild>
-            <Link href={`/login?next=/stamps/${cardId}/join`}>Sign in</Link>
+            <Link href={`/login?next=/services/stamps/${cardId}/join`}>Sign in</Link>
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </section>
     );
   }
 
-  // Check if the user already has an instance (>= 1 punch on this card)
+  // Already has instance?
   const { count } = await supabase
     .from("stamp_punch")
     .select("*", { count: "exact", head: true })
@@ -59,42 +54,33 @@ export default async function StampMembershipCreate({
 
   if (alreadyHasInstance) {
     return (
-      <Card className="max-w-md">
-        <CardHeader>
-          <CardTitle>Already added</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            You already have this stamp card in your account.
-          </p>
-        </CardContent>
-        <CardFooter className="justify-end gap-2">
+      <section aria-labelledby="join-stamp-exists" className="space-y-3">
+        <h2
+          id="join-stamp-exists"
+          className="text-xl font-semibold flex items-center gap-2"
+        >
+          <Sparkles className="h-5 w-5 text-yellow-500" aria-hidden />
+          Already added
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          You already have this stamp card in your account.
+        </p>
+        <div className="flex justify-end gap-2">
           <Button asChild variant="outline">
             <Link href={`/services/stamps/${cardId}`}>View my card</Link>
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </section>
     );
   }
 
-  // Not added yet → show creation form
+  // Create view (animated, welcoming)
   return (
-    <Card className="max-w-md">
-      <form action={action} className="contents">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <input type="hidden" name="card_id" value={cardId} />
-          <p className="text-sm text-muted-foreground">
-            This will create a personal instance of the stamp card for your
-            account. You can start collecting stamps right away.
-          </p>
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button type="submit">{cta}</Button>
-        </CardFooter>
-      </form>
-    </Card>
+    <CustomerJoinStamp
+      title={title}
+      cta={cta}
+      cardId={cardId}
+      action={action}
+    />
   );
 }

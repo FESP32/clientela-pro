@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { format } from "date-fns";
 import type { ReferredIntentRow } from "@/actions";
 import { BadgePercent, CalendarClock, Ticket } from "lucide-react";
@@ -32,11 +32,6 @@ export default function ReferredIntentsTable({
         <p className="text-sm text-muted-foreground">
           You haven’t joined any invites yet.
         </p>
-        <div className="mt-3">
-          <Button asChild>
-            <Link href="/referrals">Browse Programs</Link>
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
@@ -99,11 +94,6 @@ export default function ReferredIntentsTable({
             <Button asChild size="sm" variant="outline">
               <Link href={`/services/referrals/referred/${i.id}`}>Open</Link>
             </Button>
-            {i.program_id ? (
-              <Button asChild size="sm" variant="ghost">
-                <Link href={`/referrals/${i.program_id}`}>Program</Link>
-              </Button>
-            ) : null}
           </div>
         </div>
       ),
@@ -167,11 +157,6 @@ export default function ReferredIntentsTable({
               <Button asChild size="sm" variant="outline">
                 <Link href={`/services/referrals/referred/${i.id}`}>Open</Link>
               </Button>
-              {i.program_id ? (
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/referrals/${i.program_id}`}>Program</Link>
-                </Button>
-              ) : null}
             </div>
           </div>
         </div>

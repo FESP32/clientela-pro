@@ -1,18 +1,13 @@
 "use client";
 
-import SmileyRespond from "@/components/services/surveys/smiley-survey";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useTransition, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { SurveyRow, SurveyWithTraits, Trait } from "@/types";
+import { Button } from "@/components/ui/button";
+import SmileyRespond from "@/components/services/surveys/smiley-survey";
+import { SurveyRow, Trait } from "@/types";
+import { Separator } from "@/components/ui/separator";
+import { ClipboardList, Info, CheckCircle2, LogIn } from "lucide-react";
 
 type Props = {
   survey: SurveyRow;
@@ -32,12 +27,21 @@ export default function RespondForm({
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
 
+  const formDisabled = submitted || isPending || hasResponded;
+  const requiresAuth = !survey.is_anonymous;
+
+  // Can submit when not submitted yet, not already responded,
+  // and either the survey is anonymous OR (non-anonymous + user is authenticated)
+  const canSubmit =
+    !submitted &&
+    !hasResponded &&
+    (survey.is_anonymous || (requiresAuth && isAuthenticated));
+
   const handleSubmit = (formData: FormData) => {
-    if (submitted || hasResponded) return; // prevent double/duplicate submits
+    if (submitted || hasResponded) return;
 
     startTransition(async () => {
       const result = await onSubmit(formData);
-
       if (result.success) {
         setSubmitted(true);
         toast.success(result.message || "Response submitted!");
@@ -47,38 +51,48 @@ export default function RespondForm({
     });
   };
 
-  const formDisabled = submitted || isPending || hasResponded;
-  const requiresAuth = !survey.is_anonymous;
-
-  // Only allow submit when:
-  // - not submitted yet
-  // - user hasn't already responded
-  // - (anonymous survey) OR (non-anonymous & user is authenticated)
-  const canSubmit =
-    !submitted &&
-    !hasResponded &&
-    (survey.is_anonymous || (requiresAuth && isAuthenticated));
-
-    console.log(JSON.stringify(survey.traits));
-    
-
   return (
-    <form action={handleSubmit} className="p-4">
+    <form action={handleSubmit} className="px-5 sm:px-6 lg:px-16 py-6 min-h-screen">
       <input type="hidden" name="survey_id" value={survey.id} />
-
       <fieldset disabled={formDisabled} aria-busy={isPending}>
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle>{survey.title}</CardTitle>
-            {survey.description && (
-              <p className="text-sm text-muted-foreground">
+        <div className="mx-auto w-full max-w-3xl">
+          {/* Header */}
+          <header className="mb-5">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background/50 px-3 py-1 text-xs text-muted-foreground">
+              <ClipboardList className="h-3.5 w-3.5" />
+              <span>Survey</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+                {survey.title}
+              </h1>
+            </div>
+
+            {survey.description ? (
+              <p className="mt-2 text-sm text-muted-foreground">
                 {survey.description}
               </p>
-            )}
-          </CardHeader>
+            ) : null}
+          </header>
 
-          <CardContent className="space-y-6">
-            {/* Hide the smileys if the user already responded */}
+          {/* Hairline divider */}
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent mb-4" />
+
+          {/* Guidance for non-anonymous surveys */}
+          {!survey.is_anonymous && (
+            <div className="mb-4 flex items-start gap-2 rounded-md border border-foreground/10 bg-background/50 px-3 py-2 text-sm">
+              <Info className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <div className="text-muted-foreground">
+                This survey requires sign-in so your response can be associated
+                with your account.
+              </div>
+            </div>
+          )}
+
+          {/* Main content */}
+          <div className="space-y-6">
+            {/* Smiley picker (hidden if already responded) */}
             {!hasResponded && survey.traits && (
               <SmileyRespond
                 surveyTitle={survey.title}
@@ -86,30 +100,32 @@ export default function RespondForm({
               />
             )}
 
+            {/* Status messages (standalone blocks, not inside <p> wrapping other elements) */}
             {hasResponded && (
-              <p className="text-sm text-muted-foreground" aria-live="polite">
+              <div className="text-sm text-muted-foreground" aria-live="polite">
                 You’ve already responded to this survey.
-              </p>
+              </div>
             )}
 
             {submitted && !hasResponded && (
-              <p className="text-sm text-muted-foreground" aria-live="polite">
-                Thanks! Your response has been recorded.
-              </p>
+              <div className="inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background/60 px-3 py-1 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span>Thanks! Your response has been recorded.</span>
+              </div>
             )}
 
-            {/* For non-anonymous surveys where the user isn't logged in, keep smileys visible
-                (preview) but inform they must log in to submit */}
             {!survey.is_anonymous && !isAuthenticated && !hasResponded && (
-              <p className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 Please log in to submit your response.
-              </p>
+              </div>
             )}
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex gap-2">
-            {/* Show Submit/Cancel only when the user can actually submit */}
-            {canSubmit && (
+          <Separator className="my-6" />
+
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            {canSubmit ? (
               <>
                 <Button type="submit" disabled={isPending}>
                   {isPending ? "Submitting..." : "Submit"}
@@ -118,23 +134,24 @@ export default function RespondForm({
                   <Link href="/dashboard/surveys">Cancel</Link>
                 </Button>
               </>
-            )}
+            ) : null}
 
-            {/* Non-anonymous + not authenticated: show login button (submit/cancel hidden) */}
             {!survey.is_anonymous && !isAuthenticated && !hasResponded && (
               <Button asChild>
-                <Link href="/login">Login to Respond</Link>
+                <Link href={`/login?next=/services/surveys/${survey.id}/respond`}>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login to Respond
+                </Link>
               </Button>
             )}
 
-            {/* If already responded, no submit/cancel; offer a way back */}
             {hasResponded && (
               <Button asChild variant="outline">
                 <Link href="/dashboard/surveys">Back</Link>
               </Button>
             )}
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </fieldset>
     </form>
   );

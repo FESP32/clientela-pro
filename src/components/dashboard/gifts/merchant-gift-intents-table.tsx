@@ -19,7 +19,7 @@ import type { GiftIntentRow } from "@/types";
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { GiftIntentLinkDialog } from "@/components/dashboard/gifts/gift-intent-link-dialog";
 import { fmt } from "@/lib/utils";

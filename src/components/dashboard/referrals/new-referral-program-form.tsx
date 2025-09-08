@@ -1,19 +1,31 @@
 // components/referrals/referral-program-form.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react"; // ⬅️ add useRef
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, Megaphone, Users, Gift } from "lucide-react";
-import SubmitButton from "@/components/dashboard/common/submit-button";
+import {
+  RefreshCw,
+  Megaphone,
+  Users,
+  Gift,
+  Plus,
+  CalendarRange, // ⬅️ new
+  Sun, // ⬅️ new
+  Clock3, // ⬅️ new
+  CalendarPlus, // ⬅️ new
+  Eraser, // ⬅️ new
+} from "lucide-react";
+import SubmitButton from "@/components/common/submit-button";
+import MonoIcon from "../../common/mono-icon";
+import { format, addDays, endOfDay } from "date-fns"; // ⬅️ new
 
 type ReferralProgramFormProps = {
   onSubmit: (fd: FormData) => void | Promise<void>;
-  /** Optional server error to render (if you bubble it up via search params or state) */
   errorMessage?: string | null;
 };
 
@@ -30,21 +42,55 @@ export default function NewReferralProgramForm({
   onSubmit,
   errorMessage,
 }: ReferralProgramFormProps) {
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState<string>("");
 
   useEffect(() => {
     setCode(generateCode());
   }, []);
 
+  // ── Quick time presets helpers ────────────────────────────────────────
+  const fromRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
+
+  const fmtLocal = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
+
+  const applyRange = (start: Date | null, end: Date | null) => {
+    if (fromRef.current) {
+      fromRef.current.value = start ? fmtLocal(start) : "";
+      fromRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (toRef.current) {
+      toRef.current.value = end ? fmtLocal(end) : "";
+      toRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  };
+
+  const now = () => {
+    const d = new Date();
+    d.setSeconds(0, 0);
+    return d;
+  };
+
+  const setToday = () => applyRange(now(), endOfDay(now()));
+  const setPlus1d = () => applyRange(now(), addDays(now(), 1));
+  const setPlus7d = () => applyRange(now(), addDays(now(), 7));
+  const setPlus30d = () => applyRange(now(), addDays(now(), 30));
+  const clearRange = () => applyRange(null, null);
+  // ─────────────────────────────────────────────────────────────────────
+
   return (
-    <form action={onSubmit} className="p-4">
+    <form action={onSubmit}>
       <div className="mx-auto w-full max-w-6xl">
         {/* Header */}
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h1 className="text-2xl font-semibold leading-none tracking-tight">
+              <div className="relative flex items-center">
+                <MonoIcon>
+                  <Megaphone className="size-4" aria-hidden="true" />
+                </MonoIcon>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
                 Create Referral Program
               </h1>
             </div>
@@ -66,7 +112,7 @@ export default function NewReferralProgramForm({
         </header>
 
         {/* Body */}
-        <section className="rounded-lg border bg-card p-6 space-y-10">
+        <section className="space-y-10">
           {/* Program details */}
           <section className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground/80">
@@ -176,6 +222,74 @@ export default function NewReferralProgramForm({
               Availability window
             </h3>
 
+            {/* Quick range presets ABOVE the pickers */}
+            <div>
+              <div
+                className="flex flex-wrap items-center gap-2"
+                aria-label="Quick time range"
+              >
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <CalendarRange className="h-4 w-4" aria-hidden="true" />
+                  Quick range:
+                </span>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setToday}
+                >
+                  <Sun className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Today
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus1d}
+                >
+                  <Clock3 className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +1 day
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus7d}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +7 days
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={setPlus30d}
+                >
+                  <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Now → +30 days
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearRange}
+                  className="text-muted-foreground"
+                >
+                  <Eraser className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Clear
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Presets set both start and end. You can still fine-tune the
+                times below.
+              </p>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="valid_from">Valid from</Label>
@@ -183,11 +297,17 @@ export default function NewReferralProgramForm({
                   id="valid_from"
                   name="valid_from"
                   type="datetime-local"
+                  ref={fromRef}
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="valid_to">Valid to</Label>
-                <Input id="valid_to" name="valid_to" type="datetime-local" />
+                <Input
+                  id="valid_to"
+                  name="valid_to"
+                  type="datetime-local"
+                  ref={toRef}
+                />
               </div>
             </div>
           </section>

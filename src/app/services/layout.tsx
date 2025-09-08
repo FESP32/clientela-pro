@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Home, User } from "lucide-react";
+import { HeartHandshake, Home, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Background from "@/components/dashboard/common/background";
+import Background from "@/components/common/background";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Bottom Navigation — same position, responsive + premium look */}
       <nav
         className={cn(
-          "fixed bottom-0 left-0 right-0 border-t",
+          "sticky bottom-0 left-0 right-0 border-t",
           // premium glassy surface that adapts to theme
           "bg-background/70 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md",
           "dark:bg-background/60"
@@ -36,7 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 "hover:bg-foreground/[0.04]"
               )}
             >
-              <Home className="h-5 w-5 sm:h-5 sm:w-5" />
+              <HeartHandshake className="h-5 w-5 sm:h-5 sm:w-5" />
               <span className="mt-0.5 sm:mt-1">Services</span>
             </Link>
 

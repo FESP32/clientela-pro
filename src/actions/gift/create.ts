@@ -84,7 +84,7 @@ export async function createGiftIntent(formData: FormData) {
   // Create N rows (qty). If you prefer an RPC/bulk insert, swap this.
   const rows = Array.from({ length: qty }, () => ({
     gift_id,
-    issuer_id: user.id,
+    business_id: business.id,
     customer_id,
     status: "pending" as const,
     expires_at,

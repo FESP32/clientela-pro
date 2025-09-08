@@ -6,13 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getBool } from "@/lib/utils";
 import { ReferralProgramFromFormSchema } from "@/schemas/referrals";
 import {
-  JoinedReferralProgramWithIntents,
-  ReferralIntentListMini,
-  ReferralIntentRow,
-  ReferralParticipantJoinedQuery,
-  ReferralParticipantListItem,
   ReferralProgramInsert,
-  ReferralProgramRow,
 } from "@/types";
 import { getActiveBusiness } from "@/actions";
 
@@ -100,7 +94,7 @@ export async function createReferralParticipant(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect(`/login?next=/referrals/${programId}/join`);
+  if (!user) redirect(`/login?next=/services/referrer/${programId}`);
 
   // Already a participant?
   const { data: existing, error: selErr } = await supabase
@@ -121,7 +115,7 @@ export async function createReferralParticipant(formData: FormData) {
   }
 
   revalidatePath(`/referrals/${programId}`);
-  redirect(`/referrals/${programId}?joined=1`);
+  redirect(`/referrals/${programId}`);
 }
 
 export async function createReferralIntent(formData: FormData) {
@@ -136,7 +130,7 @@ export async function createReferralIntent(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=/referrals/${programId}/join`);
+    redirect(`/login?next=/services/referrals/referrer/${programId}/join`);
   }
 
   // Ensure current user is a participant of this program (referrer)

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import SubmitButton from "@/components/dashboard/common/submit-button";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import SubmitButton from "@/components/common/submit-button";
+import MerchantListSection from "@/components/common/merchant-list-section";
 import MerchantGiftIntentsTable from "@/components/dashboard/gifts/merchant-gift-intents-table"; // responsive list+table version
 
 import {
@@ -18,7 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CalendarClock, Hash, Info, User } from "lucide-react";
+import { CalendarClock, Hash, Info } from "lucide-react";
 
 export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
   const { gift, intents } = await listGiftIntents(giftId);
@@ -105,34 +105,6 @@ export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
             </div>
             <p id="exp-tip" className="text-xs text-muted-foreground">
               Uses your local time. You can edit later.
-            </p>
-          </div>
-
-          {/* Customer ID */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Label htmlFor="customer_id">Customer ID</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  Optional. Pre-assign to a customer (profile.user_id).
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="relative">
-              <User className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="customer_id"
-                name="customer_id"
-                placeholder="profile.user_id"
-                className="h-9 pl-8"
-                aria-describedby="cust-tip"
-              />
-            </div>
-            <p id="cust-tip" className="text-xs text-muted-foreground">
-              Leave empty to allow anyone to claim.
             </p>
           </div>
 

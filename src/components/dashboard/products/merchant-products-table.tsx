@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { ProductRow } from "@/types";
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 
 type ProductItem = Pick<ProductRow, "id" | "name" | "metadata" | "created_at">;
 
@@ -75,7 +75,6 @@ export default function MerchantProductsTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <form action={deleteProduct}>
                 <input type="hidden" name="id" value={p.id} />
                 <DropdownMenuItem asChild>

@@ -1,188 +1,127 @@
 "use client";
 
-import { createGift } from "@/actions";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import SubmitButton from "../common/submit-button";
+import { createGift } from "@/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import SubmitButton from "../../common/submit-button";
+import MonoIcon from "@/components/common/mono-icon";
 
-// ✨ Icons + animation
 import {
   Gift as GiftIcon,
   FileText,
   Image as ImageIcon,
   Info,
-  Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 type Props = {
   action?: (fd: FormData) => Promise<void>;
   title?: string;
-};
-
-const fadeIn = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35 },
-};
-
-const hoverPop = {
-  whileHover: { scale: 1.02, translateY: -2 },
-  whileTap: { scale: 0.98 },
+  /** Optional server error bubbled up via search params or state */
+  errorMessage?: string | null;
 };
 
 export default function GiftCreate({
   action = createGift,
-  title = "Create a gift",
+  title = "Create Gift",
+  errorMessage,
 }: Props) {
   return (
-    <motion.div {...fadeIn}>
-      <Card className="max-w-md w-full">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2 text-primary">
-            <GiftIcon className="h-5 w-5" />
-            <CardTitle className="text-lg">{title}</CardTitle>
-          </div>
-          {/* Friendly explainer */}
-          <div className="mt-2">
-            <div className="flex items-start gap-2 rounded-lg border bg-muted/40 p-3">
-              <Info className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                A <span className="font-medium">gift</span> is a perk or reward
-                your customers can claim. Give it a clear title, describe what
-                it includes, and optionally add an image to make it stand out.
-              </p>
+    <form action={action}>
+      <div className="mx-auto w-full max-w-6xl">
+        {/* Header */}
+        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <MonoIcon>
+                <GiftIcon className="size-4" aria-hidden="true" />
+              </MonoIcon>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+                {title}
+              </h1>
             </div>
+            <p className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1.5">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                Give it a clear title & description
+              </span>
+            </p>
           </div>
-        </CardHeader>
+        </header>
 
-        <CardContent className="space-y-6">
-          {/* Mini steps */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <motion.div
-              className="rounded-lg border p-3 bg-background"
-              {...hoverPop}
-              transition={{ type: "spring", stiffness: 220, damping: 16 }}
-            >
-              <div className="flex items-center gap-2 font-medium">
-                <FileText className="h-4 w-4 text-primary" />
-                Title
+        {/* Body */}
+        <section className="space-y-10">
+          {/* Details */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold text-foreground/80">
+              Gift details
+            </h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Title */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="title" className="flex items-center gap-2">
+                  <FileText
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  name="title"
+                  placeholder="e.g., Free Month"
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Keep it short and recognisable (under ~40 chars works best).
+                </p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Short and catchy, e.g. “Free Month”.
-              </p>
-            </motion.div>
 
-            <motion.div
-              className="rounded-lg border p-3 bg-background"
-              {...hoverPop}
-              transition={{ type: "spring", stiffness: 220, damping: 16 }}
-            >
-              <div className="flex items-center gap-2 font-medium">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Description
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                What’s included and any limits.
-              </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              className="rounded-lg border p-3 bg-background"
-              {...hoverPop}
-              transition={{ type: "spring", stiffness: 220, damping: 16 }}
-            >
-              <div className="flex items-center gap-2 font-medium">
-                <ImageIcon className="h-4 w-4 text-primary" />
-                Optional Image
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                A visual to grab attention.
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Form */}
-          <form action={action} className="space-y-4">
-            <motion.div
-              {...fadeIn}
-              transition={{ duration: 0.25, delay: 0.05 }}
-            >
-              <Label htmlFor="title" className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                Title
-              </Label>
-              <Input
-                id="title"
-                name="title"
-                placeholder="e.g. Free Month"
-                required
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Keep it under 40 characters for best results.
-              </p>
-            </motion.div>
-
-            <motion.div {...fadeIn} transition={{ duration: 0.25, delay: 0.1 }}>
+            {/* Description */}
+            <div className="flex flex-col gap-2">
               <Label htmlFor="description" className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <Info
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 Description (optional)
               </Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Describe the gift…"
-                className="mt-2"
+                placeholder="Describe what’s included and any limits…"
+                className="min-h-[120px]"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Mention eligibility or redemption details if needed.
+              <p className="text-[11px] text-muted-foreground">
+                Mention eligibility, redemption steps, or exclusions if needed.
               </p>
-            </motion.div>
+            </div>
+          </section>
 
-            <motion.div
-              {...fadeIn}
-              transition={{ duration: 0.25, delay: 0.15 }}
-            >
-              <Label htmlFor="image_url" className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                Image URL (optional)
-              </Label>
-              <Input
-                id="image_url"
-                name="image_url"
-                placeholder="https://…"
-                type="url"
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Use a public URL (JPG/PNG) around 800×600 for a crisp card.
-              </p>
-            </motion.div>
+          {/* Error (optional) */}
+          {errorMessage ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              {errorMessage}
+            </div>
+          ) : null}
 
-            <motion.div {...hoverPop} className="pt-2 flex">
-              {/* Your SubmitButton already disables on pending via useFormStatus */}
-              <SubmitButton />
-            </motion.div>
-          </form>
-        </CardContent>
+          <Separator />
 
-        <CardFooter className="justify-end gap-2">
-          <Button asChild variant="ghost">
-            <Link href="/dashboard/gifts">Back to gifts</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </motion.div>
+          {/* Actions */}
+          <div className="mt-2 flex items-center justify-end gap-3">
+            <Button asChild variant="outline">
+              <Link href="/dashboard/gifts">Cancel</Link>
+            </Button>
+            <SubmitButton />
+          </div>
+        </section>
+      </div>
+    </form>
   );
 }

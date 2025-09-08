@@ -27,7 +27,7 @@ import { toggleBusinessIsActive } from "@/actions";
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 
 type SetActiveAction = (formData: FormData) => Promise<void>;
 

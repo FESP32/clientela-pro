@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import MerchantSurveyResponsesTable from "@/components/dashboard/surveys/merchant-survey-respones-table";
 import { getSurveyWithResponses } from "@/actions"; // or wherever you placed it
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantListSection from "@/components/common/merchant-list-section";
 
 export default async function Page({
   params,

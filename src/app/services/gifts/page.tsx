@@ -1,9 +1,10 @@
 // app/dashboard/gifts/my/page.tsx
-import { GiftIntentListItem, listMyGiftIntents } from "@/actions";
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import { listMyGiftIntents } from "@/actions";
+import CustomerListSection from "@/components/common/customer-list-section";
 import CustomerMyGiftsList, {
 } from "@/components/services/gifts/customer-my-gifts-table";
 import { Badge } from "@/components/ui/badge";
+import { GiftIntentListItem } from "@/types";
 
 export const dynamic = "force-dynamic";
 

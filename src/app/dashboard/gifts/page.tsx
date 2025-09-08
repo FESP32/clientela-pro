@@ -1,12 +1,12 @@
 // app/dashboard/gifts/page.tsx
 import Image from "next/image";
 import { listGifts } from "@/actions";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantListSection from "@/components/common/merchant-list-section";
 import GiftsExplorer from "@/components/dashboard/gifts/gifts-explorer";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Image as ImageIcon, Package } from "lucide-react";
 import { GiftRow } from "@/types";
-import MonoIcon from "@/components/dashboard/common/mono-icon";
+import MonoIcon from "@/components/common/mono-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export default async function GiftsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <MonoIcon>
-              <Gift className="h-4 w-4 text-foreground/80" aria-hidden="true" />
+              <Gift className="h-4 w-4" aria-hidden="true" />
             </MonoIcon>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
               Gifts
@@ -51,7 +51,6 @@ export default async function GiftsPage() {
           Curate visually rich gifts; keep titles short and clean.
         </div>
       }
-      className="pt-2"
       headerClassName="mb-4"
       contentClassName="space-y-4"
     >

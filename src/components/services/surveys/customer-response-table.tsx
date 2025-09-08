@@ -5,7 +5,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { fmt } from "@/lib/utils";
 

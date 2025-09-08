@@ -10,7 +10,7 @@ export default function Background({ className }: Props) {
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute inset-0 z-10 overflow-hidden",
+        "pointer-events-none fixed inset-0 z-10 overflow-hidden",
         className
       )}
     >
@@ -20,8 +20,8 @@ export default function Background({ className }: Props) {
           "absolute -top-32 -left-32 h-[36rem] w-[36rem] blur-3xl",
           "rounded-full",
           // Indigo → sky
-          "bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.20),transparent_60%)]",
-          "dark:bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.18),transparent_60%)]"
+          "bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.20),transparent_10%)]",
+          "dark:bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.18),transparent_10%)]"
         )}
       />
       <div
@@ -58,10 +58,10 @@ export default function Background({ className }: Props) {
       />
 
       {/* --- Gentle top highlight / glass feel --- */}
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/60 to-transparent dark:from-white/10" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/20 to-transparent dark:from-white/10" />
 
       {/* Bottom vignette for depth */}
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/60 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/20 to-transparent" />
     </div>
   );
 }

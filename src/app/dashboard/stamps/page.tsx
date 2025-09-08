@@ -1,7 +1,7 @@
 // app/dashboard/stamps/page.tsx
 import { listStampCards, deleteStampCard } from "@/actions";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
-import MonoIcon from "@/components/dashboard/common/mono-icon";
+import MerchantListSection from "@/components/common/merchant-list-section";
+import MonoIcon from "@/components/common/mono-icon";
 import StampCardsExplorer from "@/components/dashboard/stamps/stamp-cards-explorer";
 import { Badge } from "@/components/ui/badge";
 import { StampCardListItem } from "@/types";
@@ -30,12 +30,12 @@ export default async function LoyaltyCardsPage() {
           <div className="flex items-center gap-2">
             <MonoIcon>
               <Stamp
-                className="h-4 w-4 text-foreground/80"
+                className="size-4"
                 aria-hidden="true"
               />
             </MonoIcon>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-              Cards
+              Stamp Cards
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -59,7 +59,6 @@ export default async function LoyaltyCardsPage() {
           </span>
         </div>
       }
-      className="pt-2"
       headerClassName="mb-4"
       contentClassName="space-y-4"
     >

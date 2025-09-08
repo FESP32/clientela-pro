@@ -21,7 +21,7 @@ import type { ReferralIntentListMini } from "@/types";
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 
 function statusVariant(
   s: ReferralIntentListMini["status"]
@@ -117,9 +117,6 @@ export default function ReferrerIntentTable({
                   <QrCode className="h-4 w-4" />
                   Show link
                 </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-                {/* room for more actions */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

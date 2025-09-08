@@ -3,20 +3,12 @@
 
 import { getBool } from "@/lib/utils";
 import {
-  PunchesGroupedByCard,
-  PunchWithCardBusiness,
   StampCardInsert,
-  StampCardListItem,
   StampCardProductInsert,
-  StampCardRow,
-  StampCardWithProducts,
-  StampIntentListItem,
-  StampIntentRow,
-  StampIntentWithCustomer,
 } from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getActiveBusiness } from "@/actions";
 
 export async function createStampCard(formData: FormData) {
@@ -86,19 +78,22 @@ export async function createStampMembership(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login?next=/dashboard/stamps"); // tweak next= as you prefer
-  }
-
   const card_id = String(formData.get("card_id") ?? "").trim();
-  if (!card_id) throw new Error("Missing card_id");
 
-  // Optional: validate card is active and within validity window
+  if (!user) {
+    redirect("/login?next=/services/stamps"); // tweak next= as you prefer
+  }
+  
+  if (!card_id) notFound();
+
   const { data: card, error: cardErr } = await supabase
     .from("stamp_card")
     .select("id, is_active, valid_from, valid_to, stamps_required")
     .eq("id", card_id)
     .single();
+
+    console.log(cardErr);
+    
 
   if (cardErr || !card) throw new Error("Stamp card not found");
   const now = new Date();
@@ -116,9 +111,7 @@ export async function createStampMembership(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // Revalidate whatever list/detail you show
-  revalidatePath("/dashboard/stamps");
-  redirect(`/dashboard/stamps`); // or `/dashboard/stamps/${card_id}`
+  redirect(`/services/stamps`); // or `/dashboard/stamps/${card_id}`
 }
 
 

@@ -25,9 +25,12 @@ export async function listMyBusinesses() {
       )
     `
     )
-    .eq("membership.user_id", user.id) // <-- filter by you
+    .eq("membership.user_id", user.id)
     .order("name", { ascending: true })
     .overrideTypes<BusinessWithMembership[]>();
+
+  console.log(error);
+  
 
   if (error) {
     return { error, data: [] as BusinessWithMembership[] };
@@ -49,7 +52,7 @@ export async function getActiveBusiness() {
 
   // Look up user's active business id
   const { data: activeRow, error: activeErr } = await supabase
-    .from("business_active")
+    .from("business_current")
     .select("business_id, set_at")
     .eq("user_id", user.id)
     .maybeSingle();

@@ -2,6 +2,8 @@
 import { notFound } from "next/navigation";
 import { getCustomerStampCard } from "@/actions";
 import StampCard from "@/components/services/stamps/stamp-card";
+import CustomerListSection from "@/components/common/customer-list-section";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +20,6 @@ export default async function CustomerStampCardPage({
   if (!membership) notFound();
 
   return (
-    <div className="p-4">
       <StampCard card={card} membership={membership} />
-    </div>
   );
 }

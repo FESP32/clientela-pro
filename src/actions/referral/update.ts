@@ -3,20 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { getBool } from "@/lib/utils";
-import { ReferralProgramFromFormSchema } from "@/schemas/referrals";
-import {
-  JoinedReferralProgramWithIntents,
-  ReferralIntentListMini,
-  ReferralIntentRow,
-  ReferralParticipantJoinedQuery,
-  ReferralParticipantListItem,
-  ReferralProgramInsert,
-  ReferralProgramRow,
-} from "@/types";
-import { getActiveBusiness } from "@/actions";
-
-
 
 export async function joinReferralProgram(formData: FormData) {
   const programId = String(formData.get("program_id") ?? "").trim();
@@ -62,8 +48,6 @@ export async function joinReferralProgram(formData: FormData) {
   revalidatePath(`/services/referrals/referrer/${programId}`);
 }
 
-
-
 export async function joinReferralIntent(formData: FormData) {
   const intentId = String(formData.get("intent_id") ?? "").trim();
   if (!intentId) throw new Error("Missing intent id");
@@ -92,6 +76,10 @@ export async function joinReferralIntent(formData: FormData) {
     throw new Error("Intent expired");
   }
 
+  if (intent.referrer_id === user.id) {
+    throw new Error("Cannot consume your own referral intent");
+  }
+
   // Mark as consumed
   const { error: updateErr } = await supabase
     .from("referral_intent")
@@ -104,7 +92,7 @@ export async function joinReferralIntent(formData: FormData) {
 
   if (updateErr) throw new Error(updateErr.message);
 
-  revalidatePath(`/services/referrals//${intent.id}`);
+  revalidatePath(`/services/referrals/${intent.id}`);
 }
 
 

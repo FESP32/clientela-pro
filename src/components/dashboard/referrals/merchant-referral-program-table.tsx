@@ -22,7 +22,7 @@ import { deleteReferralProgram } from "@/actions";
 
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function MerchantReferralProgramsTable({

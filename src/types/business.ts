@@ -11,9 +11,9 @@ export type BusinessUserInsert = Inserts<"business_user">;
 export type BusinessUserUpdate = Updates<"business_user">;
 
 /* ──────────────── Active Business ──────────────── */
-export type BusinessActiveRow = Tables<"business_active">;
-export type BusinessActiveInsert = Inserts<"business_active">;
-export type BusinessActiveUpdate = Updates<"business_active">;
+export type BusinessActiveRow = Tables<"business_current">;
+export type BusinessActiveInsert = Inserts<"business_current">;
+export type BusinessActiveUpdate = Updates<"business_current">;
 
 /* ──────────────── Business Invites ──────────────── */
 export type BusinessInviteRow = Tables<"business_invite">;

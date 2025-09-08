@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { listReferralParticipants } from "@/actions";
 import ReferralParticipantsTable from "@/components/dashboard/referrals/referral-participants-table";
 import { getActiveBusiness } from "@/actions";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantListSection from "@/components/common/merchant-list-section";
 
 export const dynamic = "force-dynamic";
 

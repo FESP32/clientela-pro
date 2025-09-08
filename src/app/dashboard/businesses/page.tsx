@@ -1,11 +1,11 @@
 // app/dashboard/businesses/page.tsx
 import { listMyBusinesses, setActiveBusiness } from "@/actions";
 import type { BusinessWithMembership } from "@/types";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import MerchantListSection from "@/components/common/merchant-list-section";
 import BusinessesExplorer from "@/components/dashboard/businesses/business-explorer";
 import { Badge } from "@/components/ui/badge";
-import { Building2, CheckCircle2, ShieldCheck } from "lucide-react";
-import MonoIcon from "@/components/dashboard/common/mono-icon";
+import { Building2, CheckCircle2, ShieldCheck, Store } from "lucide-react";
+import MonoIcon from "@/components/common/mono-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +26,8 @@ export default async function BusinessesPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <MonoIcon>
-              <Building2
-                className="h-4 w-4 text-foreground/80"
+              <Store
+                className="size-4"
                 aria-hidden="true"
               />
             </MonoIcon>
@@ -58,7 +58,6 @@ export default async function BusinessesPage() {
           Search, filter, and switch your current business context.
         </div>
       }
-      className="pt-2"
       headerClassName="mb-4"
       contentClassName="space-y-4"
     >

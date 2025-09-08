@@ -27,23 +27,28 @@ import { createClient } from "@/utils/supabase/server";
 //   }
 // };
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(next?: string) {
   const supabase = await createClient();
-  const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`;
-  console.log(redirectTo);
-  
+
+  // Only allow same-origin relative paths like "/foo" (avoid open redirects)
+  const safeNext =
+    next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+
+  const base = process.env.NEXT_PUBLIC_BASE_URL!;
+  const callback = new URL("/auth/callback", base);
+  if (safeNext) callback.searchParams.set("next", safeNext);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      // after Google consent, Supabase will bounce you back here:
-      redirectTo
+      redirectTo: callback.toString(),
     },
   });
+
   if (error) {
-    // you can render this error in your UI if you like
     throw new Error(`OAuth error: ${error.message}`);
   }
-  // this sends a 3xx redirect to the browser
+
   if (data.url) redirect(data.url);
 }
 

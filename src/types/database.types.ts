@@ -67,7 +67,7 @@ export type Database = {
           }
         ];
       };
-      business_active: {
+      business_current: {
         Row: {
           business_id: string;
           set_at: string;
@@ -85,14 +85,14 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "business_active_business_id_fk";
+            foreignKeyName: "business_current_business_id_fk";
             columns: ["business_id"];
             isOneToOne: false;
             referencedRelation: "business";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "business_active_user_id_fk_profile";
+            foreignKeyName: "business_current_user_id_fk_profile";
             columns: ["user_id"];
             isOneToOne: true;
             referencedRelation: "profile";
@@ -224,7 +224,7 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "gift_business_id_fkey";
+            foreignKeyName: "gift_business_id_fk";
             columns: ["business_id"];
             isOneToOne: false;
             referencedRelation: "business";
@@ -234,59 +234,59 @@ export type Database = {
       };
       gift_intent: {
         Row: {
+          business_id: string;
           consumed_at: string | null;
           created_at: string;
           customer_id: string | null;
           expires_at: string | null;
           gift_id: string;
           id: string;
-          issuer_id: string;
           status: string;
           updated_at: string;
         };
         Insert: {
+          business_id: string;
           consumed_at?: string | null;
           created_at?: string;
           customer_id?: string | null;
           expires_at?: string | null;
           gift_id: string;
           id?: string;
-          issuer_id: string;
           status?: string;
           updated_at?: string;
         };
         Update: {
+          business_id?: string;
           consumed_at?: string | null;
           created_at?: string;
           customer_id?: string | null;
           expires_at?: string | null;
           gift_id?: string;
           id?: string;
-          issuer_id?: string;
           status?: string;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "gift_intent_customer_id_fkey";
+            foreignKeyName: "gift_intent_business_id_fk";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "business";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "gift_intent_customer_id_fk_profile";
             columns: ["customer_id"];
             isOneToOne: false;
             referencedRelation: "profile";
             referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: "gift_intent_gift_id_fkey";
+            foreignKeyName: "gift_intent_gift_id_fk";
             columns: ["gift_id"];
             isOneToOne: false;
             referencedRelation: "gift";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "gift_intent_issuer_id_fkey";
-            columns: ["issuer_id"];
-            isOneToOne: false;
-            referencedRelation: "profile";
-            referencedColumns: ["user_id"];
           }
         ];
       };
@@ -823,6 +823,22 @@ export type Database = {
       gtrgm_out: {
         Args: { "": unknown };
         Returns: unknown;
+      };
+      is_business_member: {
+        Args: { biz_id: string };
+        Returns: boolean;
+      };
+      is_business_owner: {
+        Args: { biz_id: string };
+        Returns: boolean;
+      };
+      is_user_customer: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      is_user_merchant: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
       };
       set_limit: {
         Args: { "": number };

@@ -1,6 +1,6 @@
 // components/services/stamps/my-stamp-punches.tsx (server)
 import { listMyStampPunchesGroupedInCode } from "@/actions";
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerListSection from "@/components/common/customer-list-section";
 import StampPunchesResponsive from "@/components/services/stamps/stamp-punch-table";
 import { Badge } from "@/components/ui/badge";
 import { Ticket, CheckCircle2 } from "lucide-react";

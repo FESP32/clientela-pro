@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function NewBusinessPage() {
   return (
-    <div className="p-4">
+    <div className="px-5 sm:px-6 lg:px-16 mt-8 mb-16">
       <BusinessCreate action={createBusiness} />
     </div>
   );

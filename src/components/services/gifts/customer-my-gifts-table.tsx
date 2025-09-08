@@ -1,9 +1,9 @@
 // components/customer/gifts/customer-my-gifts-list.tsx
+import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmt } from "@/lib/utils";
-import { GiftIntentListItem } from "@/actions";
 import {
   CheckCircle2,
   BadgeCheck,
@@ -13,15 +13,7 @@ import {
   CalendarClock,
   Gift as GiftIcon,
 } from "lucide-react";
-
-const statusVariant = (s: string) =>
-  s === "claimed"
-    ? "default"
-    : s === "consumed"
-    ? "secondary"
-    : s === "pending"
-    ? "outline"
-    : "destructive";
+import { GiftIntentListItem } from "@/types";
 
 function statusMeta(status: string) {
   const up = status.toUpperCase();
@@ -59,14 +51,17 @@ export default function CustomerMyGiftsTable({
         const { label, Icon, variant } = statusMeta(row.status);
 
         return (
-          <div
+          <Link
             key={row.id}
-            className="group relative rounded-2xl p-[1px] transition-all duration-300
+            href={`/services/gifts/intent/${row.id}`}
+            aria-label={`Open gift ${g?.title ?? "Gift"}`}
+            className="group relative block rounded-2xl p-[1px] transition-all duration-300
                        bg-gradient-to-tr from-emerald-400/20 via-transparent to-fuchsia-400/20
-                       hover:from-emerald-400/30 hover:to-fuchsia-400/30"
+                       hover:from-emerald-400/30 hover:to-fuchsia-400/30
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2"
           >
             <Card
-              className="flex h-full flex-col rounded-[calc(theme(borderRadius.lg)+6px)]
+              className="flex h-full cursor-pointer flex-col rounded-[calc(theme(borderRadius.lg)+6px)]
                          border border-foreground/10 bg-background/80 backdrop-blur
                          transition-all duration-300 hover:shadow-lg"
             >
@@ -94,7 +89,6 @@ export default function CustomerMyGiftsTable({
                       fill
                       className="object-cover transition-transform duration-500 will-change-transform group-hover:scale-[1.03]"
                     />
-                    {/* subtle gradient at bottom for legibility */}
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/70 to-transparent" />
                   </div>
                 ) : null}
@@ -143,7 +137,7 @@ export default function CustomerMyGiftsTable({
                          transition-opacity duration-300 group-hover:opacity-40
                          bg-[radial-gradient(60%_60%_at_50%_50%,theme(colors.emerald.400/.25),transparent)]"
             />
-          </div>
+          </Link>
         );
       })}
     </div>

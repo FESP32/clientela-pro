@@ -13,8 +13,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import SubmitButton from "@/components/dashboard/common/submit-button";
-import MerchantListSection from "@/components/dashboard/common/merchant-list-section";
+import SubmitButton from "@/components/common/submit-button";
+import MerchantListSection from "@/components/common/merchant-list-section";
 import MerchantStampIntentsTable from "@/components/dashboard/stamps/merchant-stamp-intent-table";
 import { CalendarClock, Hash, Info, StickyNote } from "lucide-react";
 

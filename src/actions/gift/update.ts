@@ -1,6 +1,5 @@
 "use server";
 
-import { GiftIntentRow, GiftRow } from "@/types/gifts";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -42,33 +41,22 @@ export async function claimGiftIntent(formData: FormData) {
     throw new Error("This gift intent has expired.");
   }
 
-  // Atomic transition: pending -> consumed (assign to caller)
-  const nowIso = new Date().toISOString();
-  const { data: updated, error: updErr } = await supabase
+
+  console.log( 'user',user.id);
+  
+  
+  const { error: updErr } = await supabase
     .from("gift_intent")
     .update({
-      customer_id: user.id,
+      customer_id: user!.id,
       status: "consumed",
-      consumed_at: nowIso,
+      consumed_at: new Date().toISOString(),
     })
-    .eq("id", intent_id)
-    .eq("status", "pending")
-    .is("customer_id", null)
-    .select("id")
-    .maybeSingle();
+    .eq("id", intent_id);
 
-  if (updErr) throw new Error(updErr.message);
-  if (!updated)
-    throw new Error("Unable to claim this gift intent (it may have changed).");
+  if (updErr) console.log(JSON.stringify(updErr));
 
-  // Optional: refresh any pages that show this gift
   revalidatePath(`/dashboard/gifts/${intent.gift_id}`, "page");
-
-  // return {
-  //   ok: true as const,
-  //   status: "consumed" as const,
-  //   intentId: intent_id,
-  // };
 }
 
 export async function markGiftIntentClaimed(formData: FormData) {
@@ -85,17 +73,21 @@ export async function markGiftIntentClaimed(formData: FormData) {
   if (authErr) throw new Error(authErr.message);
   if (!user) throw new Error("You must be signed in.");
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
   // Read current intent to validate and get gift_id
   const { data: intent, error: readErr } = await supabase
     .from("gift_intent")
-    .select("id, status, issuer_id, gift_id")
+    .select("id, status, gift_id, business_id")
     .eq("id", intent_id)
     .maybeSingle();
   if (readErr) throw new Error(readErr.message);
   if (!intent) throw new Error("Gift intent not found.");
 
-  // Only the issuer (merchant) can mark as claimed
-  if (intent.issuer_id !== user.id) {
+  if (intent.business_id !== business.id) {
     throw new Error("Only the issuer can mark this gift as claimed.");
   }
 
@@ -116,8 +108,7 @@ export async function markGiftIntentClaimed(formData: FormData) {
     .maybeSingle();
 
   if (updErr) throw new Error(updErr.message);
-  if (!updated)
-    throw new Error("Unable to mark as claimed (it may have changed).");
+  
 
   // Revalidate relevant pages
   revalidatePath(`/dashboard/gifts/intent/${intent_id}`, "page");

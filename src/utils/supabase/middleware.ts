@@ -34,9 +34,6 @@ export async function updateSession(request: NextRequest) {
   // Routes config
   const protectedRoutes = [
     "/dashboard",
-    "/services/referral",
-    "/settings",
-    "/admin",
   ];
   const authRoutes = ["/login", "/signup", "/auth"];
 
@@ -53,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   // If user is not logged in and trying to access protected route -> go to login
   if (!user && isProtectedRoute) {
     const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirectTo", pathname);
+    redirectUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -78,7 +75,7 @@ export async function updateSession(request: NextRequest) {
 
   // If logged in and visiting auth pages, send them to the right home
   if (user && isAuthRoute) {
-    const redirectTo = request.nextUrl.searchParams.get("redirectTo");
+    const redirectTo = request.nextUrl.searchParams.get("next");
 
     // If there was an intended destination:
     if (redirectTo && redirectTo.startsWith("/")) {

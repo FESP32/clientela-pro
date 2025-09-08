@@ -1,5 +1,5 @@
 // components/customer/responses/my-responses-list.tsx
-import CustomerListSection from "@/components/dashboard/common/customer-list-section";
+import CustomerListSection from "@/components/common/customer-list-section";
 import CustomerMyResponsesTable, {
   type CustomerResponseItem,
 } from "@/components/services/surveys/customer-response-table";

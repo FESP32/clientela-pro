@@ -1,12 +1,10 @@
 
 "use server";
 
-import { GiftIntentRow, GiftRow } from "@/types/gifts";
+import { GiftIntentDashboardView, GiftIntentListItem, GiftIntentRow, GiftIntentView, GiftRow } from "@/types/gifts";
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getActiveBusiness } from "@/actions";
-
 
 export async function listGifts() {
   const supabase = await createClient();
@@ -99,27 +97,6 @@ export async function listGiftIntents(giftId: string): Promise<{
   return { user, gift, intents };
 }
 
-
-export type GiftIntentListItem = {
-  id: string;
-  status: "pending" | "consumed" | "canceled" | "claimed";
-  expires_at: string | null;
-  consumed_at: string | null;
-  created_at: string;
-  gift_id: string;
-  gift: {
-    id: string;
-    title: string;
-    description: string | null;
-    image_url: string | null;
-    business: {
-      id: string;
-      name: string;
-      image_url: string | null;
-    } | null;
-  } | null;
-};
-
 export async function listMyGiftIntents(): Promise<{
   data: GiftIntentListItem[];
   error?: string;
@@ -150,8 +127,70 @@ export async function listMyGiftIntents(): Promise<{
     .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
+  console.log(data);
+  
+
   if (error) return { data: [], error: error.message };
 
   return { data: (data as unknown as GiftIntentListItem[]) ?? [] };
 }
 
+export async function getGiftIntent(intentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("gift_intent")
+    .select(
+      `
+      id, status, created_at, expires_at, consumed_at,
+      gift:gift (
+        id, title, description, image_url,
+        business!gift_business_id_fk ( id, name, image_url )
+      ),
+      customer:profile!gift_intent_customer_id_fk_profile ( user_id, name )
+    `
+    )
+    .eq("id", intentId)
+    .maybeSingle();
+  if (error || !data) {
+    return { ok: false as const, message: error?.message ?? "Not found" };
+  }
+
+  return { ok: true as const, intent: data as GiftIntentView };
+}
+
+export async function getGiftIntentForDashboard(intentId: string) {
+  const supabase = await createClient();
+
+  // who am I (for ownership/CTA rendering)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Load intent with gift, business, and customer
+  const { data, error } = await supabase
+    .from("gift_intent")
+    .select(
+      `
+      id, status, expires_at, consumed_at, created_at, business_id, gift_id, customer_id,
+      gift:gift!gift_intent_gift_id_fk (
+        id, title, description, image_url
+      ),
+      business:business!gift_intent_business_id_fk (
+        id, name, image_url, owner_id
+      ),
+      customer:profile!gift_intent_customer_id_fk_profile (
+        user_id, name
+      )
+    `
+    )
+    .eq("id", intentId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return {
+    userId: user?.id ?? null,
+    intent: (data as GiftIntentDashboardView | null) ?? null,
+  };
+}

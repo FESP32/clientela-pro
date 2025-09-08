@@ -5,7 +5,7 @@ import { fmt } from "@/lib/utils";
 import { IntentActionsMenu } from "@/components/dashboard/stamps/intent-actions-menu";
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { StampIntentListItem } from "@/types";
 
 export default function StampIntentsTable({ intents }: { intents: StampIntentListItem[] }) {

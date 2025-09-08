@@ -69,7 +69,6 @@ export async function consumeStampIntent(formData: FormData) {
 
   if (!intent_id) throw new Error("Missing intent_id");
 
-  // ...rest of your existing logic...
   const { data: intent, error: iErr } = await supabase
     .from("stamp_intent")
     .select("id, card_id, business_id, customer_id, qty, status, expires_at")

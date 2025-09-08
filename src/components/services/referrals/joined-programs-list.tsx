@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ResponsiveListTable, {
   type Column,
-} from "@/components/dashboard/common/responsive-list-table";
+} from "@/components/common/responsive-list-table";
 import { Gift, Ticket, UserPlus } from "lucide-react";
 
 type Row = {
@@ -33,9 +33,6 @@ export default function JoinedReferralProgramsList({
         <p className="mb-2 text-sm text-muted-foreground">
           You haven’t joined any programs yet.
         </p>
-        <Button asChild>
-          <Link href="/referrals">Explore Programs</Link>
-        </Button>
       </CardContent>
     </Card>
   );

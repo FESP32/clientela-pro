@@ -109,7 +109,7 @@ export default function ClientBreadcrumbs({
       {/* Desktop: full breadcrumbs */}
       <Breadcrumb className="hidden sm:block">
         <BreadcrumbList>
-          {trail.map((t, i) => (
+          {trail.slice(1, trail.length).map((t, i) => (
             <React.Fragment key={`${t.href}-${i}`}>
               <BreadcrumbItem>
                 {t.isLast ? (

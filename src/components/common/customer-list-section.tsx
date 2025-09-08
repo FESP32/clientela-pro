@@ -1,6 +1,8 @@
-// components/customer/common/customer-list-section.tsx
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { motion, type Variants } from "framer-motion";
 
 type WidthKey =
   | "sm"
@@ -61,6 +63,23 @@ type CustomerListSectionProps = React.PropsWithChildren<{
   divider?: boolean;
 }>;
 
+/* ── Motion variants (typed) ─────────────────────────────────────────────── */
+const parentStagger: Variants = {
+  hidden: {},
+  show: {
+    transition: { when: "beforeChildren", staggerChildren: 0.06 },
+  },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
 export default function CustomerListSection({
   id,
   title,
@@ -71,7 +90,7 @@ export default function CustomerListSection({
   className,
   headerClassName,
   contentClassName,
-  fluid = false, // <-- centered by default for customer UX
+  fluid = false, // centered by default for customer UX
   headerMax = "3xl",
   contentMax = "4xl",
   divider = false,
@@ -79,58 +98,87 @@ export default function CustomerListSection({
   // Outer width behavior
   const rootWidth = fluid
     ? "w-full px-5 sm:px-6 lg:px-16 mt-6"
-    : "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8";
+    : "mx-auto max-w-7xl h-screen px-4 sm:px-6 lg:px-8";
 
   // Constrained, centered header/content blocks
   const headerWidth = MAX_MAP[headerMax] ?? "max-w-3xl";
   const contentWidth = MAX_MAP[contentMax] ?? "max-w-4xl";
 
+  const kids = React.Children.toArray(children);
+
   return (
-    <section id={id} className={cn(rootWidth, className)}>
+    <motion.section
+      id={id}
+      className={cn(rootWidth, className)}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.15 }}
+    >
       {(title || subtitle || kicker || actions) && (
-        <div
+        <motion.div
           className={cn(
             "mx-auto text-center mt-12",
             headerWidth,
             "mb-6 sm:mb-8",
             headerClassName
           )}
+          variants={parentStagger}
         >
           {kicker ? (
-            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <motion.div
+              className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              variants={fadeUp}
+            >
               {kicker}
-            </div>
+            </motion.div>
           ) : null}
 
           {title ? (
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+            <motion.h1
+              className="text-3xl sm:text-4xl font-semibold tracking-tight"
+              variants={fadeUp}
+            >
               {title}
-            </h1>
+            </motion.h1>
           ) : null}
 
           {subtitle ? (
-            <p className="mx-auto mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <motion.p
+              className="mx-auto mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed"
+              variants={fadeUp}
+            >
               {subtitle}
-            </p>
+            </motion.p>
           ) : null}
 
           {actions ? (
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <motion.div
+              className="mt-4 flex flex-wrap items-center justify-center gap-2"
+              variants={fadeUp}
+            >
               {actions}
-            </div>
+            </motion.div>
           ) : null}
 
           {divider && (
-            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+            <motion.div
+              className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent"
+              variants={fadeUp}
+            />
           )}
-        </div>
+        </motion.div>
       )}
 
-      <div
+      <motion.div
         className={cn("mx-auto", contentWidth, "space-y-3", contentClassName)}
+        variants={parentStagger}
       >
-        {children}
-      </div>
-    </section>
+        {kids.map((child, i) => (
+          <motion.div className="space-y-2" key={i} variants={fadeUp}>
+            {child}
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.section>
   );
 }

@@ -29,6 +29,13 @@ function getSmileyColor(value: number): string {
   return "text-green-500";
 }
 
+function getSmileyBackgroundColor(value: number): string {
+  if (value <= 2) return "bg-red-100";
+  if (value === 3) return "bg-yellow-100";
+  return "bg-green-200";
+}
+
+
 export default function SmileySurvey({
   surveyTitle,
   traits,
@@ -36,7 +43,7 @@ export default function SmileySurvey({
   nameTraits = "selected_traits",
   initialRating = null as number | null,
   maxChips = 12,
-  disabled = false, // 👈 NEW
+  disabled = false,
 }: {
   surveyTitle: string;
   traits: Trait[];
@@ -44,7 +51,7 @@ export default function SmileySurvey({
   nameTraits?: string;
   initialRating?: number | null;
   maxChips?: number;
-  disabled?: boolean; // 👈 NEW
+  disabled?: boolean;
 }) {
   const [selected, setSelected] = useState<number | null>(initialRating);
 
@@ -78,18 +85,24 @@ export default function SmileySurvey({
         disabled && "pointer-events-none select-none"
       )}
       aria-disabled={disabled}
-      // inert prevents focus/interaction in most modern browsers; harmless elsewhere
     >
       {/* Hidden rating input for the form */}
       <input type="hidden" name={nameRating} value={selected ?? ""} />
 
       <div className="text-center">
-        <h2 className="text-sm sm:text-base md:text-lg font-medium text-zinc-600 my-4">
+        {/* ↑ Improved contrast */}
+        <h2 className="text-sm sm:text-base md:text-lg font-medium text-zinc-900 dark:text-zinc-100 my-4">
           How would you rate {surveyTitle}?
         </h2>
 
-        <div className="flex justify-center gap-2 sm:gap-4 md:gap-6">
-          {smileyIcons.map(({ icon: Icon, label, value }) => (
+        {/* Mobile: grid 2–1–2, Desktop: horizontal row */}
+        <div
+          className={cn(
+            "grid grid-cols-2 gap-2 justify-items-center",
+            "sm:flex sm:justify-center sm:gap-4 md:gap-6"
+          )}
+        >
+          {smileyIcons.map(({ icon: Icon, label, value }, idx) => (
             <motion.button
               key={value}
               type="button"
@@ -106,22 +119,36 @@ export default function SmileySurvey({
               }
               transition={{ duration: 0.4 }}
               className={cn(
+                // sizes (slightly smaller on mobile)
                 "flex flex-col items-center justify-evenly transition rounded-xl",
-                "sm:w-20 sm:h-20 md:w-28 md:h-28 text-xs",
-                !disabled && "hover:bg-zinc-100 cursor-pointer",
-                selected === value && "bg-yellow-100",
-                disabled && "opacity-50 cursor-not-allowed"
+                "w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 text-xs",
+                // desktop hover
+                !disabled &&
+                  "hover:bg-secondary  cursor-pointer dark:text-zinc-800",
+                selected === value && getSmileyBackgroundColor(value),
+                disabled && "opacity-50 cursor-not-allowed",
+                // *** Mobile 2–1–2 trick: center the middle icon full row
+                idx === 2 && "col-span-2 justify-self-center"
               )}
               aria-pressed={selected === value}
               aria-label={`Select rating ${value} - ${label}`}
             >
               <Icon
                 className={cn(
-                  "h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10",
-                  selected === value && getSmileyColor(value)
+                  "h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary",
+                  selected === value &&
+                    getSmileyColor(value)
                 )}
               />
-              <span className="text-[10px] sm:text-xs mt-1">{label}</span>
+              <span
+                className={cn(
+                  "text-[11px] sm:text-xs mt-1",
+                  selected === value && "dark:text-zinc-800 text-zinc-200",
+                  selected !== value && "text-zinc-800 dark:text-zinc-200"
+                )}
+              >
+                {label}
+              </span>
             </motion.button>
           ))}
         </div>
@@ -131,13 +158,15 @@ export default function SmileySurvey({
             <motion.p
               key={selected}
               className={cn(
-                "text-xs sm:text-sm text-zinc-500 my-4",
+                // ↑ Improved contrast
+                "text-xs sm:text-sm text-zinc-700 dark:text-zinc-200 my-4",
                 disabled && "opacity-60"
               )}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.25 }}
+              aria-live="polite"
             >
               {customerFeelings[selected]}
             </motion.p>
@@ -154,7 +183,8 @@ export default function SmileySurvey({
               transition={{ duration: 0.25 }}
               className="mt-4"
             >
-              <div className="text-xs sm:text-sm text-zinc-600 mb-2">
+              {/* ↑ Improved contrast */}
+              <div className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 mb-2">
                 Pick any traits that apply:
               </div>
               <div className="flex flex-wrap justify-center gap-2">
@@ -165,6 +195,7 @@ export default function SmileySurvey({
                       key={`${t.label}-${idx}`}
                       htmlFor={inputId}
                       className={cn(
+                        "text-zinc-800 dark:text-zinc-200",
                         disabled && "opacity-50 cursor-not-allowed"
                       )}
                     >
@@ -174,7 +205,7 @@ export default function SmileySurvey({
                         type="checkbox"
                         name={nameTraits}
                         value={t.label}
-                        disabled={disabled} // 👈 lock the chips
+                        disabled={disabled}
                         aria-disabled={disabled}
                         tabIndex={disabled ? -1 : 0}
                       />
@@ -182,8 +213,8 @@ export default function SmileySurvey({
                         variant="secondary"
                         className={cn(
                           "cursor-pointer px-2 py-1 text-xs rounded-full min-w-[40px] min-h-[30px] flex items-center justify-center text-center whitespace-normal break-words max-w-xs",
-                          "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
-                          "peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:border-green-300",
+                          "bg-indigo-100 text-indigo-900 hover:bg-indigo-200",
+                          "peer-checked:bg-green-100 peer-checked:text-green-900 peer-checked:border-green-300",
                           disabled && "pointer-events-none"
                         )}
                       >
