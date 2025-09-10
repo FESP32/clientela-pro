@@ -15,9 +15,10 @@ create table if not exists public.stamp_card (
   title            text not null,                     -- e.g., "Coffee Card"
   goal_text        text not null,                     -- e.g., "Free Coffee", "10% off"
   stamps_required  integer not null check (stamps_required >= 1),
-  is_active        boolean not null default true,
-  valid_from       timestamptz,
-  valid_to         timestamptz,
+  status       text not null default 'active' 
+    check (status in ('active', 'inactive', 'finished')),
+  valid_from       timestamptz not null default now(),
+  valid_to         timestamptz not null,
   created_at       timestamptz not null default timezone('utc', now()),
   updated_at       timestamptz not null default timezone('utc', now())
 );
@@ -29,7 +30,7 @@ alter table public.stamp_card
     on delete cascade;
 
 create index if not exists idx_stamp_business_id on public.stamp_card(business_id);
-create index if not exists idx_stamp_card_active on public.stamp_card(is_active);
+create index if not exists idx_stamp_card_status on public.stamp_card(status);
 
 -- 2) Card ↔ Product mapping (M:N)
 create table if not exists public.stamp_card_product (
@@ -172,7 +173,7 @@ for select
 to authenticated
 using (
   public.is_user_customer()
-  and is_active = true
+  and status = 'active'
   and (valid_from is null or valid_from <= timezone('utc', now()))
   and (valid_to   is null or valid_to   >= timezone('utc', now()))
 );
@@ -223,7 +224,7 @@ using (
     select 1
     from public.stamp_card sc
     where sc.id = public.stamp_card_product.card_id
-      and sc.is_active = true
+      and sc.status = 'active'
       and (sc.valid_from is null or sc.valid_from <= timezone('utc', now()))
       and (sc.valid_to   is null or sc.valid_to   >= timezone('utc', now()))
   )
@@ -307,7 +308,7 @@ with check (
     select 1
     from public.stamp_card sc
     where sc.id = public.stamp_punch.card_id
-      and sc.is_active = true
+      and sc.status = 'active'
       and (sc.valid_from is null or sc.valid_from <= timezone('utc', now()))
       and (sc.valid_to   is null or sc.valid_to   >= timezone('utc', now()))
   )
@@ -396,7 +397,7 @@ using (
     select 1
     from public.stamp_card sc
     where sc.id = public.stamp_intent.card_id
-      and sc.is_active = true
+      and sc.status = 'active'
       and (sc.valid_from is null or sc.valid_from <= timezone('utc', now()))
       and (sc.valid_to   is null or sc.valid_to   >= timezone('utc', now()))
   )
@@ -455,7 +456,7 @@ using (
   and exists (
     select 1 from public.stamp_card sc
     where sc.id = public.stamp_intent.card_id
-      and sc.is_active = true
+      and sc.status = 'active'
       and (sc.valid_from is null or sc.valid_from <= timezone('utc', now()))
       and (sc.valid_to   is null or sc.valid_to   >= timezone('utc', now()))
   )
@@ -468,7 +469,7 @@ with check (
   and exists (
     select 1 from public.stamp_card sc
     where sc.id = public.stamp_intent.card_id
-      and sc.is_active = true
+      and sc.status = 'active'
       and (sc.valid_from is null or sc.valid_from <= timezone('utc', now()))
       and (sc.valid_to   is null or sc.valid_to   >= timezone('utc', now()))
   )

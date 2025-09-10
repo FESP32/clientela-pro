@@ -97,8 +97,8 @@ export default function SurveysExplorer({
 
     let list = surveys.filter((s) => {
       // status
-      if (status === "active" && !s.is_active) return false;
-      if (status === "inactive" && s.is_active) return false;
+      if (status === "active" && s.status === "active") return false;
+      if (status === "inactive" && s.status === "inactive") return false;
 
       // privacy
       if (privacy === "anonymous" && !s.is_anonymous) return false;

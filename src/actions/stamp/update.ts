@@ -1,23 +1,9 @@
 // app/(dashboard)/stamps/actions.ts
 "use server";
 
-import { getBool } from "@/lib/utils";
-import {
-  PunchesGroupedByCard,
-  PunchWithCardBusiness,
-  StampCardInsert,
-  StampCardListItem,
-  StampCardProductInsert,
-  StampCardRow,
-  StampCardWithProducts,
-  StampIntentListItem,
-  StampIntentRow,
-  StampIntentWithCustomer,
-} from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getActiveBusiness } from "@/actions";
 
 export async function punchStampCard(formData: FormData) {
   const supabase = await createClient();
@@ -120,4 +106,81 @@ export async function consumeStampIntent(formData: FormData) {
   revalidatePath(`/stamps`);
   revalidatePath(`/dashboard/loyalty/cards/${updated.card_id}/intents`);
   redirect(`/services/stamps/${updated.card_id}`);
+}
+
+export async function finishStampCard(cardId: string): Promise<void> {
+  if (!cardId) throw new Error("Missing card_id");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("stamp_card")
+    .update({ status: "finished" })
+    .eq("id", cardId)
+    .neq("status", "finished")
+    .select("id, status")
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  if (!data) {
+    // Either not found or already finished — clarify if possible
+    const { data: check, error: checkErr } = await supabase
+      .from("stamp_card")
+      .select("id, status")
+      .eq("id", cardId)
+      .maybeSingle();
+
+    if (checkErr) throw new Error(checkErr.message);
+    if (!check) throw new Error("Stamp card not found or not accessible");
+    // If it exists and is already finished, treat as success (idempotent)
+  }
+
+  revalidatePath("/dashboard/stamps");
+  revalidatePath(`/dashboard/stamps/${cardId}`);
+  revalidatePath(`/services/stamps/${cardId}`);
+}
+
+export async function toggleStampCardActive(cardId: string): Promise<void> {
+  if (!cardId) throw new Error("Missing card_id");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Read current status (RLS ensures visibility/permission)
+  const { data: row, error: readErr } = await supabase
+    .from("stamp_card")
+    .select("id, status")
+    .eq("id", cardId)
+    .maybeSingle();
+
+  if (readErr) throw new Error(readErr.message);
+  if (!row) throw new Error("Stamp card not found or not accessible");
+  if (row.status === "finished")
+    throw new Error("Finished stamp cards cannot be toggled");
+
+  const nextStatus = row.status === "active" ? "inactive" : "active";
+
+  const { data: updated, error: updErr } = await supabase
+    .from("stamp_card")
+    .update({ status: nextStatus })
+    .eq("id", cardId)
+    .eq("status", row.status) // optimistic guard to avoid races
+    .select("id, status")
+    .maybeSingle();
+
+  if (updErr) throw new Error(updErr.message);
+  if (!updated)
+    throw new Error("Stamp card status changed concurrently. Try again.");
+
+  revalidatePath("/dashboard/stamps");
+  revalidatePath(`/dashboard/stamps/${cardId}`);
+  revalidatePath(`/services/stamps/${cardId}`);
 }

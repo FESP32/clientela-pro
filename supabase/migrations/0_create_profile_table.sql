@@ -5,7 +5,6 @@ create extension if not exists "uuid-ossp";
 create table if not exists public.profile (
   user_id uuid not null,
   name text,
-  subscription_plan text check (subscription_plan in ('free', 'premium')) default 'free',
   user_type text not null default 'customer' check (user_type in ('merchant','customer')),
   created_at timestamptz not null default timezone('utc'::text, now()),
   updated_at timestamptz not null default timezone('utc'::text, now()),

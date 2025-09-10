@@ -1,31 +1,9 @@
 "use server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-
-// export const signInWithGoogle = async (
-//   event: React.FormEvent<HTMLFormElement>
-// ) => {
-//   event.preventDefault();
-//   const formData = new FormData(event.currentTarget);
-//   const supabase = await createClient();
-//   const priceId = formData.get("priceId") as string;
-//   try {
-//     const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`;
-//     const { error: signInError } = await supabase.auth.signInWithOAuth({
-//       provider: "google",
-//       options: {
-//         redirectTo: `${redirectTo}?priceId=${encodeURIComponent(
-//           priceId || ""
-//         )}&redirect=/test`,
-//       },
-//     });
-//     if (signInError) {
-//       return { error: "Failed to sign in with Google. Please try again." };
-//     }
-//   } catch (error) {
-//     return { error: "Failed to sign in with Google. Please try again." };
-//   }
-// };
+import { unstable_cache } from "next/cache";
+import { cookies } from "next/headers";
+import { createHash } from "crypto";
 
 export async function signInWithGoogle(next?: string) {
   const supabase = await createClient();
@@ -81,3 +59,5 @@ export async function logout() {
   // redirect after logout
   redirect("/login");
 }
+
+

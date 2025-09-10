@@ -43,7 +43,7 @@ export async function listStampCards() {
     .from("stamp_card")
     .select(
       `
-      id, business_id, title, goal_text, stamps_required, is_active,
+      id, business_id, title, goal_text, stamps_required, status,
       valid_from, valid_to, created_at, updated_at,
       stamp_card_product ( product_id )
     `
@@ -85,7 +85,7 @@ export async function getCustomerStampCard(cardId: string) {
   const { data: card, error: cErr } = await supabase
     .from("stamp_card")
     .select(
-      "id, business_id, title, goal_text, stamps_required, is_active, valid_from, valid_to, created_at, updated_at"
+      "id, business_id, title, goal_text, stamps_required, status, valid_from, valid_to, created_at, updated_at"
     )
     .eq("id", cardId)
     .single();
@@ -263,7 +263,7 @@ export async function getStampIntent(intentId: string) {
     .select(
       `
       id, card_id, business_id, customer_id, qty, status, note, expires_at, consumed_at, created_at,
-      card:stamp_card(id, title, stamps_required, is_active, valid_from, valid_to)
+      card:stamp_card(id, title, stamps_required, status, valid_from, valid_to)
     `
     )
     .eq("id", intentId)
@@ -305,19 +305,19 @@ export async function listMyStampPunches(): Promise<PunchWithCardBusiness[]> {
   } = await supabase.auth.getUser();
 
   if (!user) return [];
-
   const { data, error } = await supabase
     .from("stamp_punch")
     .select(
       `
       id, qty, note, created_at,
       card:stamp_card!stamp_punch_card_id_fk(
-        id, title, stamps_required,
+        id, title, stamps_required, status,
         business:business!stamp_card_business_id_fk(id, name, image_url)
       )
     `
     )
     .eq("customer_id", user.id)
+    .eq("card.status", "active")
     .order("created_at", { ascending: false })
     .overrideTypes<PunchWithCardBusiness[]>();
 
@@ -385,6 +385,23 @@ export async function listMyStampPunchesGroupedInCode(): Promise<
   });
 
   return result;
+}
+
+
+export async function getStampCardCountForBusiness(
+  businessId: string
+): Promise<number> {
+  if (!businessId) throw new Error("businessId is required");
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("stamp_card")
+    .select("id", { head: true, count: "exact" })
+    .eq("business_id", businessId);
+
+  if (error) throw new Error(`Failed to count stamp cards: ${error.message}`);
+  return count ?? 0;
 }
 
 

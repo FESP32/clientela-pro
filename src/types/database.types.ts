@@ -329,7 +329,6 @@ export type Database = {
         Row: {
           created_at: string;
           name: string | null;
-          subscription_plan: string | null;
           updated_at: string;
           user_id: string;
           user_type: string;
@@ -337,7 +336,6 @@ export type Database = {
         Insert: {
           created_at?: string;
           name?: string | null;
-          subscription_plan?: string | null;
           updated_at?: string;
           user_id: string;
           user_type?: string;
@@ -345,7 +343,6 @@ export type Database = {
         Update: {
           created_at?: string;
           name?: string | null;
-          subscription_plan?: string | null;
           updated_at?: string;
           user_id?: string;
           user_type?: string;
@@ -416,42 +413,42 @@ export type Database = {
           code: string;
           created_at: string;
           id: string;
-          is_active: boolean;
           per_referrer_cap: number | null;
           referred_reward: string | null;
           referrer_reward: string | null;
+          status: string;
           title: string;
           updated_at: string;
-          valid_from: string | null;
-          valid_to: string | null;
+          valid_from: string;
+          valid_to: string;
         };
         Insert: {
           business_id: string;
           code: string;
           created_at?: string;
           id?: string;
-          is_active?: boolean;
           per_referrer_cap?: number | null;
           referred_reward?: string | null;
           referrer_reward?: string | null;
+          status?: string;
           title: string;
           updated_at?: string;
-          valid_from?: string | null;
-          valid_to?: string | null;
+          valid_from?: string;
+          valid_to: string;
         };
         Update: {
           business_id?: string;
           code?: string;
           created_at?: string;
           id?: string;
-          is_active?: boolean;
           per_referrer_cap?: number | null;
           referred_reward?: string | null;
           referrer_reward?: string | null;
+          status?: string;
           title?: string;
           updated_at?: string;
-          valid_from?: string | null;
-          valid_to?: string | null;
+          valid_from?: string;
+          valid_to?: string;
         };
         Relationships: [
           {
@@ -559,36 +556,36 @@ export type Database = {
           created_at: string;
           goal_text: string;
           id: string;
-          is_active: boolean;
           stamps_required: number;
+          status: string;
           title: string;
           updated_at: string;
-          valid_from: string | null;
-          valid_to: string | null;
+          valid_from: string;
+          valid_to: string;
         };
         Insert: {
           business_id: string;
           created_at?: string;
           goal_text: string;
           id?: string;
-          is_active?: boolean;
           stamps_required: number;
+          status?: string;
           title: string;
           updated_at?: string;
-          valid_from?: string | null;
-          valid_to?: string | null;
+          valid_from?: string;
+          valid_to: string;
         };
         Update: {
           business_id?: string;
           created_at?: string;
           goal_text?: string;
           id?: string;
-          is_active?: boolean;
           stamps_required?: number;
+          status?: string;
           title?: string;
           updated_at?: string;
-          valid_from?: string | null;
-          valid_to?: string | null;
+          valid_from?: string;
+          valid_to?: string;
         };
         Relationships: [
           {
@@ -736,18 +733,111 @@ export type Database = {
           }
         ];
       };
+      subscription: {
+        Row: {
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          interval: string;
+          plan_id: string;
+          started_at: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          interval?: string;
+          plan_id: string;
+          started_at?: string;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          interval?: string;
+          plan_id?: string;
+          started_at?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plan_id_fk";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "subscription_plan";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscription_user_id_fk_profile";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profile";
+            referencedColumns: ["user_id"];
+          }
+        ];
+      };
+      subscription_plan: {
+        Row: {
+          code: string;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          metadata: Json;
+          name: string;
+          price_month: number;
+          price_year: number;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          name: string;
+          price_month?: number;
+          price_year?: number;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          name?: string;
+          price_month?: number;
+          price_year?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       survey: {
         Row: {
           business_id: string;
           created_at: string;
           description: string | null;
-          ends_at: string | null;
+          ends_at: string;
           id: string;
-          is_active: boolean;
           is_anonymous: boolean;
           product_id: string;
           settings: Json;
-          starts_at: string | null;
+          starts_at: string;
+          status: string;
           title: string;
           traits: Json;
           updated_at: string;
@@ -756,13 +846,13 @@ export type Database = {
           business_id: string;
           created_at?: string;
           description?: string | null;
-          ends_at?: string | null;
+          ends_at: string;
           id?: string;
-          is_active?: boolean;
           is_anonymous?: boolean;
           product_id: string;
           settings?: Json;
-          starts_at?: string | null;
+          starts_at?: string;
+          status?: string;
           title: string;
           traits?: Json;
           updated_at?: string;
@@ -771,13 +861,13 @@ export type Database = {
           business_id?: string;
           created_at?: string;
           description?: string | null;
-          ends_at?: string | null;
+          ends_at?: string;
           id?: string;
-          is_active?: boolean;
           is_anonymous?: boolean;
           product_id?: string;
           settings?: Json;
-          starts_at?: string | null;
+          starts_at?: string;
+          status?: string;
           title?: string;
           traits?: Json;
           updated_at?: string;

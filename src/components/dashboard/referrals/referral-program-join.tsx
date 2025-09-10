@@ -17,6 +17,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/server"; // ⬅️ early auth gate
+import { notFound } from "next/navigation";
 
 type Props = {
   programId: string;
@@ -76,7 +77,11 @@ export default async function ProgramJoin({ programId, action }: Props) {
   }
 
   const { program, participantCount, alreadyJoined } = res;
-  const isActive = !!program.is_active;
+  const isActive = program.status === "active";
+
+  if (!isActive) {
+    notFound();
+  }
 
   const validity =
     program.valid_from || program.valid_to

@@ -12,7 +12,7 @@ export default async function Page() {
   const data = await listSurveys();
 
   const total = data.length;
-  const active = data.filter((s) => s.is_active).length;
+  const active = !!data.filter((s) => s.status === "active");
   const anon = data.filter((s) => s.is_anonymous).length;
 
   return (

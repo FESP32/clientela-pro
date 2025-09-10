@@ -42,7 +42,7 @@ export async function listReferralPrograms() {
       business_id,
       title,
       code,
-      is_active,
+      status,
       referrer_reward,
       referred_reward,
       valid_from,
@@ -92,7 +92,7 @@ export async function listJoinedReferralProgramsWithIntents(): Promise<
   const { data: programs, error: pErr } = await supabase
     .from("referral_program")
     .select(
-      "id, title, code, is_active, referrer_reward, referred_reward, valid_from, valid_to"
+      "id, title, code, status, referrer_reward, referred_reward, valid_from, valid_to"
     )
     .in("id", programIds);
 
@@ -133,7 +133,7 @@ export async function listJoinedReferralProgramsWithIntents(): Promise<
     id: p.id,
     title: p.title,
     code: p.code,
-    is_active: p.is_active,
+    status: p.status,
     referrer_reward: p.referrer_reward ?? null,
     referred_reward: p.referred_reward ?? null,
     valid_from: p.valid_from ?? null,
@@ -215,7 +215,7 @@ export type ProgramJoinData =
         | "id"
         | "title"
         | "code"
-        | "is_active"
+        | "status"
         | "referrer_reward"
         | "referred_reward"
         | "valid_from"
@@ -242,7 +242,7 @@ export async function getProgramJoinData(
     .from("referral_program")
     .select(
       `
-      id, title, code, is_active,
+      id, title, code, status,
       referrer_reward, referred_reward,
       valid_from, valid_to, per_referrer_cap
     `
@@ -430,6 +430,23 @@ export async function listMyReferredIntents() {
     items: (data ?? []) as ReferredIntentRow[],
     error: error?.message ?? null,
   };
+}
+
+export async function getReferralProgramCountForBusiness(
+  businessId: string
+): Promise<number> {
+  if (!businessId) throw new Error("businessId is required");
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("referral_program")
+    .select("id", { head: true, count: "exact" })
+    .eq("business_id", businessId);
+
+  if (error)
+    throw new Error(`Failed to count referral programs: ${error.message}`);
+  return count ?? 0;
 }
 
 

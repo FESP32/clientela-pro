@@ -1,10 +1,14 @@
 "use server";
 
-import { GiftIntentRow, GiftRow } from "@/types/gifts";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getActiveBusiness } from "@/actions";
+import {
+  getActiveBusiness,
+  getGiftCountForBusiness,
+  getOwnerPlanForBusiness,
+} from "@/actions";
+import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createGift(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -25,8 +29,19 @@ export async function createGift(formData: FormData) {
   }
 
   const { business } = await getActiveBusiness();
+
   if (!business) {
     redirect("/dashboard/businesses/missing");
+  }
+
+  const subscriptionPlan = await getOwnerPlanForBusiness(business.id);
+
+  const subscriptionMetadata =
+    subscriptionPlan.metadata as SubscriptionMetadata;
+  const surveyCount = await getGiftCountForBusiness(business.id);
+
+  if (surveyCount >= subscriptionMetadata.max_gifts) {
+    throw new Error("Max gift count reached");
   }
 
   const { error } = await supabase.from("gift").insert({

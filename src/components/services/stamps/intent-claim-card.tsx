@@ -3,15 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { consumeStampIntent, getStampIntent } from "@/actions";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { isExpired } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -34,31 +28,8 @@ export default async function IntentClaimCard({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { intent, error } = await getStampIntent(intentId);
+  const { intent } = await getStampIntent(intentId);
   if (!intent) notFound();
-
-  if (error || !intent) {
-    return (
-      <Card className="max-w-md transition-shadow duration-200 hover:shadow-md">
-        <CardHeader>
-          <CardTitle>Intent not found</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            The intent you followed doesn’t exist.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button asChild variant="outline" className="group">
-            <Link href="/services/stamps">
-              <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-              Back to Stamps
-            </Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
 
   const requiresLogin = !user;
   const expired = isExpired(intent.expires_at);
@@ -72,20 +43,18 @@ export default async function IntentClaimCard({
 
   const card = Array.isArray(intent.card) ? intent.card[0] : intent.card;
 
-
   return (
-    <Card className="max-w-md transition-shadow duration-200 hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
+    <section className="mx-auto w-full max-w-xl px-5 py-6 sm:px-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary/10">
           <Stamp className="h-5 w-5 text-primary" />
-          <CardTitle className="text-balance">
-            Claim {card.title ?? "Stamp"} ({intent.qty})
-          </CardTitle>
         </div>
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Claim {card?.title ?? "Stamp"}{" "}
+          <span className="text-muted-foreground">({intent.qty})</span>
+        </h1>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
           <Badge variant="secondary" className="flex items-center gap-1">
             <Stamp className="h-3.5 w-3.5" />
             {intent.qty} punch{intent.qty > 1 ? "es" : ""}
@@ -115,30 +84,36 @@ export default async function IntentClaimCard({
             </Badge>
           )}
         </div>
+      </div>
 
-        {intent.note && (
+      <Separator className="my-5" />
+
+      {/* Details */}
+      <div className="space-y-3">
+        {intent.note ? (
           <p className="text-sm">
-            <span className="text-muted-foreground">Note:</span> {intent.note}
+            <span className="text-muted-foreground">Note: </span>
+            {intent.note}
           </p>
-        )}
+        ) : null}
 
         {intent.expires_at && (
           <p className="text-xs text-muted-foreground flex items-center">
-            <CalendarClock className="mr-1 h-3.5 w-3.5" />
+            <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
             Expires at: {new Date(intent.expires_at).toLocaleString()}
           </p>
         )}
 
         {assignedToAnother && (
           <p className="text-sm text-destructive flex items-center">
-            <Info className="mr-1 h-4 w-4" />
+            <Info className="mr-1.5 h-4 w-4" />
             This intent is reserved for a different customer.
           </p>
         )}
 
         {requiresLogin && (
           <p className="text-sm text-muted-foreground flex items-center">
-            <LogIn className="mr-1 h-4 w-4" />
+            <LogIn className="mr-1.5 h-4 w-4" />
             Please sign in to claim this intent.
           </p>
         )}
@@ -148,9 +123,12 @@ export default async function IntentClaimCard({
             This intent is already {intent.status}.
           </p>
         )}
-      </CardContent>
+      </div>
 
-      <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+  
+
+      {/* Actions */}
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2">
           <Button asChild variant="outline" className="group">
             <Link href="/services/stamps">
@@ -159,13 +137,9 @@ export default async function IntentClaimCard({
             </Link>
           </Button>
 
-          <Button asChild variant="outline" className="group">
+          <Button asChild variant="outline">
             <Link
-              href={
-                intent.card
-                  ? `/services/stamps/${card.id}`
-                  : "/services/stamps"
-              }
+              href={card ? `/services/stamps/${card.id}` : "/services/stamps"}
             >
               View my card
             </Link>
@@ -175,7 +149,6 @@ export default async function IntentClaimCard({
         {claimable ? (
           <form action={consumeStampIntent} className="contents">
             <input type="hidden" name="intent_id" value={intent.id} />
-            {/* so the action can bounce back to here if auth is needed */}
             <input
               type="hidden"
               name="redirect_to"
@@ -201,7 +174,7 @@ export default async function IntentClaimCard({
         ) : (
           <Button disabled>Claim</Button>
         )}
-      </CardFooter>
-    </Card>
+      </div>
+    </section>
   );
 }

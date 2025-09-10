@@ -120,7 +120,7 @@ with check (                              -- << the NEW row must satisfy this pr
     select 1
     from public.survey s
     where s.id = public.response.survey_id                -- << the target survey exists
-      and s.is_active = true                              -- << survey marked active
+      and s.status = 'active'                              -- << survey marked active
       and (s.starts_at is null or s.starts_at <= now())   -- << has started (or no start time)
       and (s.ends_at   is null or s.ends_at   >= now())   -- << not ended yet (or no end time)
       and (
@@ -148,7 +148,7 @@ with check (                              -- << the NEW row must satisfy this pr
     select 1
     from public.survey s
     where s.id = public.response.survey_id                -- << the target survey exists
-      and s.is_active = true                              -- << survey marked active
+      and s.status = 'active'                              -- << survey marked active
       and (s.starts_at is null or s.starts_at <= now())   -- << has started (or no start time)
       and (s.ends_at   is null or s.ends_at   >= now())   -- << not ended yet (or no end time)
       and s.is_anonymous = true                           -- << ONLY anonymous surveys accept anon inserts

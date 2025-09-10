@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 const parentStagger: Variants = {
   hidden: {},
@@ -40,13 +39,9 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
 }
 
 export default function CustomerJoinStamp({
-  title,
-  cta,
   cardId,
   action,
 }: {
-  title: string;
-  cta: string;
   cardId: string;
   action: (formData: FormData) => Promise<void>;
 }) {
@@ -72,7 +67,7 @@ export default function CustomerJoinStamp({
           <Stamp className="h-7 w-7 text-primary" />
         </motion.span>
         <h2 id="join-stamp-create" className="text-xl font-semibold">
-          {title}
+          Add this card to my account
         </h2>
         <motion.span
           initial={{ scale: 0.9, opacity: 0.6 }}
@@ -133,7 +128,7 @@ export default function CustomerJoinStamp({
         </div>
 
         <div className="flex justify-center">
-          <SubmitButton>{cta}</SubmitButton>
+          <SubmitButton>Create my card</SubmitButton>
         </div>
       </motion.form>
     </motion.div>

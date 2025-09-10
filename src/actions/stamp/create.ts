@@ -2,14 +2,16 @@
 "use server";
 
 import { getBool } from "@/lib/utils";
-import {
-  StampCardInsert,
-  StampCardProductInsert,
-} from "@/types/stamps";
+import { StampCardInsert, StampCardProductInsert } from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
-import { getActiveBusiness } from "@/actions";
+import {
+  getActiveBusiness,
+  getOwnerPlanForBusiness,
+  getStampCardCountForBusiness,
+} from "@/actions";
+import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createStampCard(formData: FormData) {
   const supabase = await createClient();
@@ -18,23 +20,33 @@ export async function createStampCard(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
+  const subscriptionPlan = await getOwnerPlanForBusiness(business.id);
+
+  const subscriptionMetadata =
+    subscriptionPlan.metadata as SubscriptionMetadata;
+  const stampCardCount = await getStampCardCountForBusiness(business.id);
+
+  if (stampCardCount >= subscriptionMetadata.max_stamps) {
+    console.error("Max Stamp Cards count reached");
+    redirect("/dashboard/upgrade");
+  }
+
   const title = String(formData.get("title") ?? "").trim();
   const goal_text = String(formData.get("goal_text") ?? "").trim();
   const stamps_required = Number(formData.get("stamps_required") ?? 0);
-  const is_active = getBool(formData, "is_active");
   const valid_from = String(formData.get("valid_from") ?? "").trim();
   const valid_to = String(formData.get("valid_to") ?? "").trim();
   const product_ids = formData.getAll("product_ids[]").map(String);
 
   if (!title) throw new Error("Title is required");
   if (!goal_text) throw new Error("Goal text is required");
-  if (!Number.isInteger(stamps_required) || stamps_required < 1) {
+  if (!Number.isInteger(stamps_required) || stamps_required < 1 ) {
     throw new Error("Stamps required must be an integer ≥ 1");
-  }
-
-  const { business } = await getActiveBusiness();
-  if (!business) {
-    redirect("/dashboard/businesses/missing");
   }
 
   const payload: StampCardInsert = {
@@ -42,9 +54,9 @@ export async function createStampCard(formData: FormData) {
     title,
     goal_text,
     stamps_required,
-    is_active,
-    valid_from: valid_from ? new Date(valid_from).toISOString() : null,
-    valid_to: valid_to ? new Date(valid_to).toISOString() : null,
+    status: "active",
+    valid_from: new Date(valid_from).toISOString(),
+    valid_to: new Date(valid_to).toISOString(),
   };
 
   // 1) Create card
@@ -68,7 +80,7 @@ export async function createStampCard(formData: FormData) {
     if (cpErr) throw new Error(cpErr.message);
   }
 
-  revalidatePath("/dashboard/stamps");
+  // revalidatePath("/dashboard/stamps");
   redirect("/dashboard/stamps");
 }
 
@@ -83,23 +95,20 @@ export async function createStampMembership(formData: FormData) {
   if (!user) {
     redirect("/login?next=/services/stamps"); // tweak next= as you prefer
   }
-  
+
   if (!card_id) notFound();
 
   const { data: card, error: cardErr } = await supabase
     .from("stamp_card")
-    .select("id, is_active, valid_from, valid_to, stamps_required")
+    .select("id, status, valid_from, valid_to, stamps_required")
     .eq("id", card_id)
     .single();
-
-    console.log(cardErr);
-    
 
   if (cardErr || !card) throw new Error("Stamp card not found");
   const now = new Date();
   const startsOk = !card.valid_from || new Date(card.valid_from) <= now;
   const endsOk = !card.valid_to || now <= new Date(card.valid_to);
-  if (!card.is_active || !startsOk || !endsOk) {
+  if (card.status === "active" || !startsOk || !endsOk) {
     throw new Error("This stamp card is inactive or not currently valid");
   }
 
@@ -111,9 +120,9 @@ export async function createStampMembership(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+
   redirect(`/services/stamps`); // or `/dashboard/stamps/${card_id}`
 }
-
 
 export async function createStampIntent(formData: FormData) {
   const supabase = await createClient();
@@ -173,4 +182,3 @@ export async function createStampIntent(formData: FormData) {
   // Refresh the list
   revalidatePath("/dashboard/stamps/");
 }
-

@@ -6,23 +6,21 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
   RefreshCw,
   Megaphone,
   Users,
   Gift,
-  Plus,
-  CalendarRange, // ⬅️ new
-  Sun, // ⬅️ new
-  Clock3, // ⬅️ new
-  CalendarPlus, // ⬅️ new
-  Eraser, // ⬅️ new
+  CalendarRange,
+  Sun,
+  Clock3,
+  CalendarPlus,
+  Eraser,
 } from "lucide-react";
 import SubmitButton from "@/components/common/submit-button";
 import MonoIcon from "../../common/mono-icon";
-import { format, addDays, endOfDay } from "date-fns"; // ⬅️ new
+import { format, addDays, endOfDay } from "date-fns";
 
 type ReferralProgramFormProps = {
   onSubmit: (fd: FormData) => void | Promise<void>;
@@ -71,7 +69,6 @@ export default function NewReferralProgramForm({
     return d;
   };
 
-  const setToday = () => applyRange(now(), endOfDay(now()));
   const setPlus1d = () => applyRange(now(), addDays(now(), 1));
   const setPlus7d = () => applyRange(now(), addDays(now(), 7));
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
@@ -105,10 +102,6 @@ export default function NewReferralProgramForm({
               </span>
             </p>
           </div>
-
-          <Button asChild variant="outline">
-            <Link href="/dashboard/referrals">Cancel</Link>
-          </Button>
         </header>
 
         {/* Body */}
@@ -159,16 +152,6 @@ export default function NewReferralProgramForm({
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center justify-between rounded-md border p-3">
-                <div className="pr-4">
-                  <Label htmlFor="is_active">Active</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Make the program usable right away.
-                  </p>
-                </div>
-                <Switch id="is_active" name="is_active" defaultChecked />
-              </div>
-
               <div className="flex flex-col gap-2">
                 <Label htmlFor="per_referrer_cap">Per-referrer cap</Label>
                 <Input
@@ -176,11 +159,13 @@ export default function NewReferralProgramForm({
                   name="per_referrer_cap"
                   type="number"
                   min={1}
+                  max={50}
+                  defaultValue={10}
+                  required
                   placeholder="Leave empty for unlimited"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Maximum successful referrals credited per participant. Empty =
-                  unlimited.
+                  Maximum successful referrals credited per participant. (Max 50)
                 </p>
               </div>
             </div>
@@ -237,16 +222,6 @@ export default function NewReferralProgramForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={setToday}
-                >
-                  <Sun className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Today
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={setPlus1d}
                 >
                   <Clock3 className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -298,6 +273,8 @@ export default function NewReferralProgramForm({
                   name="valid_from"
                   type="datetime-local"
                   ref={fromRef}
+                  required
+                  defaultValue={fmtLocal(new Date())}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -306,7 +283,9 @@ export default function NewReferralProgramForm({
                   id="valid_to"
                   name="valid_to"
                   type="datetime-local"
+                  required
                   ref={toRef}
+                  defaultValue={fmtLocal(addDays(now(), 1))}
                 />
               </div>
             </div>
@@ -321,11 +300,11 @@ export default function NewReferralProgramForm({
         </section>
 
         {/* Actions */}
-        <div className="mt-4 flex items-center justify-end gap-3">
+        <div className="mt-4 flex items-center gap-3">
+          <SubmitButton />
           <Button asChild variant="outline">
             <Link href="/dashboard/referrals">Cancel</Link>
           </Button>
-          <SubmitButton />
         </div>
       </div>
     </form>

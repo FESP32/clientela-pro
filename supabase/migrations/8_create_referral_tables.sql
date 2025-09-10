@@ -9,11 +9,12 @@ create table if not exists public.referral_program (
   id               uuid primary key default gen_random_uuid(),
   business_id      uuid not null,  -- FK added below
   title            text not null,
-  is_active        boolean not null default true,
+  status       text not null default 'active' 
+    check (status in ('active', 'inactive', 'finished')),
   referrer_reward  text,
   referred_reward  text,
-  valid_from       timestamptz,
-  valid_to         timestamptz,
+  valid_from       timestamptz not null default now(),
+  valid_to         timestamptz not null,
   code             text not null,                         -- business-scoped program code
   per_referrer_cap integer check (per_referrer_cap is null or per_referrer_cap >= 1),
   created_at       timestamptz not null default timezone('utc', now()),
@@ -35,7 +36,7 @@ create unique index if not exists uq_referral_program_code
   on public.referral_program(business_id, code);
 
 create index if not exists idx_referral_business_id on public.referral_program(business_id);
-create index if not exists idx_referral_program_active on public.referral_program(is_active);
+create index if not exists idx_referral_program_status on public.referral_program(status);
 
 drop trigger if exists trig_touch_referral_program on public.referral_program;
 create trigger trig_touch_referral_program
@@ -162,7 +163,7 @@ for select
 to authenticated
 using (
   public.is_user_customer()                          -- << requester is 'customer'
-  and is_active = true                               -- << program enabled
+  and status = 'active'                               -- << program enabled
   and (valid_from is null or valid_from <= timezone('utc', now()))  -- << started (or open)
   and (valid_to   is null or valid_to   >= timezone('utc', now()))  -- << not expired (or open)
 );
@@ -234,7 +235,7 @@ with check (
       select 1
       from public.referral_program rp
       where rp.id = public.referral_program_participant.program_id
-        and rp.is_active = true
+        and rp.status = 'active'
         and (rp.valid_from is null or rp.valid_from <= timezone('utc', now()))
         and (rp.valid_to   is null or rp.valid_to   >= timezone('utc', now()))
     )
@@ -328,7 +329,7 @@ using (
     select 1
     from public.referral_program rp
     where rp.id = public.referral_intent.program_id
-      and rp.is_active = true
+      and rp.status = 'active'
       and (rp.valid_from is null or rp.valid_from <= timezone('utc', now()))
       and (rp.valid_to   is null or rp.valid_to   >= timezone('utc', now()))
   )
@@ -363,7 +364,7 @@ with check (
       select 1
       from public.referral_program rp
       where rp.id = public.referral_intent.program_id
-        and rp.is_active = true
+        and rp.status = 'active'
         and (rp.valid_from is null or rp.valid_from <= timezone('utc', now()))
         and (rp.valid_to   is null or rp.valid_to   >= timezone('utc', now()))
     )
@@ -429,7 +430,7 @@ using (
     select 1
     from public.referral_program rp
     where rp.id = public.referral_intent.program_id
-      and rp.is_active = true
+      and rp.status = 'active'
       and (rp.valid_from is null or rp.valid_from <= timezone('utc', now()))
       and (rp.valid_to   is null or rp.valid_to   >= timezone('utc', now()))
   )
@@ -443,7 +444,7 @@ with check (
     select 1
     from public.referral_program rp
     where rp.id = public.referral_intent.program_id
-      and rp.is_active = true
+      and rp.status = 'active'
       and (rp.valid_from is null or rp.valid_from <= timezone('utc', now()))
       and (rp.valid_to   is null or rp.valid_to   >= timezone('utc', now()))
   )

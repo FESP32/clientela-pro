@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import {
-  SurveyInsert
-} from "@/types";
+import { SurveyInsert } from "@/types";
 import { getBool } from "@/lib/utils";
 import { SurveyFromFormSchema } from "@/schemas/surveys";
 import { getActiveBusiness } from "@/actions/business/read";
+import { SubscriptionMetadata } from "@/types/subscription";
+import { getOwnerPlanForBusiness } from "../subscription";
+import { getSurveyCountForBusiness } from "@/actions";
 
 function parseLinesToTraits(block: string, score: 1 | 2 | 3 | 4 | 5) {
   const lines = (block || "")
@@ -93,7 +94,6 @@ export async function submitResponse(formData: FormData) {
     return { success: false, message: "Survey not found" };
   }
 
-  // ── Respect anonymity
   const respondent_id = survey.is_anonymous ? null : user?.id ?? null;
 
   const { error } = await supabase.from("response").insert({
@@ -120,12 +120,28 @@ export async function createSurvey(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { business } = await getActiveBusiness();
+
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
+  const subscriptionPlan = await getOwnerPlanForBusiness(business.id);
+
+  const subscriptionMetadata =
+    subscriptionPlan.metadata as SubscriptionMetadata;
+  const surveyCount = await getSurveyCountForBusiness(business.id);
+
+  if (surveyCount >= subscriptionMetadata.max_surveys) {
+    console.error("Max Survey count reached");
+    redirect("/dashboard/upgrade");
+  }
+
   // ✅ Include is_anonymous in parsing
   const parsed = SurveyFromFormSchema.safeParse({
     product_id: formData.get("product_id"),
     title: formData.get("title"),
     description: formData.get("description") ?? "",
-    is_active: formData.get("is_active") ?? undefined,
     is_anonymous: formData.get("is_anonymous") ?? "true", // <- NEW
     starts_at: formData.get("starts_at") ?? "",
     ends_at: formData.get("ends_at") ?? "",
@@ -174,21 +190,15 @@ export async function createSurvey(formData: FormData) {
     ];
   }
 
-  const { business } = await getActiveBusiness();
-
-  if (!business) {
-    redirect("/dashboard/businesses/missing");
-  }
-
   const insertPayload: SurveyInsert = {
     business_id: business.id,
     product_id,
     title,
     description,
-    is_active: getBool(formData, "is_active"),
+    status: 'active',
     is_anonymous: getBool(formData, "is_anonymous"),
-    starts_at: starts_at ? new Date(starts_at).toISOString() : null,
-    ends_at: ends_at ? new Date(ends_at).toISOString() : null,
+    starts_at: new Date(starts_at).toISOString(),
+    ends_at: new Date(ends_at).toISOString(),
     traits,
   };
 
@@ -198,6 +208,3 @@ export async function createSurvey(formData: FormData) {
   revalidatePath("/dashboard/surveys");
   redirect("/dashboard/surveys");
 }
-
-
-

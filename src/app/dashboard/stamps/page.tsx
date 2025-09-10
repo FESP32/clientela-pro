@@ -14,7 +14,7 @@ export default async function LoyaltyCardsPage() {
 
   const now = Date.now();
   const total = cards.length;
-  const active = cards.filter((c: StampCardListItem) => c.is_active).length;
+  const active = !!cards.filter((c: StampCardListItem) => c.status === "active");
   const liveNow = cards.filter((c: StampCardListItem) => {
     const start = c.valid_from ? new Date(c.valid_from).getTime() : undefined;
     const end = c.valid_to ? new Date(c.valid_to).getTime() : undefined;

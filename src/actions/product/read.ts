@@ -1,9 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { ProductSchema } from "@/schemas/products";
 import { getActiveBusiness } from "@/actions";
 import { ProductRow } from "@/types/products";
 
@@ -39,4 +37,21 @@ export async function listProducts() {
     data: (data ?? []) as ProductRow[],
     error: error?.message ?? null,
   };
+}
+
+
+export async function getProductCountForBusiness(
+  businessId: string
+): Promise<number> {
+  if (!businessId) throw new Error("businessId is required");
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("product")
+    .select("id", { head: true, count: "exact" })
+    .eq("business_id", businessId);
+
+  if (error) throw new Error(`Failed to count products: ${error.message}`);
+  return count ?? 0;
 }

@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { getBool } from "@/lib/utils";
 import { ReferralProgramFromFormSchema } from "@/schemas/referrals";
+import { ReferralProgramInsert } from "@/types";
 import {
-  ReferralProgramInsert,
-} from "@/types";
-import { getActiveBusiness } from "@/actions";
+  getActiveBusiness,
+  getOwnerPlanForBusiness,
+  getReferralProgramCountForBusiness,
+} from "@/actions";
+import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createReferralProgram(formData: FormData) {
   const supabase = await createClient();
@@ -17,16 +19,31 @@ export async function createReferralProgram(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { business } = await getActiveBusiness();
+  if (!business) {
+    redirect("/dashboard/businesses/missing");
+  }
+
+  const subscriptionPlan = await getOwnerPlanForBusiness(business.id);
+
+  const subscriptionMetadata =
+    subscriptionPlan.metadata as SubscriptionMetadata;
+  const referralProgramCount = await getReferralProgramCountForBusiness(business.id);
+
+  if (referralProgramCount >= subscriptionMetadata.max_referral_programs) {
+    console.error("Max referral program count reached");
+    redirect("/dashboard/upgrade");
+  }
+
   // Parse form input (same style as createSurvey)
   const parsed = ReferralProgramFromFormSchema.safeParse({
     title: formData.get("title"),
     code: formData.get("code"),
-    is_active: formData.get("is_active") ?? "true",
     referrer_reward: formData.get("referrer_reward") ?? "",
     referred_reward: formData.get("referred_reward") ?? "",
-    valid_from: formData.get("valid_from") ?? "",
-    valid_to: formData.get("valid_to") ?? "",
-    per_referrer_cap: formData.get("per_referrer_cap") ?? "",
+    valid_from: formData.get("valid_from"),
+    valid_to: formData.get("valid_to"),
+    per_referrer_cap: formData.get("per_referrer_cap") ?? 1,
   });
 
   if (!parsed.success) {
@@ -37,7 +54,6 @@ export async function createReferralProgram(formData: FormData) {
   const {
     title,
     code,
-    is_active,
     referrer_reward,
     referred_reward,
     valid_from,
@@ -50,21 +66,15 @@ export async function createReferralProgram(formData: FormData) {
     throw new Error("End date must be later than start date.");
   }
 
-  const { business } = await getActiveBusiness();
-
-  if (!business) {
-    redirect("/dashboard/businesses/missing");
-  }
-
   const insertPayload: ReferralProgramInsert = {
     business_id: business?.id,
     title,
     code,
-    is_active: is_active ?? getBool(formData, "is_active"),
+    status: 'active',
     referrer_reward: referrer_reward || null,
     referred_reward: referred_reward || null,
-    valid_from: valid_from ? valid_from.toISOString() : null,
-    valid_to: valid_to ? valid_to.toISOString() : null,
+    valid_from: new Date(valid_from).toISOString(),
+    valid_to: new Date(valid_to).toISOString(),
     per_referrer_cap, // null => unlimited, else number
   };
 
@@ -120,8 +130,7 @@ export async function createReferralParticipant(formData: FormData) {
 
 export async function createReferralIntent(formData: FormData) {
   const programId = String(formData.get("program_id") ?? "").trim();
-  const expiresAtRaw = String(formData.get("expires_at") ?? "").trim() || null;
-
+    
   if (!programId) throw new Error("Missing program_id");
 
   const supabase = await createClient();
@@ -147,12 +156,12 @@ export async function createReferralIntent(formData: FormData) {
   // Validate program state
   const { data: program, error: progErr } = await supabase
     .from("referral_program")
-    .select("is_active, valid_from, valid_to")
+    .select("status, valid_from, valid_to")
     .eq("id", programId)
     .maybeSingle();
   if (progErr) throw new Error(progErr.message);
   if (!program) throw new Error("Program not found.");
-  if (!program.is_active) throw new Error("Program is inactive.");
+  if (program.status !== "active") throw new Error("Program is inactive.");
 
   const now = new Date();
   if (program.valid_from && new Date(program.valid_from) > now) {
@@ -162,7 +171,7 @@ export async function createReferralIntent(formData: FormData) {
     throw new Error("Program has expired.");
   }
 
-  const expiresAt = expiresAtRaw ? new Date(expiresAtRaw).toISOString() : null;
+  const expiresAt = program.valid_to;
 
   const { error: insertErr } = await supabase.from("referral_intent").insert({
     program_id: programId,
@@ -174,8 +183,5 @@ export async function createReferralIntent(formData: FormData) {
   if (insertErr) throw new Error(insertErr.message);
 
   revalidatePath(`/referrals/${programId}`);
-  // Also revalidate the join page where this panel lives
   revalidatePath(`/referrals/${programId}/join`);
 }
-
-

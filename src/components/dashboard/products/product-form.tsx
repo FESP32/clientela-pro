@@ -22,13 +22,10 @@ import { cn } from "@/lib/utils";
 import MonoIcon from "../../common/mono-icon";
 
 type ProductFormProps = {
-  onSubmit: (formData: FormData) => Promise<void>; // server action
-  title?: string;
-  submitLabel?: string;
-  cancelHref?: string;
+  onSubmit: (formData: FormData) => Promise<void>;
   defaultValues?: {
     name?: string;
-    metadata?: string; // stringified JSON if editing
+    metadata?: string;
   };
 };
 
@@ -99,9 +96,6 @@ function isValidKeyName(key: string) {
 export default function ProductForm({
   onSubmit,
   defaultValues,
-  title = "Create Products",
-  submitLabel,
-  cancelHref = "/dashboard/products",
 }: ProductFormProps) {
   const [rows, setRows] = useState<KV[]>(() =>
     parseInitialKV(defaultValues?.metadata)
@@ -124,14 +118,6 @@ export default function ProductForm({
     }
     return dups;
   }, [rows]);
-
-  const invalidKeys = useMemo(
-    () =>
-      new Set(
-        rows.filter((r) => r.key && !isValidKeyName(r.key)).map((r) => r.key)
-      ),
-    [rows]
-  );
 
   // JSON value that will be submitted
   const metadataString = useMemo(() => {
@@ -187,8 +173,6 @@ export default function ProductForm({
     setRows((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const moveFocusToNew = useRef<HTMLInputElement>(null);
-
   return (
     <form action={onSubmit} className="mx-auto max-w-6xl">
       {/* Header */}
@@ -199,13 +183,13 @@ export default function ProductForm({
               <Package2 className="size-4" aria-hidden="true" />
             </MonoIcon>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-              {title}
+              Create Products
             </h1>
           </div>
           <p className="mt-2 text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
             <span className="inline-flex items-center gap-1">
               <Info className="h-4 w-4" aria-hidden="true" />
-              Give your product a clear, memorable name.
+              Create the stock you have available.
             </span>
             <span className="inline-flex items-center gap-1">
               <ListTree className="h-4 w-4" aria-hidden="true" />
@@ -246,7 +230,7 @@ export default function ProductForm({
           <Input
             id="name"
             name="name"
-            placeholder="Apple Pie"
+            placeholder="Give your product a clear, memorable name."
             required
             defaultValue={defaultValues?.name}
           />
@@ -411,7 +395,7 @@ export default function ProductForm({
       <div className="mt-4 flex gap-2">
         <SubmitButton />
         <Button asChild variant="outline">
-          <Link href={cancelHref}>Cancel</Link>
+          <Link href="/dashboard/products">Cancel</Link>
         </Button>
       </div>
     </form>

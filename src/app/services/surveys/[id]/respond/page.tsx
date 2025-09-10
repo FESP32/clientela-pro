@@ -12,9 +12,8 @@ export default async function RespondPage({
 }) {
   const { id } = await params;
 
-  // Fetch survey (make sure it includes `is_anonymous`)
   const survey = await getSurvey(id);
-  if (!survey) notFound();
+  if (!survey || survey.status !== "active") notFound();
 
   // Get auth status server-side and pass it to the client component
   const supabase = await createClient();

@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import SubmitButton from "../../common/submit-button";
 import { ProductRow } from "@/types/products";
@@ -17,13 +16,13 @@ import {
   Hash,
   Info,
   CalendarRange,
-  Sun,
   Clock3,
   CalendarPlus,
   Eraser,
 } from "lucide-react";
 import MonoIcon from "../../common/mono-icon";
-import { format, addDays, endOfDay } from "date-fns";
+import { format, addDays } from "date-fns";
+import Link from "next/link";
 
 export default function StampCardForm({
   products,
@@ -67,7 +66,7 @@ export default function StampCardForm({
     d.setSeconds(0, 0);
     return d;
   };
-  const setToday = () => applyRange(now(), endOfDay(now()));
+
   const setPlus1d = () => applyRange(now(), addDays(now(), 1));
   const setPlus7d = () => applyRange(now(), addDays(now(), 7));
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
@@ -114,14 +113,11 @@ export default function StampCardForm({
                   <Input
                     id="title"
                     name="title"
-                    placeholder="e.g. Coffee Card"
+                    placeholder="A short, recognisable name customers will see."
                     required
                     className="pl-8"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  A short, recognisable name customers will see.
-                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -133,14 +129,15 @@ export default function StampCardForm({
                     name="stamps_required"
                     type="number"
                     inputMode="numeric"
-                    min={1}
+                    min={2}
+                    max={50}
                     step={1}
                     required
                     className="pl-8"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  How many stamps to redeem (minimum 1).
+                  How many stamps to redeem (min 2, max 50).
                 </p>
               </div>
             </div>
@@ -153,32 +150,15 @@ export default function StampCardForm({
               <Textarea
                 id="goal_text"
                 name="goal_text"
-                placeholder="e.g. Free coffee after collecting all stamps"
+                placeholder="Tell customers exactly what they get when finished."
                 required
                 className="min-h-[90px]"
               />
-              <p className="text-xs text-muted-foreground">
-                Tell customers exactly what they get when finished.
-              </p>
             </div>
           </div>
 
           {/* Status & window (rearranged) */}
           <div className="space-y-4">
-            {/* 1) Active at the top */}
-            <div className="space-y-1.5">
-              <Label htmlFor="is_active">Active</Label>
-              <div className="flex items-center gap-3">
-                <Switch id="is_active" name="is_active" />
-                <span className="text-sm text-muted-foreground">
-                  Make this card available to customers
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                You can toggle this later without losing data.
-              </p>
-            </div>
-
             {/* 2) Quick range ABOVE the pickers */}
             <div>
               <div
@@ -189,16 +169,6 @@ export default function StampCardForm({
                   <CalendarRange className="h-4 w-4" aria-hidden="true" />
                   Quick range:
                 </span>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={setToday}
-                >
-                  <Sun className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Today
-                </Button>
 
                 <Button
                   type="button"
@@ -258,12 +228,11 @@ export default function StampCardForm({
                     name="valid_from"
                     type="datetime-local"
                     className="pl-8"
+                    required
+                    defaultValue={fmtLocal(new Date())}
                     ref={fromRef}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Optional. Leave empty to start immediately.
-                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -276,11 +245,10 @@ export default function StampCardForm({
                     type="datetime-local"
                     className="pl-8"
                     ref={toRef}
+                    required
+                    defaultValue={fmtLocal(addDays(now(), 1))}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Optional. Leave empty for no end date.
-                </p>
               </div>
             </div>
           </div>
@@ -356,8 +324,11 @@ export default function StampCardForm({
         </section>
 
         {/* Footer */}
-        <div className="mt-5 flex justify-end">
+        <div className="mt-4 flex items-center gap-3">
           <SubmitButton />
+          <Button asChild variant="outline">
+            <Link href="/dashboard/stamps">Cancel</Link>
+          </Button>
         </div>
       </div>
     </form>

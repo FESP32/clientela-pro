@@ -17,7 +17,7 @@ function isActive(card: StampCardRow) {
   const now = new Date();
   const startsOk = !card.valid_from || new Date(card.valid_from) <= now;
   const endsOk = !card.valid_to || now <= new Date(card.valid_to);
-  return card.is_active && startsOk && endsOk;
+  return card.status === "active" && startsOk && endsOk;
 }
 
 export default function StampCard({

@@ -4,9 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { ProductSchema } from "@/schemas/products";
-import { getActiveBusiness } from "@/actions";
+import {
+  getActiveBusiness,
+  getOwnerPlanForBusiness,
+  getProductCountForBusiness,
+} from "@/actions";
+import { SubscriptionMetadata } from "@/types/subscription";
 
-export async function createProduct(formData: FormData) {
+export async function createProduct(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const {
@@ -21,7 +26,16 @@ export async function createProduct(formData: FormData) {
     redirect("/dashboard/businesses/missing");
   }
 
-  // 2) Validate inputs (inject business_id resolved above)
+  const subscriptionPlan = await getOwnerPlanForBusiness(business.id);
+
+  const subscriptionMetadata = subscriptionPlan.metadata as SubscriptionMetadata;
+  const productCount = await getProductCountForBusiness(business.id);
+
+  if (productCount >= subscriptionMetadata.max_products) {
+    console.error("Max product count reached");
+    redirect("/dashboard/upgrade");
+  }
+
   const parsed = ProductSchema.safeParse({
     name: formData.get("name") ?? "",
     business_id: business.id,
@@ -50,4 +64,3 @@ export async function createProduct(formData: FormData) {
   revalidatePath("/dashboard/products");
   redirect("/dashboard/products");
 }
-

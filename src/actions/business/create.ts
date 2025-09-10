@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getBool } from "@/lib/utils";
+import { getMyOwnedBusinessCount, getMyPlan } from "@/actions";
+import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createBusiness(formData: FormData) {
   const supabase = await createClient();
@@ -14,7 +16,16 @@ export async function createBusiness(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/dashboard/businesses/new");
 
-  // Read form fields
+  const subscriptionPlan = await getMyPlan();
+
+  const subscriptionMetadata: SubscriptionMetadata = subscriptionPlan.metadata as SubscriptionMetadata;
+  const businessCount = await getMyOwnedBusinessCount();
+  
+  if (businessCount >= subscriptionMetadata.max_businesses) {
+    console.error("Max business count reached");
+    redirect("/dashboard/upgrade");
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const description = (formData.get("description") as string) || null;
   const website_url = (formData.get("website_url") as string) || null;
@@ -27,7 +38,6 @@ export async function createBusiness(formData: FormData) {
     throw new Error("Name is required.");
   }
 
-  // Optional image validation
   if (imageFile) {
     const maxBytes = 5 * 1024 * 1024; // 5MB
     if (imageFile.size > maxBytes) {
@@ -70,8 +80,6 @@ export async function createBusiness(formData: FormData) {
       .getPublicUrl(objectPath);
     image_url = pub.publicUrl;
   }
-
-  
 
   const { data: business, error: insertErr } = await supabase
     .from("business")

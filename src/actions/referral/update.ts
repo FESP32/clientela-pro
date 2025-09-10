@@ -157,5 +157,77 @@ export async function markIntentClaimed(formData: FormData) {
   revalidatePath(`/referrals/${intent.program_id}`);
 }
 
+export async function finishReferralProgram(programId: string): Promise<void> {
+  if (!programId) throw new Error("Missing program_id");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("referral_program")
+    .update({ status: "finished" })
+    .eq("id", programId)
+    .neq("status", "finished")
+    .select("id, status")
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  if (!data) {
+    // Not found or already finished — clarify without failing the UX
+    const { data: check, error: checkErr } = await supabase
+      .from("referral_program")
+      .select("id, status")
+      .eq("id", programId)
+      .maybeSingle();
+
+    if (checkErr) throw new Error(checkErr.message);
+    if (!check) throw new Error("Referral program not found or not accessible");
+    // already finished → treat as success
+  }
+
+  revalidatePath("/dashboard/referrals");
+}
+
+export async function toggleReferralProgramActive(programId: string): Promise<void> {
+  if (!programId) throw new Error("Missing program_id");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: row, error: readErr } = await supabase
+    .from("referral_program")
+    .select("id, status")
+    .eq("id", programId)
+    .maybeSingle();
+
+  if (readErr) throw new Error(readErr.message);
+  if (!row) throw new Error("Referral program not found or not accessible");
+  if (row.status === "finished")
+    throw new Error("Finished programs cannot be toggled");
+
+  const nextStatus = row.status === "active" ? "inactive" : "active";
+
+  const { data: updated, error: updErr } = await supabase
+    .from("referral_program")
+    .update({ status: nextStatus })
+    .eq("id", programId)
+    .eq("status", row.status) // optimistic guard
+    .select("id, status")
+    .maybeSingle();
+
+  if (updErr) throw new Error(updErr.message);
+  if (!updated)
+    throw new Error("Program status changed concurrently. Try again.");
+
+  revalidatePath("/dashboard/referrals");
+}
+
 
 

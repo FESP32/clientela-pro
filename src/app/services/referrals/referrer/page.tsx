@@ -20,7 +20,7 @@ export default async function JoinedProgramsPage() {
   const items = await listJoinedReferralProgramsWithIntents();
 
   const total = items.length;
-  const active = items.filter((p) => p.is_active).length;
+  const active = items.filter((p) => p.status === "active").length;
   const inactive = total - active;
 
   return (

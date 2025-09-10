@@ -37,7 +37,6 @@ interface NewSurveyFormProps {
 }
 
 function fmtLocal(dt: Date) {
-  // For <input type="datetime-local"> (no seconds)
   return format(dt, "yyyy-MM-dd'T'HH:mm");
 }
 
@@ -66,7 +65,6 @@ export default function NewSurveyForm({
     return d;
   };
 
-  const setToday = () => applyRange(now(), endOfDay(now()));
   const setPlus1d = () => applyRange(now(), addDays(now(), 1));
   const setPlus7d = () => applyRange(now(), addDays(now(), 7));
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
@@ -161,6 +159,8 @@ export default function NewSurveyForm({
                 id="starts_at"
                 name="starts_at"
                 type="datetime-local"
+                required
+                defaultValue={fmtLocal(new Date())}
                 ref={startRef}
               />
             </div>
@@ -171,6 +171,8 @@ export default function NewSurveyForm({
                 id="ends_at"
                 name="ends_at"
                 type="datetime-local"
+                required
+                defaultValue={fmtLocal(addDays(now(), 1))}
                 ref={endRef}
               />
             </div>
@@ -185,17 +187,6 @@ export default function NewSurveyForm({
                   <CalendarRange className="h-4 w-4" aria-hidden="true" />
                   Quick range:
                 </span>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={setToday}
-                  aria-describedby="range-help"
-                >
-                  <Sun className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Today
-                </Button>
 
                 <Button
                   type="button"
@@ -243,18 +234,7 @@ export default function NewSurveyForm({
                 times above.
               </p>
             </div>
-
-            {/* Active */}
-            <div className="space-x-2 flex items-center md:col-span-2">
-              <input
-                id="is_active"
-                name="is_active"
-                type="checkbox"
-                defaultChecked
-              />
-              <Label htmlFor="is_active">Active</Label>
-            </div>
-
+  
             {/* Anonymous */}
             <div className="space-x-2 flex items-center md:col-span-2">
               <input
@@ -283,7 +263,6 @@ export default function NewSurveyForm({
 
           <Separator />
 
-          {/* Trait editor */}
           <TraitsPerScore />
         </section>
 

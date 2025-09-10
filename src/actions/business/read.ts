@@ -29,9 +29,7 @@ export async function listMyBusinesses() {
     .order("name", { ascending: true })
     .overrideTypes<BusinessWithMembership[]>();
 
-  console.log(error);
   
-
   if (error) {
     return { error, data: [] as BusinessWithMembership[] };
   }
@@ -51,14 +49,14 @@ export async function getActiveBusiness() {
   }
 
   // Look up user's active business id
-  const { data: activeRow, error: activeErr } = await supabase
+  const { data: currentRow, error: currentErr } = await supabase
     .from("business_current")
     .select("business_id, set_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (activeErr) throw new Error(activeErr.message);
-  if (!activeRow) {
+  if (currentErr) throw new Error(currentErr.message);
+  if (!currentRow) {
     return { business: null, role: null, set_at: null as string | null };
   }
 
@@ -68,11 +66,11 @@ export async function getActiveBusiness() {
     .select(
       "id, owner_id, name, description, website_url, instagram_url, facebook_url, image_url, image_path, is_active, created_at, updated_at"
     )
-    .eq("id", activeRow.business_id)
+    .eq("id", currentRow.business_id)
     .maybeSingle();
 
   if (bizErr) throw new Error(bizErr.message);
-  if (!business) {
+  if (!business || !business.is_active) {
     // Could be filtered by RLS or deleted
     return { business: null, role: null, set_at: null as string | null };
   }
@@ -91,7 +89,7 @@ export async function getActiveBusiness() {
     membership?.role ??
     (business.owner_id === user.id ? ("owner" as const) : null);
 
-  return { business, role, set_at: activeRow.set_at as string };
+  return { business, role, set_at: currentRow.set_at as string };
 }
 
 export async function getBusinessDetail(businessId: string) {
@@ -119,5 +117,28 @@ export async function getBusinessDetail(businessId: string) {
 
   if (error) throw error;
   return data;
+}
+
+export async function getMyOwnedBusinessCount(): Promise<number> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { count, error } = await supabase
+    .from("business")
+    .select("id", { head: true, count: "exact" })
+    .eq("owner_id", user.id);
+
+  if (error) {
+    throw new Error(`Failed to count businesses: ${error.message}`);
+  }
+
+  return count ?? 0;
 }
 

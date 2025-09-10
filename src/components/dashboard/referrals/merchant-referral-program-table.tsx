@@ -13,17 +13,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, UserPlus, QrCode, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, UserPlus, QrCode, Trash2, ToggleLeft, ToggleRight, ListCheck } from "lucide-react";
 
 import { ReferralJoinLinkDialog } from "@/components/dashboard/referrals/referral-join-link-dialog";
 import { fmt } from "@/lib/utils";
 import type { ReferralProgramRow } from "@/types";
-import { deleteReferralProgram } from "@/actions";
+import { deleteReferralProgram, finishReferralProgram, toggleReferralProgramActive } from "@/actions";
 
 import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
+import StatusBadge from "@/components/common/status-badge";
 
 export default function MerchantReferralProgramsTable({
   programs,
@@ -60,11 +61,7 @@ export default function MerchantReferralProgramsTable({
       header: "Status",
       headClassName: "w-[12%]",
       cell: (p) =>
-        p.is_active ? (
-          <Badge>Active</Badge>
-        ) : (
-          <Badge variant="outline">Inactive</Badge>
-        ),
+        <StatusBadge status={p.status} endsAt={p.valid_to}/>
     },
     {
       key: "referrer_reward",
@@ -149,6 +146,30 @@ export default function MerchantReferralProgramsTable({
                     </button>
                   </DropdownMenuItem>
                 </form>
+
+                <form action={finishReferralProgram.bind(null, p.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      <ListCheck />
+                      Finish
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+
+                <form action={toggleReferralProgramActive.bind(null, p.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      {p.status === "active" ? <ToggleLeft /> : <ToggleRight />}
+                      {p.status === "active" ? "Set inactive" : "Set active"}
+                    </button>
+                  </DropdownMenuItem>
+                </form>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -185,7 +206,7 @@ export default function MerchantReferralProgramsTable({
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.code}</Badge>
-                    {p.is_active ? (
+                    {p.status === "active" ? (
                       <Badge>Active</Badge>
                     ) : (
                       <Badge variant="outline">Inactive</Badge>

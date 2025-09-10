@@ -71,8 +71,8 @@ export default function ReferralProgramsExplorer({
     const q = query.trim().toLowerCase();
 
     let list = programs.filter((p) => {
-      if (status === "active" && !p.is_active) return false;
-      if (status === "inactive" && p.is_active) return false;
+      if (status === "active" && p.status === "active") return false;
+      if (status === "inactive" && p.status === "inactive") return false;
 
       const hasReferrer = Boolean(p.referrer_reward);
       const hasReferred = Boolean(p.referred_reward);

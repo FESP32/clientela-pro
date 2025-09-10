@@ -48,7 +48,7 @@ export type JoinedReferralProgramWithIntents = {
   id: string;
   title: string;
   code: string;
-  is_active: boolean;
+  status: string;
   referrer_reward: string | null;
   referred_reward: string | null;
   valid_from: string | null; // timestamptz

@@ -24,11 +24,10 @@ set search_path = public
 as $$
 begin
   -- Insert a default profile (id matching auth.users.id)
-  insert into public.profile (user_id, name, subscription_plan, created_at, updated_at)
+  insert into public.profile (user_id, name, created_at, updated_at)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(coalesce(new.email, ''), '@', 1)),
-    'free',
     timezone('utc'::text, now()),
     timezone('utc'::text, now())
   )

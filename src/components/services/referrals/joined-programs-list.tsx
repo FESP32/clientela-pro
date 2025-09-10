@@ -9,12 +9,13 @@ import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 import { Gift, Ticket, UserPlus } from "lucide-react";
+import StatusBadge from "@/components/common/status-badge";
 
 type Row = {
   id: string;
   title: string;
   code: string;
-  is_active: boolean;
+  status: string;
   referrer_reward: string | null;
   referred_reward: string | null;
   valid_from: string | null;
@@ -49,11 +50,7 @@ export default function JoinedReferralProgramsList({
             <Badge variant="secondary" className="font-mono">
               {p.code}
             </Badge>
-            {p.is_active ? (
-              <Badge>Active</Badge>
-            ) : (
-              <Badge variant="outline">Inactive</Badge>
-            )}
+            {<StatusBadge status={p.status} endsAt={p.valid_to}/>}
           </div>
         </div>
       ),
@@ -103,7 +100,7 @@ export default function JoinedReferralProgramsList({
           <div className="min-w-0">
             <div className="flex items-center justify-between gap-2">
               <div className="font-medium truncate">{p.title}</div>
-              {p.is_active ? (
+              {p.status ? (
                 <Badge>Active</Badge>
               ) : (
                 <Badge variant="outline">Inactive</Badge>

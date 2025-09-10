@@ -20,7 +20,7 @@ export default async function ReferralProgramsPage() {
   const programs = await listReferralPrograms();
 
   const total = programs.length;
-  const active = programs.filter((p) => p.is_active).length;
+  const active = !!programs.filter((p) => p.status === "active");
   const withRewards = programs.filter(
     (p) => Boolean(p.referrer_reward) || Boolean(p.referred_reward)
   ).length;

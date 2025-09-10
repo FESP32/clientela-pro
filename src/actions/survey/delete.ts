@@ -3,14 +3,6 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import {
-  SurveyInsert,
-  SurveyRow,
-  SurveyWithProduct,
-  SurveyWithResponses,
-} from "@/types";
-import { getBool } from "@/lib/utils";
-import { SurveyFromFormSchema } from "@/schemas/surveys";
 import { getActiveBusiness } from "@/actions/business/read";
 
 export async function deleteSurvey(surveyId: string) {

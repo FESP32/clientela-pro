@@ -19,6 +19,10 @@ import {
   Eye,
   Trash2,
   QrCode,
+  ToggleLeft,
+  ToggleRight,
+  Ban,
+  ListCheck,
 } from "lucide-react";
 
 import type { SurveyWithProduct } from "@/types/surveys";
@@ -29,6 +33,8 @@ import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
+import StatusBadge from "@/components/common/status-badge";
+import { finishSurvey, toggleSurveyActive } from "@/actions";
 
 export default function MerchantSurveysTable({
   surveys,
@@ -75,11 +81,7 @@ export default function MerchantSurveysTable({
       header: "Status",
       headClassName: "w-[120px]",
       cell: (s) =>
-        s.is_active ? (
-          <Badge>Active</Badge>
-        ) : (
-          <Badge variant="outline">Inactive</Badge>
-        ),
+        <StatusBadge status={s.status} endsAt={s.ends_at}/>
     },
     {
       key: "anon",
@@ -162,10 +164,34 @@ export default function MerchantSurveysTable({
                   <DropdownMenuItem asChild>
                     <button
                       type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+
+                <form action={finishSurvey.bind(null, s.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      <ListCheck />
+                      Finish
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+
+                <form action={toggleSurveyActive.bind(null, s.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      {s.status === "active" ? <ToggleLeft /> : <ToggleRight />}
+                      {s.status === "active" ? "Set inactive" : "Set active"}
                     </button>
                   </DropdownMenuItem>
                 </form>
@@ -215,7 +241,7 @@ export default function MerchantSurveysTable({
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {s.is_active ? (
+                    {s.status === "active" ? (
                       <Badge>Active</Badge>
                     ) : (
                       <Badge variant="outline">Inactive</Badge>

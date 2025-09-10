@@ -92,8 +92,8 @@ export default function StampCardsExplorer({
     };
 
     let list = cards.filter((c) => {
-      if (status === "active" && !c.is_active) return false;
-      if (status === "inactive" && c.is_active) return false;
+      if (status === "active" && c.status === "active") return false;
+      if (status === "inactive" && c.status === "active") return false;
 
       if (products === "with" && !(c.product_count ?? 0)) return false;
       if (products === "without" && (c.product_count ?? 0) > 0) return false;

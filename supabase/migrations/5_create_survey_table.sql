@@ -16,10 +16,11 @@ create table if not exists public.survey (
   title        text not null,
   description  text,
   traits       jsonb not null default '[]'::jsonb,
-  is_anonymous boolean not null default false,   -- when true, responses may be anonymous
-  is_active    boolean not null default true,    -- survey is enabled for collection
-  starts_at    timestamptz,                      -- optional open window start
-  ends_at      timestamptz,                      -- optional open window end
+  is_anonymous boolean not null default false,
+  status       text not null default 'active' 
+    check (status in ('active', 'inactive', 'finished')),
+  starts_at    timestamptz not null default now(),                   
+  ends_at      timestamptz not null,
   settings     jsonb not null default '{}'::jsonb,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -92,7 +93,7 @@ for select                       -- << applies to SELECT statements
 to authenticated                 -- << only logged-in users (role: authenticated)
 using (                          -- << rows are visible when this predicate is TRUE
   public.is_user_customer()      -- << current user is of type 'customer'
-  and is_active = true           -- << survey is marked active
+  and status = 'active'           -- << survey is marked active
   and (starts_at is null or starts_at <= now())  -- << has started (or no start)
   and (ends_at   is null or ends_at   >= now())  -- << not ended yet (or no end)
 );
@@ -109,7 +110,7 @@ on public.survey                 -- << policy targets the 'survey' table
 for select                       -- << applies to SELECT statements
 to anon                          -- << unauthenticated users (role: anon)
 using (                          -- << rows are visible when this predicate is TRUE
-  is_active = true           -- << survey is marked active
+  status = 'active'           -- << survey is marked active
   and (starts_at is null or starts_at <= now())  -- << has started (or no start)
   and (ends_at   is null or ends_at   >= now())  -- << not ended yet (or no end)
 );

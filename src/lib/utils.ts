@@ -15,10 +15,10 @@ export function isExpired(expires_at?: string | null) {
   return !!expires_at && new Date(expires_at) <= new Date();
 }
 
-export function fmt(d?: string | null) {
+export function fmt(d?: string | Date | null) {
   if (!d) return "—";
   try {
-    return format(new Date(d), "PPP");
+    return format(new Date(d), "MM/dd/yyyy");
   } catch {
     return "—";
   }

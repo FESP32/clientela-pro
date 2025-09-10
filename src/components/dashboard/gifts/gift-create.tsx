@@ -19,14 +19,12 @@ import {
 
 type Props = {
   action?: (fd: FormData) => Promise<void>;
-  title?: string;
   /** Optional server error bubbled up via search params or state */
   errorMessage?: string | null;
 };
 
 export default function GiftCreate({
   action = createGift,
-  title = "Create Gift",
   errorMessage,
 }: Props) {
   return (
@@ -40,7 +38,7 @@ export default function GiftCreate({
                 <GiftIcon className="size-4" aria-hidden="true" />
               </MonoIcon>
               <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-                {title}
+                Create Gift
               </h1>
             </div>
             <p className="mt-2 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
@@ -114,11 +112,11 @@ export default function GiftCreate({
           <Separator />
 
           {/* Actions */}
-          <div className="mt-2 flex items-center justify-end gap-3">
+          <div className="mt-2 flex items-center gap-3">
+            <SubmitButton />
             <Button asChild variant="outline">
               <Link href="/dashboard/gifts">Cancel</Link>
             </Button>
-            <SubmitButton />
           </div>
         </section>
       </div>

@@ -18,6 +18,7 @@ export default async function CustomerStampCardPage({
   if (!user) notFound();
   if (error || !card) notFound();
   if (!membership) notFound();
+  if (card.status !== "active") notFound();
 
   return (
       <StampCard card={card} membership={membership} />

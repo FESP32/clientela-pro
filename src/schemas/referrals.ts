@@ -9,28 +9,13 @@ export const ReferralProgramFromFormSchema = z.object({
       /^[A-Za-z0-9._-]+$/,
       "Use letters, numbers, dot, dash or underscore"
     ),
-  is_active: z
-    .union([
-      z.literal("on"),
-      z.literal("true"),
-      z.literal("false"),
-      z.boolean(),
-    ])
-    .optional()
-    .transform((v) =>
-      v === "on" || v === "true" || v === true ? true : false
-    ),
   referrer_reward: z.string().optional().nullable(),
   referred_reward: z.string().optional().nullable(),
   valid_from: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(v) : null)),
+    .string(),
+    
   valid_to: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(v) : null)),
-  // empty string => null (unlimited); otherwise number >= 1
+    .string(),
   per_referrer_cap: z
     .union([z.string(), z.number()])
     .optional()

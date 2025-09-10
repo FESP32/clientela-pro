@@ -194,3 +194,19 @@ export async function getGiftIntentForDashboard(intentId: string) {
     intent: (data as GiftIntentDashboardView | null) ?? null,
   };
 }
+
+export async function getGiftCountForBusiness(
+  businessId: string
+): Promise<number> {
+  if (!businessId) throw new Error("businessId is required");
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("gift")
+    .select("id", { head: true, count: "exact" })
+    .eq("business_id", businessId);
+
+  if (error) throw new Error(`Failed to count gifts: ${error.message}`);
+  return count ?? 0;
+}

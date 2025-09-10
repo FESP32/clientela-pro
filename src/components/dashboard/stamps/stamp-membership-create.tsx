@@ -6,13 +6,11 @@ import CustomerJoinStamp from "./customer-join-stamp";
 
 export default async function StampMembershipCreate({
   cardId,
-  title = "Add this card to my account",
-  cta = "Create my card",
+  // title = "Add this card to my account",
+  // cta = "Create my card",
   action,
 }: {
   cardId: string;
-  title?: string;
-  cta?: string;
   action: (formData: FormData) => Promise<void>;
 }) {
   const supabase = await createClient();
@@ -77,8 +75,6 @@ export default async function StampMembershipCreate({
   // Create view (animated, welcoming)
   return (
     <CustomerJoinStamp
-      title={title}
-      cta={cta}
       cardId={cardId}
       action={action}
     />

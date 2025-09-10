@@ -15,7 +15,12 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import SignOut from "@/components/auth/sign-out";
 import { ProfileRow } from "@/types/auth";
-import { Crown, User as UserIcon, ArrowLeft } from "lucide-react";
+import {
+  Crown,
+  User as UserIcon,
+  ArrowLeft,
+  CalendarClock,
+} from "lucide-react";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -26,6 +31,7 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/login");
 
+  // Profile
   const { data: profile, error } = await supabase
     .from("profile")
     .select("*")
@@ -60,15 +66,102 @@ export default async function ProfilePage() {
     );
   }
 
+  const isMerchant = (profile.user_type ?? "").toLowerCase() === "merchant";
+
+  // Only fetch subscription when user is a merchant
+  let subscription: {
+    id: string;
+    user_id: string;
+    status: string;
+    interval: string;
+    started_at: string | null;
+    expires_at: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    subscription_plan: {
+      id: string;
+      code: string;
+      name: string;
+      description: string | null;
+      price_month: number;
+      price_year: number;
+      currency: string;
+    } | null;
+  } | null = null;
+
+  let plan: {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    price_month: number;
+    price_year: number;
+    currency: string;
+  } | null = null;
+
+  if (isMerchant) {
+    const { data: maybeSub } = await supabase
+      .from("subscription")
+      .select(
+        `
+        id,
+        user_id,
+        status,
+        interval,
+        started_at,
+        expires_at,
+        created_at,
+        updated_at,
+        subscription_plan:plan_id (
+          id, code, name, description, price_month, price_year, currency
+        )
+      `
+      )
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .is("expires_at", null)
+      .maybeSingle();
+
+    subscription = maybeSub ?? null;
+
+    // Prefer joined plan; fallback to free if no active subscription
+    plan = subscription?.subscription_plan ?? null;
+
+    if (!plan) {
+      const { data: freePlan } = await supabase
+        .from("subscription_plan")
+        .select(
+          "id, code, name, description, price_month, price_year, currency"
+        )
+        .eq("code", "free")
+        .maybeSingle();
+      plan = freePlan ?? null;
+    }
+  }
+
   const joined = profile.created_at
     ? format(new Date(profile.created_at), "PPP")
     : "—";
-  const planIsPremium = profile.subscription_plan === "premium";
   const initial = (
     profile.name?.trim()?.[0] ??
     user.email?.trim()?.[0] ??
     "U"
   )?.toUpperCase();
+
+  // Subscription display values (only meaningful for merchants)
+  const subStatus = subscription?.status ?? "none";
+  const interval = subscription?.interval ?? "month";
+  const isActive = subStatus === "active";
+  const price =
+    plan && interval === "year"
+      ? Number(plan.price_year ?? 0)
+      : Number(plan?.price_month ?? 0);
+  const currency = plan?.currency ?? "USD";
+  const periodText = isActive
+    ? `Renews every ${interval}`
+    : subscription?.expires_at
+    ? `Ends ${format(new Date(subscription.expires_at), "PPP")}`
+    : "—";
 
   return (
     <div className="mx-auto mt-10 max-w-xl px-6">
@@ -105,13 +198,6 @@ export default async function ProfilePage() {
                     Back to Services
                   </Link>
                 </Button>
-                <Badge
-                  variant={planIsPremium ? "default" : "secondary"}
-                  className="gap-1.5"
-                >
-                  {planIsPremium && <Crown className="h-3.5 w-3.5" />}
-                  {planIsPremium ? "Premium" : "Free"}
-                </Badge>
               </div>
             </div>
 
@@ -140,6 +226,71 @@ export default async function ProfilePage() {
             </div>
 
             <Separator />
+
+            {/* Subscription (merchants only) */}
+            {isMerchant && plan ? (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium">
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                        Subscription
+                      </span>
+                      {plan?.name ? (
+                        <Badge variant="secondary" className="ml-1">
+                          {plan.name}
+                        </Badge>
+                      ) : null}
+                    </div>
+
+                    {isActive ? (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/billing">Manage</Link>
+                      </Button>
+                    ) : (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/billing/upgrade">Upgrade</Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="text-sm capitalize">
+                        {isActive ? "active" : "free"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Interval</p>
+                      <p className="text-sm capitalize">
+                        {isActive ? interval : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Billing</p>
+                      <p className="text-sm">
+                        {currency} ${price.toFixed(2)}
+                        {isActive ? ` / ${interval}` : ""}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Renewal</p>
+                      <p className="text-sm inline-flex items-center gap-1">
+                        <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                        {periodText}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+              </>
+            ) : null}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>

@@ -20,6 +20,9 @@ import {
   ExternalLink,
   QrCode,
   Stamp,
+  ToggleLeft,
+  ToggleRight,
+  ListCheck,
 } from "lucide-react";
 
 import { StampJoinLinkDialog } from "@/components/dashboard/stamps/stamp-join-link-dialog";
@@ -30,6 +33,8 @@ import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
+import StatusBadge from "@/components/common/status-badge";
+import { finishStampCard, toggleStampCardActive } from "@/actions";
 
 export default function MerchantStampCardsTable({
   cards,
@@ -90,11 +95,7 @@ export default function MerchantStampCardsTable({
       header: "Status",
       headClassName: "w-[8%]",
       cell: (c) =>
-        c.is_active ? (
-          <Badge>Active</Badge>
-        ) : (
-          <Badge variant="outline">Inactive</Badge>
-        ),
+        <StatusBadge status={c.status} endsAt={c.valid_to}/>
     },
     {
       key: "actions",
@@ -140,7 +141,7 @@ export default function MerchantStampCardsTable({
                     href={`/dashboard/stamps/${c.id}`}
                     className="flex items-center gap-2"
                   >
-                    <Stamp className="size-4"/>
+                    <Stamp className="size-4" />
                     Create Stamp Punch
                   </Link>
                 </DropdownMenuItem>
@@ -156,6 +157,29 @@ export default function MerchantStampCardsTable({
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+                <form action={finishStampCard.bind(null, c.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      <ListCheck />
+                      Finish
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+
+                <form action={toggleStampCardActive.bind(null, c.id)}>
+                  <DropdownMenuItem asChild>
+                    <button
+                      type="submit"
+                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
+                    >
+                      {c.status === "active" ? <ToggleLeft /> : <ToggleRight />}
+                      {c.status === "active" ? "Set inactive" : "Set active"}
                     </button>
                   </DropdownMenuItem>
                 </form>
@@ -201,7 +225,7 @@ export default function MerchantStampCardsTable({
                     <Badge variant="outline">
                       {c.product_count ?? 0} products
                     </Badge>
-                    {c.is_active ? (
+                    {c.status === "active" ? (
                       <Badge>Active</Badge>
                     ) : (
                       <Badge variant="outline">Inactive</Badge>
