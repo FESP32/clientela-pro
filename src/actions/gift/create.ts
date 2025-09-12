@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   getActiveBusiness,
   getGiftCountForBusiness,
@@ -14,10 +14,6 @@ export async function createGift(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
   const image_url = String(formData.get("image_url") ?? "").trim() || null;
-
-  if (!title) {
-    throw new Error("Title is required.");
-  }
 
   const supabase = await createClient();
   const {
@@ -41,7 +37,10 @@ export async function createGift(formData: FormData) {
   const surveyCount = await getGiftCountForBusiness(business.id);
 
   if (surveyCount >= subscriptionMetadata.max_gifts) {
-    throw new Error("Max gift count reached");
+    return {
+      success: false,
+      message: "Max gift count reached",
+    };
   }
 
   const { error } = await supabase.from("gift").insert({
@@ -52,12 +51,19 @@ export async function createGift(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    return {
+      success: false,
+      message: error.message,
+    };
   }
-
-  // Update any listings that show gifts
+  
   revalidatePath("/dashboard/gifts");
-  redirect("/dashboard/gifts?created=1");
+
+  return {
+    success: true,
+    message: "Gift created successfuly",
+  };
+  
 }
 
 export async function createGiftIntent(formData: FormData) {
@@ -89,7 +95,7 @@ export async function createGiftIntent(formData: FormData) {
     .eq("business_id", business.id)
     .maybeSingle();
   if (gErr) throw new Error(gErr.message);
-  if (!gift) throw new Error("Gift not found or not owned by you");
+  if (!gift) notFound();
 
   const expires_at = expires_at_raw
     ? new Date(expires_at_raw).toISOString()
@@ -106,7 +112,17 @@ export async function createGiftIntent(formData: FormData) {
   }));
 
   const { error: insertErr } = await supabase.from("gift_intent").insert(rows);
-  if (insertErr) throw new Error(insertErr.message);
+  if (insertErr) {
+    return {
+      success: false,
+      message: "Error creating gift intent(s)",
+    };
+  };
 
   revalidatePath(`/dashboard/gifts/${gift_id}`);
+
+  return {
+    success: true,
+    message: "Gift intent(s) created successfully",
+  };
 }

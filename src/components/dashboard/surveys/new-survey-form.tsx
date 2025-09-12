@@ -22,28 +22,31 @@ import {
   Shield,
   Sparkles,
   CalendarRange,
-  Sun,
   Clock3,
   CalendarPlus,
   Eraser,
 } from "lucide-react";
 import MonoIcon from "../../common/mono-icon";
-import { useRef } from "react";
-import { format, addDays, endOfDay } from "date-fns";
+import { useRef, useTransition } from "react";
+import { format, addDays } from "date-fns";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface NewSurveyFormProps {
   products: ProductRow[];
-  action: (formData: FormData) => Promise<void>;
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 function fmtLocal(dt: Date) {
   return format(dt, "yyyy-MM-dd'T'HH:mm");
 }
 
-export default function NewSurveyForm({
-  products,
-  action,
-}: NewSurveyFormProps) {
+export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const startRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLInputElement>(null);
 
@@ -70,8 +73,20 @@ export default function NewSurveyForm({
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
   const clearRange = () => applyRange(null, null);
 
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push("/dashboard/surveys");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
   return (
-    <form action={action}>
+    <form action={handleSubmit}>
       <div className="mx-auto w-full max-w-6xl">
         {/* Header */}
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -234,7 +249,7 @@ export default function NewSurveyForm({
                 times above.
               </p>
             </div>
-  
+
             {/* Anonymous */}
             <div className="space-x-2 flex items-center md:col-span-2">
               <input

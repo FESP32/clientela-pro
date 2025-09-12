@@ -1,7 +1,7 @@
 // components/referrals/referral-program-form.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react"; // ⬅️ add useRef
+import { useEffect, useRef, useState, useTransition } from "react"; // ⬅️ add useRef
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,18 +13,20 @@ import {
   Users,
   Gift,
   CalendarRange,
-  Sun,
   Clock3,
   CalendarPlus,
   Eraser,
 } from "lucide-react";
 import SubmitButton from "@/components/common/submit-button";
 import MonoIcon from "../../common/mono-icon";
-import { format, addDays, endOfDay } from "date-fns";
+import { format, addDays } from "date-fns";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-type ReferralProgramFormProps = {
-  onSubmit: (fd: FormData) => void | Promise<void>;
-  errorMessage?: string | null;
+type Props = {
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
 };
 
 // Simple random code generator (avoids ambiguous chars)
@@ -36,17 +38,16 @@ function generateCode() {
   return code;
 }
 
-export default function NewReferralProgramForm({
-  onSubmit,
-  errorMessage,
-}: ReferralProgramFormProps) {
+export default function NewReferralProgramForm({ onSubmit }: Props) {
+
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [code, setCode] = useState<string>("");
 
   useEffect(() => {
     setCode(generateCode());
   }, []);
 
-  // ── Quick time presets helpers ────────────────────────────────────────
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
 
@@ -73,10 +74,21 @@ export default function NewReferralProgramForm({
   const setPlus7d = () => applyRange(now(), addDays(now(), 7));
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
   const clearRange = () => applyRange(null, null);
-  // ─────────────────────────────────────────────────────────────────────
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push("/dashboard/referrals");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
 
   return (
-    <form action={onSubmit}>
+    <form action={handleSubmit}>
       <div className="mx-auto w-full max-w-6xl">
         {/* Header */}
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -165,7 +177,8 @@ export default function NewReferralProgramForm({
                   placeholder="Leave empty for unlimited"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Maximum successful referrals credited per participant. (Max 50)
+                  Maximum successful referrals credited per participant. (Max
+                  50)
                 </p>
               </div>
             </div>
@@ -290,13 +303,6 @@ export default function NewReferralProgramForm({
               </div>
             </div>
           </section>
-
-          {/* Error */}
-          {errorMessage ? (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-              {errorMessage}
-            </div>
-          ) : null}
         </section>
 
         {/* Actions */}

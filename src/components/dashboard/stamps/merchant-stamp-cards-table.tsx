@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
-  Settings2,
   Trash2,
   ExternalLink,
   QrCode,

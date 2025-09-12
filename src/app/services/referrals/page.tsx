@@ -6,7 +6,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Sparkles,
-  LetterText,
   MailCheck,
 } from "lucide-react";
 

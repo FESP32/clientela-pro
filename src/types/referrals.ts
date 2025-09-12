@@ -56,3 +56,28 @@ export type JoinedReferralProgramWithIntents = {
   joined_at: string; // timestamptz from referral_program_participant.created_at
   intents: ReferralIntentListMini[];
 };
+
+export type ProgramReferralCap = {
+  /** NULL => unlimited */
+  cap: number | null;
+  /** Successful referrals attributed to the current referrer (participant.referred_qty) */
+  referredQty: number;
+  /** NULL => unlimited */
+  remaining: number | null;
+  /** true when remaining === 0 and cap !== null */
+  reachedCap: boolean;
+  /** Participant row id if present (may be useful) */
+  participantId: string | null;
+};
+
+export type ProgramIntentQuota = {
+  /** Program-provided quantity (NULL => unlimited) */
+  cap: number | null;
+  /** Number of intents the current user has created for this program */
+  createdIntents: number;
+  /** Remaining you can still create (NULL => unlimited) */
+  remainingCreatable: number | null;
+  /** True when createdIntents >= cap (and cap !== null) */
+  reachedCap: boolean;
+};
+

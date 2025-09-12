@@ -1,45 +1,40 @@
-// components/services/referrals/create-intent-panel.tsx
-import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  createReferralIntent,
-  listMyProgramReferralIntents,
-  getMyProgramIntentQuota,
-} from "@/actions";
-import type { ReferralProgramRow } from "@/types";
+import type {
+  ProgramIntentQuota,
+  ReferralIntentListMini,
+  ReferralProgramRow,
+} from "@/types";
 import ReferrerIntentTable from "./referrer-intent-table";
 import SubmitButton from "@/components/common/submit-button";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 type Props = {
   program: Pick<
     ReferralProgramRow,
     "id" | "title" | "code" | "per_referrer_cap"
   >;
-  title?: string;
-  cta?: string;
-  action?: (fd: FormData) => Promise<void>;
+  quota: ProgramIntentQuota | null;
+  intents: ReferralIntentListMini[] | null;
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
 };
 
-export default async function CreateIntentPanel({
+export default function CreateIntentPanel({
   program,
-  title = "Invite a friend",
-  action = createReferralIntent,
+  onSubmit,
+  quota,
+  intents,
 }: Props) {
   const programId = program.id;
-  const supabase = await createClient();
 
-  // Current user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Quota based on *intents created* vs cap
-  const quota = user ? await getMyProgramIntentQuota(programId) : null;
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   // Fallbacks for display when signed-out
   const cap =
@@ -50,16 +45,22 @@ export default async function CreateIntentPanel({
   const createdIntents = quota?.createdIntents ?? 0;
   const reachedCap = !!quota?.reachedCap;
 
-  // Intents list
-  const intents = user
-    ? await listMyProgramReferralIntents(programId, 20)
-    : null;
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
 
   return (
     <section className="w-full mx-auto max-w-2xl md:max-w-6xl space-y-6">
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-lg md:text-xl font-semibold">{title}</h2>
+        <h2 className="text-lg md:text-xl font-semibold">Invite a friend</h2>
 
         <div className="flex flex-wrap items-center gap-2">
           {cap !== null ? (
@@ -83,51 +84,17 @@ export default async function CreateIntentPanel({
 
       {/* Create intent form / auth states */}
       <div className="space-y-4">
-        {!user ? (
-          <>
-            <div className="text-sm text-muted-foreground">
-              Sign in to create invites.
-            </div>
-            <Button asChild className="w-full md:w-auto">
-              <Link
-                href={`/login?next=/services/referrals/referrer/${programId}`}
-              >
-                Sign in
-              </Link>
-            </Button>
-          </>
-        ) : reachedCap ? (
-          <>
-            <div className="text-sm text-muted-foreground">
-              You’ve reached the maximum number of invites you can create for
-              this program.
-            </div>
-            <Button disabled className="w-full">
-              Cap reached
-            </Button>
-          </>
-        ) : (
-          <form action={action} className="space-y-4">
-            <input type="hidden" name="program_id" value={programId} />
-            <SubmitButton />
-          </form>
-        )}
+        <form action={handleSubmit} className="space-y-4">
+          <input type="hidden" name="program_id" value={programId} />
+          <SubmitButton />
+        </form>
       </div>
 
       <Separator />
 
       {/* Intents list */}
       <section className="space-y-2">
-        <h3 className="text-sm font-medium">Your invites</h3>
-        {!user ? (
-          <div className="text-sm text-muted-foreground">
-            Sign in to view your invites.
-          </div>
-        ) : !intents || intents.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            No invites created yet.
-          </div>
-        ) : (
+        {intents && intents.length > 0 && (
           <div className="w-full overflow-x-auto">
             <ReferrerIntentTable intents={intents} />
           </div>

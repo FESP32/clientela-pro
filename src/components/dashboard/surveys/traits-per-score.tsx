@@ -105,7 +105,6 @@ function Section({
 
     if (items.length) {
       setRows((prev) => {
-        const startLen = prev.length;
         const next = [...prev, ...items];
         queueMicrotask(() => {
           const id = `trait-${score}-${next.length - 1}`;

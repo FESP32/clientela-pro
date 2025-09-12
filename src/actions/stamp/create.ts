@@ -1,7 +1,5 @@
-// app/(dashboard)/stamps/actions.ts
 "use server";
 
-import { getBool } from "@/lib/utils";
 import { StampCardInsert, StampCardProductInsert } from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -14,6 +12,7 @@ import {
 import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createStampCard(formData: FormData) {
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,8 +31,7 @@ export async function createStampCard(formData: FormData) {
   const stampCardCount = await getStampCardCountForBusiness(business.id);
 
   if (stampCardCount >= subscriptionMetadata.max_stamps) {
-    console.error("Max Stamp Cards count reached");
-    redirect("/dashboard/upgrade");
+    return { success: false, message: "Max stamps cards reached" };
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -80,8 +78,8 @@ export async function createStampCard(formData: FormData) {
     if (cpErr) throw new Error(cpErr.message);
   }
 
-  // revalidatePath("/dashboard/stamps");
-  redirect("/dashboard/stamps");
+  revalidatePath("/dashboard/stamps");
+  return { success: true, message: "Stamp card created successfully" };
 }
 
 export async function createStampMembership(formData: FormData) {
@@ -108,7 +106,7 @@ export async function createStampMembership(formData: FormData) {
   const now = new Date();
   const startsOk = !card.valid_from || new Date(card.valid_from) <= now;
   const endsOk = !card.valid_to || now <= new Date(card.valid_to);
-  if (card.status === "active" || !startsOk || !endsOk) {
+  if (card.status !== "active" || !startsOk || !endsOk) {
     throw new Error("This stamp card is inactive or not currently valid");
   }
 
@@ -162,7 +160,7 @@ export async function createStampIntent(formData: FormData) {
     redirect("/dashboard/businesses/missing");
   }
 
-  if (cardErr || !card) throw new Error("Card not found");
+  if (cardErr || !card) notFound()  ;
   if (card.business_id !== business.id)
     throw new Error("Not authorized to create intents for this card");
 
@@ -170,15 +168,25 @@ export async function createStampIntent(formData: FormData) {
   const { error: iErr } = await supabase.from("stamp_intent").insert({
     card_id,
     business_id: business.id,
-    customer_id, // can be null for open intents
+    customer_id,
     qty,
     note,
-    expires_at, // can be null for no expiry
+    expires_at,
     status: "pending",
   });
 
-  if (iErr) throw new Error(iErr.message);
+  if (iErr) {
+    return {
+      success: false,
+      message: "Error creating intent",
+    };
+  }
 
   // Refresh the list
-  revalidatePath("/dashboard/stamps/");
+  revalidatePath(`/dashboard/stamps/${card_id}`);
+
+  return {
+    success: true,
+    message: "Stamp intent successfuly created",
+  };
 }

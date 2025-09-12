@@ -21,7 +21,6 @@ import {
   QrCode,
   ToggleLeft,
   ToggleRight,
-  Ban,
   ListCheck,
 } from "lucide-react";
 

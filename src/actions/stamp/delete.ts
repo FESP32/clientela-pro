@@ -1,19 +1,6 @@
 // app/(dashboard)/stamps/actions.ts
 "use server";
 
-import { getBool } from "@/lib/utils";
-import {
-  PunchesGroupedByCard,
-  PunchWithCardBusiness,
-  StampCardInsert,
-  StampCardListItem,
-  StampCardProductInsert,
-  StampCardRow,
-  StampCardWithProducts,
-  StampIntentListItem,
-  StampIntentRow,
-  StampIntentWithCustomer,
-} from "@/types/stamps";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

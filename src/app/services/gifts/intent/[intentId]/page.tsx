@@ -1,4 +1,3 @@
-// app/services/gifts/[intentId]/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import CustomerGiftIntent from "@/components/services/gifts/customer-gift-intent";
 import CustomerListSection from "@/components/common/customer-list-section";

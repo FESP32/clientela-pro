@@ -1,17 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { getBool } from "@/lib/utils";
-import { ReferralProgramFromFormSchema } from "@/schemas/referrals";
 import {
   JoinedReferralProgramWithIntents,
+  ProgramIntentQuota,
   ReferralIntentListMini,
   ReferralIntentRow,
   ReferralParticipantJoinedQuery,
   ReferralParticipantListItem,
-  ReferralProgramInsert,
   ReferralProgramRow,
 } from "@/types";
 import { getActiveBusiness } from "@/actions";
@@ -310,30 +307,6 @@ export async function listMyProgramReferralIntents(
 }
 
 
-
-export type ProgramReferralCap = {
-  /** NULL => unlimited */
-  cap: number | null;
-  /** Successful referrals attributed to the current referrer (participant.referred_qty) */
-  referredQty: number;
-  /** NULL => unlimited */
-  remaining: number | null;
-  /** true when remaining === 0 and cap !== null */
-  reachedCap: boolean;
-  /** Participant row id if present (may be useful) */
-  participantId: string | null;
-};
-
-export type ProgramIntentQuota = {
-  /** Program-provided quantity (NULL => unlimited) */
-  cap: number | null;
-  /** Number of intents the current user has created for this program */
-  createdIntents: number;
-  /** Remaining you can still create (NULL => unlimited) */
-  remainingCreatable: number | null;
-  /** True when createdIntents >= cap (and cap !== null) */
-  reachedCap: boolean;
-};
 
 /**
  * Computes the user's intent-creation quota for a program:

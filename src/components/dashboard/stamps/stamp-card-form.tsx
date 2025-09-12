@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,14 +23,21 @@ import {
 import MonoIcon from "../../common/mono-icon";
 import { format, addDays } from "date-fns";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-export default function StampCardForm({
-  products,
-  onSubmit,
-}: {
+
+type Props = {
   products: ProductRow[];
-  onSubmit: (fd: FormData) => void | Promise<void>;
-}) {
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
+};
+
+export default function StampCardForm({ products, onSubmit }: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const allIds = useMemo(() => products.map((p) => String(p.id)), [products]);
   const [selected, setSelected] = useState<string[]>([]);
   const allChecked = allIds.length > 0 && selected.length === allIds.length;
@@ -72,8 +79,20 @@ export default function StampCardForm({
   const setPlus30d = () => applyRange(now(), addDays(now(), 30));
   const clearRange = () => applyRange(null, null);
 
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push("/dashboard/stamps");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
   return (
-    <form action={onSubmit}>
+    <form action={handleSubmit}>
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -325,7 +344,7 @@ export default function StampCardForm({
 
         {/* Footer */}
         <div className="mt-4 flex items-center gap-3">
-          <SubmitButton />
+          <SubmitButton overwritePending={isPending}/>
           <Button asChild variant="outline">
             <Link href="/dashboard/stamps">Cancel</Link>
           </Button>

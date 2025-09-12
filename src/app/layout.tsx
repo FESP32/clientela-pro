@@ -6,6 +6,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import NextTopLoader from "nextjs-toploader";
 
 
 const geistSans = Merriweather_Sans({
@@ -106,7 +107,8 @@ export default async function RootLayout({
   return (
     <html suppressHydrationWarning lang={locale}>
       <body className={`${geistSans.className} antialiased`}>
-        <NextIntlClientProvider>  
+        <NextTopLoader color="#6366f1" />
+        <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>{children}</TooltipProvider>
           </ThemeProvider>

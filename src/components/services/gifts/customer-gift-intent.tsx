@@ -13,11 +13,9 @@ export default async function GiftConsumeView({
   intentId,
   userId,
 }: {
-  // intent: GiftIntentView;
   intentId: string;
   userId?: string | null;
 }) {
-  // 🔐 Guard: require sign-in to view/claim
   if (!userId) {
     const nextPath = `/services/gifts/intent/${intentId}`;
     return (

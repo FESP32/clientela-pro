@@ -1,4 +1,4 @@
-import { Gift, ListChecks, Sparkles, Stamp, Share2 } from "lucide-react";
+import { ListChecks, Sparkles } from "lucide-react";
 
 export function FeedbackContentBlock() {
   return (

@@ -22,7 +22,6 @@ import {
   Search,
   Plus,
   ArrowUpDown,
-  Sparkles,
   Rows,
   StretchHorizontal,
   Info,

@@ -1,9 +1,6 @@
-// app/stamps/[cardId]/page.tsx
 import { notFound } from "next/navigation";
 import { getCustomerStampCard } from "@/actions";
 import StampCard from "@/components/services/stamps/stamp-card";
-import CustomerListSection from "@/components/common/customer-list-section";
-import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +18,6 @@ export default async function CustomerStampCardPage({
   if (card.status !== "active") notFound();
 
   return (
-      <StampCard card={card} membership={membership} />
+    <StampCard card={card} membership={membership} />
   );
 }

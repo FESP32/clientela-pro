@@ -1,24 +1,13 @@
-// components/dashboard/gifts/gift-intents-panel.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listGiftIntents, createGiftIntent } from "@/actions";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import SubmitButton from "@/components/common/submit-button";
 import MerchantListSection from "@/components/common/merchant-list-section";
-import MerchantGiftIntentsTable from "@/components/dashboard/gifts/merchant-gift-intents-table"; // responsive list+table version
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CalendarClock, Hash, Info } from "lucide-react";
+import MerchantGiftIntentsTable from "@/components/dashboard/gifts/merchant-gift-intents-table";
+import GiftIntentsCreateForm from "@/components/dashboard/gifts/gift-intents-create-form";
 
 export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
   const { gift, intents } = await listGiftIntents(giftId);
@@ -41,79 +30,12 @@ export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
       subtitle="Create, manage, and track usage windows for this gift."
       contentClassName="space-y-4"
     >
-      {/* Create form (icon-labeled, with tips) */}
-      <TooltipProvider>
-        <form
-          action={createGiftIntent}
-          className="mb-2 grid w-full grid-cols-1 gap-3 md:grid-cols-[auto_minmax(220px,1fr)_minmax(220px,1fr)_auto] md:items-end"
-        >
-          <input type="hidden" name="gift_id" value={gift.id} />
-
-          {/* Qty */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Label htmlFor="qty">Qty</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  How many intents (codes) to create.
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="relative">
-              <Hash className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="qty"
-                type="number"
-                name="qty"
-                min={1}
-                defaultValue={1}
-                inputMode="numeric"
-                className="h-9 w-24 pl-8"
-                aria-describedby="qty-tip"
-              />
-            </div>
-            <p id="qty-tip" className="text-xs text-muted-foreground">
-              Minimum 1. You can create more later.
-            </p>
-          </div>
-
-          {/* Expires at */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Label htmlFor="expires_at">Expires at</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  Optional. Leave blank for no expiration.
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="relative">
-              <CalendarClock className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="expires_at"
-                type="datetime-local"
-                name="expires_at"
-                className="h-9 pl-8"
-                aria-describedby="exp-tip"
-              />
-            </div>
-            <p id="exp-tip" className="text-xs text-muted-foreground">
-              Uses your local time. You can edit later.
-            </p>
-          </div>
-
-          {/* Submit */}
-          <div className="flex items-end">
-            <SubmitButton />
-          </div>
-        </form>
-      </TooltipProvider>
+      {/* Create form (moved to client component) */}
+      <GiftIntentsCreateForm
+        gift={gift}
+        intents={intents}
+        onSubmit={createGiftIntent}
+      />
 
       <Separator className="my-2" />
 

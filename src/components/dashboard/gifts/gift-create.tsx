@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { createGift } from "@/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,26 +8,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import SubmitButton from "../../common/submit-button";
 import MonoIcon from "@/components/common/mono-icon";
+import { useRouter } from "next/navigation";
 
 import {
   Gift as GiftIcon,
   FileText,
-  Image as ImageIcon,
   Info,
 } from "lucide-react";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 type Props = {
-  action?: (fd: FormData) => Promise<void>;
-  /** Optional server error bubbled up via search params or state */
-  errorMessage?: string | null;
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
 };
 
-export default function GiftCreate({
-  action = createGift,
-  errorMessage,
-}: Props) {
+export default function GiftCreate({ onSubmit }: Props) {
+
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push("/dashboard/gifts");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
   return (
-    <form action={action}>
+    <form action={handleSubmit}>
       <div className="mx-auto w-full max-w-6xl">
         {/* Header */}
         <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -78,7 +92,6 @@ export default function GiftCreate({
                   Keep it short and recognisable (under ~40 chars works best).
                 </p>
               </div>
-
             </div>
 
             {/* Description */}
@@ -102,16 +115,8 @@ export default function GiftCreate({
             </div>
           </section>
 
-          {/* Error (optional) */}
-          {errorMessage ? (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-              {errorMessage}
-            </div>
-          ) : null}
-
           <Separator />
 
-          {/* Actions */}
           <div className="mt-2 flex items-center gap-3">
             <SubmitButton />
             <Button asChild variant="outline">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import SubmitButton from "../../common/submit-button";
 import CreateIntentPanel from "@/components/services/referrals/create-intent-panel";
-import { createReferralIntent, getProgramJoinData } from "@/actions";
+import { createReferralIntent, getMyProgramIntentQuota, getProgramJoinData, listMyProgramReferralIntents } from "@/actions";
 import CustomerListSection from "@/components/common/customer-list-section";
 import {
   BadgePercent,
@@ -58,7 +58,6 @@ export default async function ProgramJoin({ programId, action }: Props) {
     );
   }
 
-  // 2) 👇 User is authenticated — now it’s safe to fetch program & participant info
   const res = await getProgramJoinData(programId);
 
   if (!res.ok) {
@@ -96,6 +95,11 @@ export default async function ProgramJoin({ programId, action }: Props) {
           .filter(Boolean)
           .join(" ")
       : "No date restrictions";
+
+  const quota = user ? await getMyProgramIntentQuota(programId) : null;
+  const intents = user
+    ? await listMyProgramReferralIntents(programId, 20)
+    : null;
 
   return (
     <CustomerListSection
@@ -210,9 +214,9 @@ export default async function ProgramJoin({ programId, action }: Props) {
       {alreadyJoined ? (
         <CreateIntentPanel
           program={program}
-          action={createReferralIntent}
-          title="Invite a friend"
-          cta="Create intent"
+          onSubmit={createReferralIntent}
+          quota={quota}
+          intents={intents}
         />
       ) : null}
     </CustomerListSection>

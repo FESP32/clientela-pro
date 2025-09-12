@@ -31,8 +31,7 @@ export async function createReferralProgram(formData: FormData) {
   const referralProgramCount = await getReferralProgramCountForBusiness(business.id);
 
   if (referralProgramCount >= subscriptionMetadata.max_referral_programs) {
-    console.error("Max referral program count reached");
-    redirect("/dashboard/upgrade");
+    return { success: false, message: "Max referral program count reached" };
   }
 
   // Parse form input (same style as createSurvey)
@@ -48,7 +47,10 @@ export async function createReferralProgram(formData: FormData) {
 
   if (!parsed.success) {
     const msg = parsed.error.errors.map((e) => e.message).join(", ");
-    throw new Error(msg || "Invalid input");
+    return {
+      success: false,
+      message: msg,
+    };
   }
 
   const {
@@ -61,7 +63,6 @@ export async function createReferralProgram(formData: FormData) {
     per_referrer_cap,
   } = parsed.data;
 
-  // Optional: basic range check (DB can also enforce)
   if (valid_from && valid_to && valid_to <= valid_from) {
     throw new Error("End date must be later than start date.");
   }
@@ -92,7 +93,7 @@ export async function createReferralProgram(formData: FormData) {
   }
 
   revalidatePath("/dashboard/referrals");
-  redirect("/dashboard/referrals");
+  return { success: true, message: "referral program submitted successfully" };
 }
 
 export async function createReferralParticipant(formData: FormData) {
@@ -180,8 +181,17 @@ export async function createReferralIntent(formData: FormData) {
     status: "pending",
     expires_at: expiresAt,
   });
-  if (insertErr) throw new Error(insertErr.message);
+  if (insertErr) 
+    return {
+      success: true,
+      message: "Error creating Referral intent",
+    };;
 
-  revalidatePath(`/referrals/${programId}`);
-  revalidatePath(`/referrals/${programId}/join`);
+  revalidatePath(`/referrals/referrer/${programId}`);
+
+  return {
+    success: true,
+    message: "Referral intent successfuly created",
+  };
+  
 }

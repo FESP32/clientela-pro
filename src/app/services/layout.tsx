@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeartHandshake, Home, User } from "lucide-react";
+import { HeartHandshake, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Background from "@/components/common/background";
 

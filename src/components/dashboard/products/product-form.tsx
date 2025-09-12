@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,9 +20,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MonoIcon from "../../common/mono-icon";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type ProductFormProps = {
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (
+    formData: FormData
+  ) => Promise<{ success: boolean; message: string }>;
   defaultValues?: {
     name?: string;
     metadata?: string;
@@ -97,6 +101,10 @@ export default function ProductForm({
   onSubmit,
   defaultValues,
 }: ProductFormProps) {
+
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  
   const [rows, setRows] = useState<KV[]>(() =>
     parseInitialKV(defaultValues?.metadata)
   );
@@ -173,8 +181,20 @@ export default function ProductForm({
     setRows((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await onSubmit(formData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push("/dashboard/products");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
   return (
-    <form action={onSubmit} className="mx-auto max-w-6xl">
+    <form action={handleSubmit} className="mx-auto max-w-6xl">
       {/* Header */}
       <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>

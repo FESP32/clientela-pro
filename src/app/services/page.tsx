@@ -80,7 +80,7 @@ export default function CustomerMenu() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 gap-4 p-6 pt-4 sm:grid-cols-3">
-          {TILES.map(({ href, label, Icon, desc }, idx) => (
+          {TILES.map(({ href, label, Icon, desc }) => (
             <Link
               key={href}
               href={href}

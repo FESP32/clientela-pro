@@ -1,9 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { unstable_cache } from "next/cache";
-import { cookies } from "next/headers";
-import { createHash } from "crypto";
 
 export async function signInWithGoogle(next?: string) {
   const supabase = await createClient();

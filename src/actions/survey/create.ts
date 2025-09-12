@@ -133,8 +133,7 @@ export async function createSurvey(formData: FormData) {
   const surveyCount = await getSurveyCountForBusiness(business.id);
 
   if (surveyCount >= subscriptionMetadata.max_surveys) {
-    console.error("Max Survey count reached");
-    redirect("/dashboard/upgrade");
+    return { success: false, message: "Max survey count reached" };
   }
 
   // ✅ Include is_anonymous in parsing
@@ -154,7 +153,7 @@ export async function createSurvey(formData: FormData) {
 
   if (!parsed.success) {
     const msg = parsed.error.errors.map((e) => e.message).join(", ");
-    throw new Error(msg);
+    return { success: false, message: msg };
   }
 
   const {
@@ -206,5 +205,6 @@ export async function createSurvey(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard/surveys");
-  redirect("/dashboard/surveys");
+  
+  return { success: true, message: "Survey created successfully" };
 }

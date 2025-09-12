@@ -1,5 +1,3 @@
-// app/dashboard/gifts/page.tsx
-import Image from "next/image";
 import { listGifts } from "@/actions";
 import MerchantListSection from "@/components/common/merchant-list-section";
 import GiftsExplorer from "@/components/dashboard/gifts/gifts-explorer";
