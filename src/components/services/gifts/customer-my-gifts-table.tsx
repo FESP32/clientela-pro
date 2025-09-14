@@ -81,18 +81,6 @@ export default function CustomerMyGiftsTable({
               </CardHeader>
 
               <CardContent className="space-y-3">
-                {g?.image_url ? (
-                  <div className="relative w-full h-40 overflow-hidden rounded-md border">
-                    <Image
-                      src={g.image_url}
-                      alt={g.title ?? "Gift image"}
-                      fill
-                      className="object-cover transition-transform duration-500 will-change-transform group-hover:scale-[1.03]"
-                    />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/70 to-transparent" />
-                  </div>
-                ) : null}
-
                 <div className="text-sm text-muted-foreground space-y-2">
                   {g?.description ? (
                     <p className="line-clamp-3">{g.description}</p>

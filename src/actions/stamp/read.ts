@@ -141,7 +141,7 @@ export async function listStampIntents(cardId: string) {
   if (!user) {
     return {
       user: null,
-      card: null as { id: string; title: string } | null,
+      card: null as StampCardRow | null,
       intents: [] as StampIntentListItem[],
       error: null as string | null,
     };
@@ -150,10 +150,10 @@ export async function listStampIntents(cardId: string) {
   // Ensure the card exists (id, title, business_id)
   const { data: card, error: cardErr } = await supabase
     .from("stamp_card")
-    .select("id, title, business_id")
+    .select("id, title, business_id, valid_to")
     .eq("id", cardId)
     .maybeSingle()
-    .overrideTypes<Pick<StampCardRow, "id" | "title" | "business_id"> | null>();
+    .overrideTypes<StampCardRow>();
 
   if (cardErr || !card) {
     return {
@@ -229,7 +229,7 @@ export async function listStampIntents(cardId: string) {
 
   return {
     user,
-    card: { id: card.id, title: card.title },
+    card: { id: card.id, title: card.title, valid_to: card.valid_to } as StampCardRow,
     intents,
     error: null as string | null,
   };

@@ -47,7 +47,7 @@ export default async function CardIntentsPage({
       <MerchantStampIntentsTable intents={intents} />
 
       {/* Optional back action */}
-      <div className="mt-3">
+      <div className="my-8">
         <Button asChild variant="outline">
           <Link href="/dashboard/stamps">Back to Cards</Link>
         </Button>

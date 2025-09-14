@@ -71,22 +71,6 @@ export default async function GiftConsumeView({
 
       {/* Gift / Business */}
       <div className="flex items-start gap-4">
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-muted">
-          {gift?.image_url ? (
-            <Image
-              src={gift.image_url}
-              alt={`${gift.title ?? "Gift"} image`}
-              fill
-              sizes="56px"
-              className="object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-              {gift?.title?.[0]?.toUpperCase() ?? "?"}
-            </span>
-          )}
-        </div>
-
         <div className="min-w-0">
           <div className="text-base font-medium">{gift?.title ?? "—"}</div>
           {gift?.description ? (

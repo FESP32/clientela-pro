@@ -5,6 +5,7 @@ export const SurveyFromFormSchema = z.object({
   product_id: z.string().uuid({ message: "Select a product." }),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional().default(""),
+  max_responses: z.number().int().min(1, "Must be at least 1"),
   is_anonymous: z
     .preprocess(
       (v) => v === "on" || v === "true" || v === true || v === 1 || v === "1",

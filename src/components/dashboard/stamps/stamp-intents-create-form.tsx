@@ -10,18 +10,15 @@ import {
 } from "@/components/ui/tooltip";
 import SubmitButton from "@/components/common/submit-button";
 import { CalendarClock, Hash, Info, StickyNote } from "lucide-react";
-import type { Tables } from "@/types/database.types";
 import { useTransition } from "react";
 import { toast } from "sonner";
-
-type StampCardRow = Tables<"stamp_card">;
-type StampIntentRow = Tables<"stamp_intent">;
+import { StampCardRow, StampIntentRow } from "@/types";
 
 export default function StampIntentsCreateForm({
   card,
   onSubmit,
 }: {
-  card: Pick<StampCardRow, "id" | "title">;
+  card: StampCardRow;
   intents: Array<Pick<StampIntentRow, "id" | "status">>;
   onSubmit: (
     formData: FormData
@@ -41,6 +38,9 @@ export default function StampIntentsCreateForm({
     });
   };
 
+
+  console.log(card.valid_to);
+  
   return (
     <TooltipProvider>
       <form
@@ -138,8 +138,15 @@ export default function StampIntentsCreateForm({
         </div>
 
         {/* Submit */}
-        <div className="flex items-end">
-          <SubmitButton />
+        <div className="flex items-center">
+        {card.valid_to && new Date(card.valid_to) < new Date() && (
+          <div className="mr-4 text-sm text-destructive">
+            This card has expired. You cannot create more intents.
+          </div>
+        )}
+          <SubmitButton
+            disabled={card.valid_to ? new Date(card.valid_to) < new Date() : false}
+          />
         </div>
       </form>
     </TooltipProvider>

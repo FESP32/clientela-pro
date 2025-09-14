@@ -38,21 +38,6 @@ export default async function ReferralProgramsPage() {
             </h1>
           </div>
 
-          {/* Badges instead of stat chips */}
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              <Users className="h-3.5 w-3.5" />
-              {total} total
-            </Badge>
-            <Badge className="gap-1.5">
-              <Tag className="h-3.5 w-3.5" />
-              {active} active
-            </Badge>
-            <Badge variant="outline" className="gap-1.5">
-              <Gift className="h-3.5 w-3.5" />
-              {withRewards} with rewards
-            </Badge>
-          </div>
         </div>
       }
       subtitle={

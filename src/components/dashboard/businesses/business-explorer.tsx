@@ -32,6 +32,9 @@ import {
   Info,
   SortAsc,
   SortDesc,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 type SetActiveAction = (formData: FormData) => Promise<void>;
@@ -48,7 +51,17 @@ export default function BusinessesExplorer({
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
   const [role, setRole] = useState<"any" | "owner" | "admin" | "member">("any");
   const [compact, setCompact] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false); // NEW: collapsible on mobile
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Keep panel always open on md+; collapsible on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setPanelOpen(mq.matches ? true : false);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // Spotlight-like shortcuts
   useEffect(() => {
@@ -62,7 +75,8 @@ export default function BusinessesExplorer({
 
       if (!editing && e.key === "/") {
         e.preventDefault();
-        inputRef.current?.focus();
+        setPanelOpen(true); // auto-open on mobile
+        setTimeout(() => inputRef.current?.focus(), 0);
       }
       if (!editing && (e.key === "c" || e.key === "C")) {
         setCompact((v) => !v);
@@ -103,8 +117,36 @@ export default function BusinessesExplorer({
 
   return (
     <TooltipProvider>
-      {/* Command Bar — glassy, quiet, icon-forward */}
-      <div className="rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15">
+      {/* Mobile toggle header */}
+      <div className="mb-2 flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="businesses-explorer-controls"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Search & Filters
+          {panelOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="text-foreground">{filtered.length}</span> of{" "}
+          <span className="text-foreground">{items.length}</span>
+        </div>
+      </div>
+
+      {/* Command Bar — collapsible on mobile, always open on md+ */}
+      <div
+        id="businesses-explorer-controls"
+        className={`${
+          panelOpen ? "block" : "hidden"
+        } md:block rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15`}
+      >
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
           {/* Search */}
           <div className="relative w-full md:max-w-md">

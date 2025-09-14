@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getBool } from "@/lib/utils";
-import { getMyOwnedBusinessCount, getMyPlan } from "@/actions";
+import { getActiveBusiness, getMyOwnedBusinessCount, getMyPlan } from "@/actions";
 import { SubscriptionMetadata } from "@/types/subscription";
 
 export async function createBusiness(formData: FormData) {
@@ -17,10 +17,10 @@ export async function createBusiness(formData: FormData) {
   if (!user) redirect("/login?next=/dashboard/businesses/new");
 
   const subscriptionPlan = await getMyPlan();
-
-  const subscriptionMetadata: SubscriptionMetadata = subscriptionPlan.metadata as SubscriptionMetadata;
+  const subscriptionMetadata: SubscriptionMetadata =
+    subscriptionPlan.metadata as SubscriptionMetadata;
   const businessCount = await getMyOwnedBusinessCount();
-  
+
   if (businessCount >= subscriptionMetadata.max_businesses) {
     console.error("Max business count reached");
     redirect("/dashboard/upgrade");
@@ -31,13 +31,26 @@ export async function createBusiness(formData: FormData) {
   const website_url = (formData.get("website_url") as string) || null;
   const instagram_url = (formData.get("instagram_url") as string) || null;
   const facebook_url = (formData.get("facebook_url") as string) || null;
-  const imageFile = formData.get("image") as File | null;
   const is_active = getBool(formData, "is_active");
 
   if (!name) {
     throw new Error("Name is required.");
   }
 
+  // Robustly interpret the uploaded image field
+  const rawImage = formData.get("image");
+  let imageFile: File | null = null;
+
+  if (rawImage instanceof File) {
+    const invalidName = !rawImage.name || rawImage.name === "undefined";
+    const looksEmpty = rawImage.size === 0 || invalidName;
+    const isImage = rawImage.type?.startsWith("image/");
+    if (!looksEmpty && isImage) {
+      imageFile = rawImage;
+    }
+  }
+
+  // Validate only if we actually have a real image file
   if (imageFile) {
     const maxBytes = 5 * 1024 * 1024; // 5MB
     if (imageFile.size > maxBytes) {
@@ -55,9 +68,10 @@ export async function createBusiness(formData: FormData) {
   if (imageFile) {
     const extFromName = imageFile.name?.split(".").pop()?.toLowerCase();
     const extFromType = imageFile.type?.replace("image/", "");
-    const ext = extFromName || extFromType || "jpg";
+    const ext = (extFromName || extFromType || "jpg")
+      .replace("jpeg", "jpg")
+      .replace("svg+xml", "svg");
 
-    // Example object path: businesses/<owner_id>/<uuid>.<ext>
     const objectPath = `business/${user.id}/${crypto.randomUUID()}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage
@@ -74,7 +88,6 @@ export async function createBusiness(formData: FormData) {
 
     image_path = objectPath;
 
-    // Public URL (no network request)
     const { data: pub } = supabase.storage
       .from("public-images")
       .getPublicUrl(objectPath);
@@ -92,7 +105,7 @@ export async function createBusiness(formData: FormData) {
       facebook_url,
       image_path,
       image_url,
-      is_active
+      is_active,
     })
     .select("id")
     .single();
@@ -106,6 +119,26 @@ export async function createBusiness(formData: FormData) {
     user_id: user.id,
     role: "owner",
   });
+
+  const { business: activeBusiness } = await getActiveBusiness();
+
+  console.log(activeBusiness, businessCount, is_active);
+  
+
+  if (businessCount === 0 && !activeBusiness && is_active) {
+    const { error } = await supabase.from("business_current").upsert(
+      {
+        user_id: user.id,
+        business_id: business.id,
+        set_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+    if (error) {
+      console.error('Unable to set new business as current');
+    }
+  }
 
   if (memberErr) {
     throw new Error(memberErr.message);

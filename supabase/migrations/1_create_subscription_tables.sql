@@ -1,10 +1,6 @@
--- =========================================================
--- Subscriptions — adjust schema: interval → subscription, price → (price_month, price_year)
--- =========================================================
-
 create extension if not exists pgcrypto;
 
--- Touch updated_at helper (reused)
+-- Touch updated_at helper
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -14,9 +10,6 @@ begin
   return new;
 end$$;
 
--- ---------------------------------------------------------
--- subscription_plan (catalog) — ensure table, then adjust columns
--- ---------------------------------------------------------
 create table if not exists public.subscription_plan (
   id            uuid primary key default gen_random_uuid(),
   code          text not null,
@@ -30,15 +23,7 @@ create table if not exists public.subscription_plan (
   created_at    timestamptz not null default timezone('utc', now()),
   updated_at    timestamptz not null default timezone('utc', now())
 );
-
--- If migrating from older version, add new columns if missing
-alter table public.subscription_plan
-  add column if not exists price_month numeric(12,2) not null default 0.00;
-
-alter table public.subscription_plan
-  add column if not exists price_year numeric(12,2) not null default 0.00;
-
--- Indexes (clean + idempotent)
+-- Indexes
 create unique index if not exists subscription_plan_code_uq on public.subscription_plan (code);
 create index if not exists subscription_plan_active_idx     on public.subscription_plan (is_active);
 
@@ -49,7 +34,7 @@ before update on public.subscription_plan
 for each row execute procedure public.touch_updated_at();
 
 -- ---------------------------------------------------------
--- subscription (per-user) — ensure table, add interval column
+-- subscription table
 -- ---------------------------------------------------------
 create table if not exists public.subscription (
   id            uuid primary key default gen_random_uuid(),
@@ -59,15 +44,11 @@ create table if not exists public.subscription (
   status        text not null default 'active' check (status in ('active', 'canceled')),
   started_at    timestamptz not null default timezone('utc', now()),
   expires_at    timestamptz,
-
-  -- NEW: interval now lives here
   interval      text not null default 'month' check (interval in ('month','year')),
-
   created_at    timestamptz not null default timezone('utc', now()),
   updated_at    timestamptz not null default timezone('utc', now())
 );
 
--- FKs (separate clauses; re-adding is idempotent if names match)
 alter table public.subscription
   add constraint subscription_user_id_fk_profile
     foreign key (user_id) references public.profile(user_id)
@@ -84,7 +65,7 @@ create index if not exists subscription_plan_idx     on public.subscription (pla
 create index if not exists subscription_status_idx   on public.subscription (status);
 create index if not exists subscription_interval_idx on public.subscription (interval);
 
--- One ACTIVE subscription per user (idempotent)
+-- One active subscription per user
 create unique index if not exists subscription_one_active_per_user
   on public.subscription (user_id)
   where (status = 'active' and expires_at is null);
@@ -94,27 +75,6 @@ drop trigger if exists trig_touch_subscription on public.subscription;
 create trigger trig_touch_subscription
 before update on public.subscription
 for each row execute procedure public.touch_updated_at();
-
--- ---------------------------------------------------------
--- Seed / upsert plans with month & year pricing
--- ---------------------------------------------------------
-insert into public.subscription_plan (code, name, description, price_month, price_year, currency, is_active, metadata)
-values
-  ('free',        'Free',        'Basic features',                         0.00,   0.00, 'USD', true, '{}'::jsonb),
-  ('growth',      'Growth',      'For small teams ready to scale',        29.00, 290.00, 'USD', true, '{}'::jsonb),
-  ('growth_plus', 'Growth+',     'Advanced features for growing teams',   39.00, 390.00, 'USD', true, '{}'::jsonb),
-  ('enterprise',  'Enterprise',  'Custom, enterprise-grade plan',          0.00,   0.00, 'USD', true, '{}'::jsonb)
-on conflict (code) do update
-set
-  name         = excluded.name,
-  description  = excluded.description,
-  price_month  = excluded.price_month,
-  price_year   = excluded.price_year,
-  currency     = excluded.currency,
-  is_active    = excluded.is_active,
-  metadata     = excluded.metadata,
-  updated_at   = timezone('utc', now());
-
 
 -- ---------------------------------------------------------
 -- Seed / upsert plans WITH metadata limits
@@ -127,13 +87,13 @@ values
     jsonb_build_object(
       'max_businesses',        1,
       'max_products',          3,
-      'max_surveys',           5,
+      'max_surveys',           3,
       'max_referral_programs', 1,
-      'max_gifts',             1,
+      'max_gifts',             3,
       'max_stamps',            1
     )
   ),
-  ('growth',     'Growth',    'For small teams ready to scale',       29.00,    290.00,    'USD',    true,
+  ('growth',     'Growth',    'For small teams ready to scale',       20.00,    200.00,    'USD',    true,
     jsonb_build_object(
       'max_businesses',        1,
       'max_products',          25,
@@ -143,7 +103,7 @@ values
       'max_stamps',            10
     )
   ),
-  ('growth_plus','Growth+',   'Advanced features for growing teams',  79.00,    790.00,    'USD',    true,
+  ('growth_plus','Growth+',   'Advanced features for growing teams',  40.00,    420.00,    'USD',    true,
     jsonb_build_object(
       'max_businesses',        3,
       'max_products',          50,

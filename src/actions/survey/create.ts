@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { SurveyInsert } from "@/types";
@@ -9,7 +9,7 @@ import { SurveyFromFormSchema } from "@/schemas/surveys";
 import { getActiveBusiness } from "@/actions/business/read";
 import { SubscriptionMetadata } from "@/types/subscription";
 import { getOwnerPlanForBusiness } from "../subscription";
-import { getSurveyCountForBusiness } from "@/actions";
+import { getSurveyCountForBusiness, getSurveyResponseCount } from "@/actions";
 
 function parseLinesToTraits(block: string, score: 1 | 2 | 3 | 4 | 5) {
   const lines = (block || "")
@@ -68,6 +68,7 @@ export async function submitResponse(formData: FormData) {
   const survey_id = String(formData.get("survey_id") ?? "").trim();
   const ratingStr = String(formData.get("rating") ?? "").trim();
   const comment = String(formData.get("comment") ?? "").trim();
+  
 
   if (!survey_id) {
     return { success: false, message: "Missing survey_id" };
@@ -86,12 +87,18 @@ export async function submitResponse(formData: FormData) {
 
   const { data: survey, error: surveyError } = await supabase
     .from("survey")
-    .select("is_anonymous")
+    .select("is_anonymous, max_responses")
     .eq("id", survey_id)
     .single();
 
   if (surveyError || !survey) {
-    return { success: false, message: "Survey not found" };
+    notFound();
+  }
+
+  const responseCount = await getSurveyResponseCount(survey_id);
+  
+  if (responseCount > survey.max_responses) {
+    return { success: false, message: "Cannot submit more responses" };
   }
 
   const respondent_id = survey.is_anonymous ? null : user?.id ?? null;
@@ -105,7 +112,7 @@ export async function submitResponse(formData: FormData) {
   });
 
   if (error) {
-    return { success: false, message: error.message };
+    return { success: false, message: "You are not allowed to respond this survey" };
   }
 
   revalidatePath(`/dashboard/surveys/${survey_id}/respond`);
@@ -136,14 +143,14 @@ export async function createSurvey(formData: FormData) {
     return { success: false, message: "Max survey count reached" };
   }
 
-  // ✅ Include is_anonymous in parsing
   const parsed = SurveyFromFormSchema.safeParse({
     product_id: formData.get("product_id"),
     title: formData.get("title"),
     description: formData.get("description") ?? "",
-    is_anonymous: formData.get("is_anonymous") ?? "true", // <- NEW
+    is_anonymous: formData.get("is_anonymous") ?? "true",
     starts_at: formData.get("starts_at") ?? "",
     ends_at: formData.get("ends_at") ?? "",
+    max_responses: Number(formData.get("max_responses")) ?? 1,
     traits_1: formData.get("traits_1") ?? "",
     traits_2: formData.get("traits_2") ?? "",
     traits_3: formData.get("traits_3") ?? "",
@@ -153,7 +160,7 @@ export async function createSurvey(formData: FormData) {
 
   if (!parsed.success) {
     const msg = parsed.error.errors.map((e) => e.message).join(", ");
-    return { success: false, message: msg };
+    return { success: false, message: msg  };
   }
 
   const {
@@ -162,6 +169,7 @@ export async function createSurvey(formData: FormData) {
     description,
     starts_at,
     ends_at,
+    max_responses,
     traits_1,
     traits_2,
     traits_3,
@@ -194,7 +202,8 @@ export async function createSurvey(formData: FormData) {
     product_id,
     title,
     description,
-    status: 'active',
+    status: "active",
+    max_responses,
     is_anonymous: getBool(formData, "is_anonymous"),
     starts_at: new Date(starts_at).toISOString(),
     ends_at: new Date(ends_at).toISOString(),
@@ -205,6 +214,6 @@ export async function createSurvey(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/dashboard/surveys");
-  
+
   return { success: true, message: "Survey created successfully" };
 }

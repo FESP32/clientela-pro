@@ -21,6 +21,7 @@ create table if not exists public.survey (
     check (status in ('active', 'inactive', 'finished')),
   starts_at    timestamptz not null default now(),                   
   ends_at      timestamptz not null,
+  max_responses integer not null default 50,
   settings     jsonb not null default '{}'::jsonb,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()

@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
   Select,
@@ -23,11 +20,12 @@ import {
   Search,
   Plus,
   ArrowUpDown,
-  Rows,
-  StretchHorizontal,
   Info,
   Filter,
   Shield,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { SurveyWithProduct } from "@/types";
 
@@ -45,8 +43,17 @@ export default function SurveysExplorer({
   const [windowSel, setWindowSel] = useState<
     "any" | "live" | "upcoming" | "ended"
   >("any");
-  const [compact, setCompact] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false); // collapsible on mobile
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Always open on md+; collapsible on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setPanelOpen(mq.matches ? true : false);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // Spotlight-like shortcuts
   useEffect(() => {
@@ -60,10 +67,8 @@ export default function SurveysExplorer({
 
       if (!editing && e.key === "/") {
         e.preventDefault();
-        inputRef.current?.focus();
-      }
-      if (!editing && (e.key === "c" || e.key === "C")) {
-        setCompact((v) => !v);
+        setPanelOpen(true); // auto-open on mobile
+        setTimeout(() => inputRef.current?.focus(), 0);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -96,9 +101,9 @@ export default function SurveysExplorer({
     };
 
     let list = surveys.filter((s) => {
-      // status
-      if (status === "active" && s.status === "active") return false;
-      if (status === "inactive" && s.status === "inactive") return false;
+      // status (fixed logic)
+      if (status === "active" && s.status !== "active") return false;
+      if (status === "inactive" && s.status !== "inactive") return false;
 
       // privacy
       if (privacy === "anonymous" && !s.is_anonymous) return false;
@@ -137,15 +142,43 @@ export default function SurveysExplorer({
 
   return (
     <TooltipProvider>
-      {/* Command Bar — glassy, quiet, icon-forward */}
-      <div className="rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15">
+      {/* Mobile toggle header */}
+      <div className="mb-2 flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="surveys-explorer-controls"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Search & Filters
+          {panelOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="text-foreground">{filtered.length}</span> of{" "}
+          <span className="text-foreground">{surveys.length}</span>
+        </div>
+      </div>
+
+      {/* Command Bar — collapsible on mobile, always open on md+ */}
+      <div
+        id="surveys-explorer-controls"
+        className={`${
+          panelOpen ? "block" : "hidden"
+        } md:block rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15`}
+      >
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
           {/* Search */}
           <div className="relative w-full md:max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder="Search surveys…  (press /)"
+              placeholder="Search surveys…"
               className="pl-9 bg-background/50"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -172,7 +205,7 @@ export default function SurveysExplorer({
               </span>
               <Select
                 value={status}
-                onValueChange={(v: typeof status) => setStatus(v)}
+                onValueChange={(v) => setStatus(v as typeof status)}
               >
                 <SelectTrigger className="h-9 w-[140px] bg-background/50">
                   <SelectValue placeholder="Status" />
@@ -193,7 +226,7 @@ export default function SurveysExplorer({
               </span>
               <Select
                 value={privacy}
-                onValueChange={(v: typeof privacy) => setPrivacy(v)}
+                onValueChange={(v) => setPrivacy(v as typeof privacy)}
               >
                 <SelectTrigger className="h-9 w-[150px] bg-background/50">
                   <SelectValue placeholder="Privacy" />
@@ -214,7 +247,7 @@ export default function SurveysExplorer({
               </span>
               <Select
                 value={windowSel}
-                onValueChange={(v: typeof windowSel) => setWindowSel(v)}
+                onValueChange={(v) => setWindowSel(v as typeof windowSel)}
               >
                 <SelectTrigger className="h-9 w-[170px] bg-background/50">
                   <SelectValue placeholder="Window" />
@@ -238,7 +271,7 @@ export default function SurveysExplorer({
               </span>
               <Select
                 value={sort}
-                onValueChange={(v: typeof sort) => setSort(v)}
+                onValueChange={(v) => setSort(v as typeof sort)}
               >
                 <SelectTrigger className="h-9 w-[170px] bg-background/50">
                   <SelectValue placeholder="Sort by" />
@@ -253,31 +286,6 @@ export default function SurveysExplorer({
             </div>
 
             <Separator orientation="vertical" className="hidden h-6 md:block" />
-
-            {/* Density */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCompact((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-white/60 px-3 py-1 text-sm shadow-sm backdrop-blur hover:bg-white/70 dark:bg-white/5 dark:hover:bg-white/10"
-                  aria-pressed={compact}
-                  aria-label="Toggle compact density (c)"
-                >
-                  {compact ? (
-                    <>
-                      <Rows className="h-4 w-4 opacity-80" />
-                      Compact
-                    </>
-                  ) : (
-                    <>
-                      <StretchHorizontal className="h-4 w-4 opacity-80" />
-                      Comfortable
-                    </>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Press “c” to toggle density</TooltipContent>
-            </Tooltip>
 
             {/* Add survey */}
             <Button asChild className="ml-1">
@@ -295,15 +303,11 @@ export default function SurveysExplorer({
             Showing <span className="text-foreground">{filtered.length}</span>{" "}
             of <span className="text-foreground">{surveys.length}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
-            Live now = within the start/end window.
-          </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className={compact ? "text-sm" : ""}>
+      <div className={"text-sm mb-12"}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border p-6 text-sm text-muted-foreground">
             No surveys match your filters.
@@ -321,9 +325,10 @@ export default function SurveysExplorer({
             </button>
           </div>
         ) : (
-          // NOTE: If your MerchantSurveysTable still expects `surveys={...}`,
-          // change `items={filtered}` to `surveys={filtered}` below.
-          <MerchantSurveysTable surveys={filtered} deleteSurvey={deleteSurvey} />
+          <MerchantSurveysTable
+            surveys={filtered}
+            deleteSurvey={deleteSurvey}
+          />
         )}
       </div>
     </TooltipProvider>

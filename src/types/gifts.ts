@@ -13,7 +13,7 @@ export type GiftIntentUpdate = Updates<"gift_intent">;
 
 export type GiftWithBusiness = Pick<
   GiftRow,
-  "id" | "title" | "description" | "image_url"
+  "id" | "title" | "description"
 > & {
   business: Pick<BusinessRow, "id" | "name" | "image_url"> | null;
 };
@@ -30,7 +30,7 @@ export type GiftIntentView = Omit<GiftIntentRow, "status"> & {
 export type GiftIntentDashboardView = Tables<"gift_intent"> & {
   gift: Pick<
     Tables<"gift">,
-    "id" | "title" | "description" | "image_url"
+    "id" | "title" | "description" 
   > | null;
   business: Pick<
     Tables<"business">,
@@ -46,7 +46,7 @@ type GiftIntentCore = Pick<
 
 type GiftCore = Pick<
   Tables<"gift">,
-  "id" | "title" | "description" | "image_url"
+  "id" | "title" | "description"
 >;
 
 type BusinessCore = Pick<Tables<"business">, "id" | "name" | "image_url">;

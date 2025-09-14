@@ -29,6 +29,9 @@ import {
   Gift,
   ShieldCheck,
   Info,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ReferralProgramRow } from "@/types";
 
@@ -43,8 +46,17 @@ export default function ReferralProgramsExplorer({
   const [rewards, setRewards] = useState<"all" | "any" | "both" | "none">(
     "all"
   );
-  const [compact, setCompact] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false); // collapsible on mobile
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Always open on md+; collapsible on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setPanelOpen(mq.matches ? true : false);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // Spotlight-style shortcuts
   useEffect(() => {
@@ -57,10 +69,8 @@ export default function ReferralProgramsExplorer({
           (t as HTMLElement).isContentEditable);
       if (!editing && e.key === "/") {
         e.preventDefault();
-        inputRef.current?.focus();
-      }
-      if (!editing && (e.key === "c" || e.key === "C")) {
-        setCompact((v) => !v);
+        setPanelOpen(true); // auto-open on mobile
+        setTimeout(() => inputRef.current?.focus(), 0);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -71,8 +81,9 @@ export default function ReferralProgramsExplorer({
     const q = query.trim().toLowerCase();
 
     let list = programs.filter((p) => {
-      if (status === "active" && p.status === "active") return false;
-      if (status === "inactive" && p.status === "inactive") return false;
+      // status (fixed logic)
+      if (status === "active" && p.status !== "active") return false;
+      if (status === "inactive" && p.status !== "inactive") return false;
 
       const hasReferrer = Boolean(p.referrer_reward);
       const hasReferred = Boolean(p.referred_reward);
@@ -108,15 +119,43 @@ export default function ReferralProgramsExplorer({
 
   return (
     <TooltipProvider>
-      {/* Command Bar — glassy, quiet, icon-forward */}
-      <div className="rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15">
+      {/* Mobile toggle header */}
+      <div className="mb-2 flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="referrals-explorer-controls"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Search & Filters
+          {panelOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="text-foreground">{filtered.length}</span> of{" "}
+          <span className="text-foreground">{programs.length}</span>
+        </div>
+      </div>
+
+      {/* Command Bar — collapsible on mobile, always open on md+ */}
+      <div
+        id="referrals-explorer-controls"
+        className={`${
+          panelOpen ? "block" : "hidden"
+        } md:block rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15`}
+      >
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
           {/* Search */}
           <div className="relative w-full md:max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder="Search programs…  (press /)"
+              placeholder="Search programs…"
               className="pl-9 bg-background/50"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -143,7 +182,7 @@ export default function ReferralProgramsExplorer({
               </span>
               <Select
                 value={status}
-                onValueChange={(v: typeof status) => setStatus(v)}
+                onValueChange={(v) => setStatus(v as typeof status)}
               >
                 <SelectTrigger className="h-9 w-[140px] bg-background/50">
                   <SelectValue placeholder="Status" />
@@ -164,7 +203,7 @@ export default function ReferralProgramsExplorer({
               </span>
               <Select
                 value={rewards}
-                onValueChange={(v: typeof rewards) => setRewards(v)}
+                onValueChange={(v) => setRewards(v as typeof rewards)}
               >
                 <SelectTrigger className="h-9 w-[170px] bg-background/50">
                   <SelectValue placeholder="Rewards" />
@@ -188,7 +227,7 @@ export default function ReferralProgramsExplorer({
               </span>
               <Select
                 value={sort}
-                onValueChange={(v: typeof sort) => setSort(v)}
+                onValueChange={(v) => setSort(v as typeof sort)}
               >
                 <SelectTrigger className="h-9 w-[170px] bg-background/50">
                   <SelectValue placeholder="Sort by" />
@@ -203,31 +242,6 @@ export default function ReferralProgramsExplorer({
             </div>
 
             <Separator orientation="vertical" className="hidden h-6 md:block" />
-
-            {/* Density */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCompact((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-white/60 px-3 py-1 text-sm shadow-sm backdrop-blur hover:bg-white/70 dark:bg-white/5 dark:hover:bg-white/10"
-                  aria-pressed={compact}
-                  aria-label="Toggle compact density (c)"
-                >
-                  {compact ? (
-                    <>
-                      <Rows className="h-4 w-4 opacity-80" />
-                      Compact
-                    </>
-                  ) : (
-                    <>
-                      <StretchHorizontal className="h-4 w-4 opacity-80" />
-                      Comfortable
-                    </>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Press “c” to toggle density</TooltipContent>
-            </Tooltip>
 
             {/* Primary action */}
             <Button asChild className="ml-1">
@@ -245,15 +259,11 @@ export default function ReferralProgramsExplorer({
             Showing <span className="text-foreground">{filtered.length}</span>{" "}
             of <span className="text-foreground">{programs.length}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
-            “Both” = Referrer and Referred rewards configured.
-          </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className={compact ? "text-sm" : ""}>
+      <div className={"text-sm mb-16"}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border p-6 text-sm text-muted-foreground">
             No programs match your filters.

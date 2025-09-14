@@ -31,6 +31,9 @@ import {
   Info,
   SortAsc,
   SortDesc,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { GiftRow } from "@/types";
 
@@ -40,8 +43,17 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
   const [imageFilter, setImageFilter] = useState<"any" | "with" | "without">(
     "any"
   );
-  const [compact, setCompact] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false); // collapsible on mobile
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Keep panel open on md+; collapsible on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setPanelOpen(mq.matches ? true : false);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // Spotlight-like shortcuts
   useEffect(() => {
@@ -55,10 +67,8 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
 
       if (!editing && e.key === "/") {
         e.preventDefault();
-        inputRef.current?.focus();
-      }
-      if (!editing && (e.key === "c" || e.key === "C")) {
-        setCompact((v) => !v);
+        setPanelOpen(true); // auto-open on mobile
+        setTimeout(() => inputRef.current?.focus(), 0);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -69,8 +79,6 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
     const q = query.trim().toLowerCase();
 
     let list = gifts.filter((g) => {
-      if (imageFilter === "with" && !g.image_url) return false;
-      if (imageFilter === "without" && g.image_url) return false;
       if (!q) return true;
       return (g.title ?? "").toLowerCase().includes(q);
     });
@@ -78,9 +86,6 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
     list = [...list].sort((a, b) => {
       if (sort === "az") return (a.title ?? "").localeCompare(b.title ?? "");
       if (sort === "za") return (b.title ?? "").localeCompare(a.title ?? "");
-      if (sort === "with") return Number(!a.image_url) - Number(!b.image_url); // with images first
-      if (sort === "without")
-        return Number(!!a.image_url) - Number(!!b.image_url); // without first
       return 0;
     });
 
@@ -89,8 +94,36 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
 
   return (
     <TooltipProvider>
-      {/* Command Bar — glassy, quiet, icon-forward */}
-      <div className="rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15">
+      {/* Mobile toggle header */}
+      <div className="mb-2 flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="gifts-explorer-controls"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Search & Filters
+          {panelOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="text-foreground">{filtered.length}</span> of{" "}
+          <span className="text-foreground">{gifts.length}</span>
+        </div>
+      </div>
+
+      {/* Command Bar — collapsible on mobile, always open on md+ */}
+      <div
+        id="gifts-explorer-controls"
+        className={`${
+          panelOpen ? "block" : "hidden"
+        } md:block rounded-2xl border border-foreground/10 bg-white/60 shadow-sm backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl dark:bg-white/5 dark:border-white/15`}
+      >
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
           {/* Search */}
           <div className="relative w-full md:max-w-md">
@@ -116,26 +149,6 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
 
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Image filter */}
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center text-sm text-muted-foreground">
-                <Filter className="mr-1 h-4 w-4" />
-                Images
-              </span>
-              <Select
-                value={imageFilter}
-                onValueChange={(v: typeof imageFilter) => setImageFilter(v)}
-              >
-                <SelectTrigger className="h-9 w-[150px] bg-background/50">
-                  <SelectValue placeholder="Images" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="with">With images</SelectItem>
-                  <SelectItem value="without">Without images</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <Separator orientation="vertical" className="hidden h-6 md:block" />
 
@@ -147,7 +160,7 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
               </span>
               <Select
                 value={sort}
-                onValueChange={(v: typeof sort) => setSort(v)}
+                onValueChange={(v) => setSort(v as typeof sort)}
               >
                 <SelectTrigger className="h-9 w-[170px] bg-background/50">
                   <SelectValue placeholder="Sort by" />
@@ -163,47 +176,11 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
                       <SortDesc className="h-4 w-4" /> Title Z–A
                     </div>
                   </SelectItem>
-                  <SelectItem value="with">
-                    <div className="inline-flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" /> With images first
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="without">
-                    <div className="inline-flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4 opacity-60" /> Without
-                      images first
-                    </div>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <Separator orientation="vertical" className="hidden h-6 md:block" />
-
-            {/* Density */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCompact((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-white/60 px-3 py-1 text-sm shadow-sm backdrop-blur hover:bg-white/70 dark:bg-white/5 dark:hover:bg-white/10"
-                  aria-pressed={compact}
-                  aria-label="Toggle compact density (c)"
-                >
-                  {compact ? (
-                    <>
-                      <Rows className="h-4 w-4 opacity-80" />
-                      Compact
-                    </>
-                  ) : (
-                    <>
-                      <StretchHorizontal className="h-4 w-4 opacity-80" />
-                      Comfortable
-                    </>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Press “c” to toggle density</TooltipContent>
-            </Tooltip>
 
             {/* Primary action */}
             <Button asChild className="ml-1">
@@ -221,15 +198,11 @@ export default function GiftsExplorer({ gifts }: { gifts: GiftRow[] }) {
             Showing <span className="text-foreground">{filtered.length}</span>{" "}
             of <span className="text-foreground">{gifts.length}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
-            Prefer square images for the best grid fit.
-          </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className={compact ? "text-sm" : ""}>
+      <div className={"text-sm mb-16"}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border p-6 text-sm text-muted-foreground">
             No gifts match your filters.

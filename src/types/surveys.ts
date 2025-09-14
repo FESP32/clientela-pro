@@ -29,6 +29,7 @@ export type SurveyWithResponses = Pick<
   | "starts_at"
   | "ends_at"
   | "created_at"
+  | "max_responses"
 > & {
   responses: ResponseWithRespondent[];
 };

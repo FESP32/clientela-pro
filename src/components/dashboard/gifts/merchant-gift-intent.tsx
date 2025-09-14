@@ -47,17 +47,6 @@ export default function GiftIntentView({
         <CardContent className="space-y-4">
           {/* Gift info */}
           <div className="flex gap-4">
-            {gift?.image_url ? (
-              <div className="relative w-28 h-28 rounded-lg overflow-hidden border">
-                <Image
-                  src={gift.image_url}
-                  alt={gift.title ?? "Gift image"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : null}
-
             <div className="flex-1">
               <h2 className="text-lg font-semibold">{gift?.title ?? "Gift"}</h2>
               {gift?.description ? (

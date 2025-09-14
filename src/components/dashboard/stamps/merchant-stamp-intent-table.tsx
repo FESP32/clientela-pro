@@ -1,14 +1,115 @@
 "use client";
 
+import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { fmt } from "@/lib/utils";
-import { IntentActionsMenu } from "@/components/dashboard/stamps/intent-actions-menu";
 import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 import { StampIntentListItem } from "@/types";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Eye, QrCode } from "lucide-react";
+import { IntentLinkDialog } from "@/components/dashboard/stamps/intent-link-dialog";
 
-export default function StampIntentsTable({ intents }: { intents: StampIntentListItem[] }) {
+function MobileQRButton({
+  href,
+  className,
+}: {
+  href: string;
+  className?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <>
+      <Button
+        type="button"
+        aria-label="Show QR"
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+        variant="secondary"
+        className={`md:hidden h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
+          className ?? ""
+        }`}
+      >
+        <QrCode className="h-5 w-5 mr-2" />
+        Show QR
+      </Button>
+
+      {open && (
+        <IntentLinkDialog
+          open={open}
+          onOpenChange={setOpen}
+          href={href}
+          title="Scan to open"
+        />
+      )}
+    </>
+  );
+}
+
+function IntentActionsMenu({ href }: { href: string }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <>
+      {open && (
+        <IntentLinkDialog
+          open={open}
+          onOpenChange={(o) => setOpen(o)}
+          href={href}
+          title={"Scan to open"}
+        />
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Open actions">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+          <DropdownMenuItem
+            asChild
+            className="text-primary data-[highlighted]:bg-primary/10"
+          >
+            <Link href={href} className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              View
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-amber-600 data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/30"
+            onSelect={() => setTimeout(() => setOpen(true), 0)}
+          >
+            <QrCode className="h-4 w-4" />
+            Show QR
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
+
+export default function StampIntentsTable({
+  intents,
+}: {
+  intents: StampIntentListItem[];
+}) {
   const emptyState = (
     <div className="rounded-lg border p-6">
       <p className="mb-1 font-medium">No intents yet</p>
@@ -147,7 +248,8 @@ export default function StampIntentsTable({ intents }: { intents: StampIntentLis
               </div>
             </div>
 
-            <div className="shrink-0">
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <MobileQRButton href={`/services/stamps/intents/${i.id}`} />
               <IntentActionsMenu href={`/services/stamps/intents/${i.id}`} />
             </div>
           </div>

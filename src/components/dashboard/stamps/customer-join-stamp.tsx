@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import SubmitButton from "@/components/common/submit-button";
 
 const parentStagger: Variants = {
   hidden: {},
@@ -28,21 +29,13 @@ const fadeUp: Variants = {
   },
 };
 
-function SubmitButton({ children }: { children: React.ReactNode }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending} className="min-w-[140px]">
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
-      {children}
-    </Button>
-  );
-}
-
 export default function CustomerJoinStamp({
   cardId,
+  title,
   action,
 }: {
   cardId: string;
+  title: string;
   action: (formData: FormData) => Promise<void>;
 }) {
   return (
@@ -77,6 +70,13 @@ export default function CustomerJoinStamp({
         >
           <Sparkles className="h-6 w-6 text-yellow-500" />
         </motion.span>
+      </motion.div>
+
+      <motion.div
+        variants={fadeUp}
+        className="flex items-center justify-center gap-3"
+      >
+        <span className="text-3xl font-medium text-primary/80">{title}</span>
       </motion.div>
 
       {/* Quick benefits */}
@@ -126,9 +126,8 @@ export default function CustomerJoinStamp({
             <Gift className="h-4 w-4" aria-hidden /> unlock perks sooner
           </span>
         </div>
-
         <div className="flex justify-center">
-          <SubmitButton>Create my card</SubmitButton>
+          <SubmitButton displayText="Create my card" />
         </div>
       </motion.form>
     </motion.div>

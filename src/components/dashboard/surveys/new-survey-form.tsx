@@ -25,12 +25,14 @@ import {
   Clock3,
   CalendarPlus,
   Eraser,
+  Hash,
 } from "lucide-react";
 import MonoIcon from "../../common/mono-icon";
-import { useRef, useTransition } from "react";
+import { useRef, useTransition, useState } from "react";
 import { format, addDays } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 interface NewSurveyFormProps {
   products: ProductRow[];
@@ -43,17 +45,23 @@ function fmtLocal(dt: Date) {
   return format(dt, "yyyy-MM-dd'T'HH:mm");
 }
 
-export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps) {
+export default function NewSurveyForm({
+  products,
+  onSubmit,
+}: NewSurveyFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const startRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLInputElement>(null);
 
+  // --- Anonymous toggle state + hidden checkbox sync (for server submission) ---
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const anonCheckboxRef = useRef<HTMLInputElement>(null);
+
   const applyRange = (start: Date | null, end: Date | null) => {
     if (startRef.current) {
       startRef.current.value = start ? fmtLocal(start) : "";
-      // Dispatch input event to notify any listeners (helpful when mixing with form libs)
       startRef.current.dispatchEvent(new Event("input", { bubbles: true }));
     }
     if (endRef.current) {
@@ -116,6 +124,53 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
           </div>
         </header>
 
+        {/* Privacy / Visibility — moved to the top and made a toggle */}
+        <section
+          aria-labelledby="privacy-heading"
+          className="mb-4 rounded-lg border bg-card/50 p-4"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h3 id="privacy-heading" className="text-sm font-semibold">
+                Privacy & Identity
+              </h3>
+              <p id="anon_help" className="text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                  <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                  Anonymous responses
+                </span>
+              </p>
+            </div>
+
+            {/* Switch controls a hidden checkbox so the server still gets `is_anonymous` */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground select-none">
+                {isAnonymous ? "On" : "Off"}
+              </span>
+              <Switch
+                id="is_anonymous_toggle"
+                checked={isAnonymous}
+                onCheckedChange={(v) => {
+                  setIsAnonymous(v);
+                  if (anonCheckboxRef.current)
+                    anonCheckboxRef.current.checked = v;
+                }}
+                aria-describedby="anon_help"
+              />
+              {/* Hidden checkbox that actually submits with the form */}
+              <input
+                ref={anonCheckboxRef}
+                type="checkbox"
+                name="is_anonymous"
+                defaultChecked
+                className="sr-only"
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Details */}
         <section className="rounded-lg space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
@@ -164,6 +219,27 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="max_responses">Max Responses</Label>
+            <div className="relative">
+              <Hash className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="max_responses"
+                name="max_responses"
+                type="number"
+                inputMode="numeric"
+                min={2}
+                max={50}
+                step={1}
+                required
+                className="pl-8"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              How many responses you want to collect (min 2, max 50).
+            </p>
+          </div>
+
           <Separator />
 
           {/* Schedule & settings */}
@@ -207,6 +283,7 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="cursor-pointer"
                   onClick={setPlus1d}
                 >
                   <Clock3 className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -217,6 +294,7 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="cursor-pointer"
                   onClick={setPlus7d}
                 >
                   <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -227,6 +305,7 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="cursor-pointer"
                   onClick={setPlus30d}
                 >
                   <CalendarPlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
@@ -238,7 +317,7 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
                   variant="ghost"
                   size="sm"
                   onClick={clearRange}
-                  className="text-muted-foreground"
+                  className="text-muted-foreground cursor-pointer"
                 >
                   <Eraser className="h-4 w-4 mr-1.5" aria-hidden="true" />
                   Clear
@@ -249,31 +328,6 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
                 times above.
               </p>
             </div>
-
-            {/* Anonymous */}
-            <div className="space-x-2 flex items-center md:col-span-2">
-              <input
-                id="is_anonymous"
-                name="is_anonymous"
-                type="checkbox"
-                defaultChecked
-              />
-              <Label
-                htmlFor="is_anonymous"
-                className="inline-flex items-center gap-1"
-              >
-                <Shield
-                  className="h-3.5 w-3.5 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                Anonymous survey
-              </Label>
-            </div>
-
-            <p className="text-sm text-muted-foreground md:col-span-2">
-              When enabled, this survey is intended to collect responses without
-              identifying the respondent.
-            </p>
           </div>
 
           <Separator />
@@ -281,7 +335,6 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
           <TraitsPerScore />
         </section>
 
-        {/* Footer */}
         <div className="mt-4 flex gap-2">
           <SubmitButton />
           <Button asChild variant="outline">
@@ -292,3 +345,4 @@ export default function NewSurveyForm({ products, onSubmit }: NewSurveyFormProps
     </form>
   );
 }
+  

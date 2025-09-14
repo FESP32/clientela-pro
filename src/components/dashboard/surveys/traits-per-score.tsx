@@ -166,21 +166,6 @@ function Section({
         </div>
       </div>
 
-      {/* Bulk add */}
-      <div className="grid grid-cols-12 gap-2 items-center">
-        <Input
-          value={bulkDraft}
-          onChange={(e) => setBulkDraft(e.target.value)}
-          onKeyDown={onBulkKeyDown}
-          placeholder='Bulk add: e.g. "+Loved the crust; !Too salty, ~Average portion" (Enter to add)'
-          className="col-span-10"
-          aria-label="Bulk add traits"
-        />
-        <Button type="button" onClick={handleBulkAdd} className="col-span-2">
-          Add
-        </Button>
-      </div>
-
       {/* Headers */}
       <div className="grid grid-cols-12 gap-2 items-center">
         <div className="col-span-6 text-xs text-muted-foreground">Trait</div>
@@ -248,13 +233,6 @@ function Section({
       >
         <Plus className="mr-2 h-4 w-4" /> Add trait
       </Button>
-
-      <p className="text-[11px] text-muted-foreground">
-        Defaults: <strong>1–2</strong> → negative, <strong>3</strong> → neutral,{" "}
-        <strong>4–5</strong> → positive. In bulk add, use <code>!</code> for
-        negative, <code>~</code> for neutral, <code>+</code> for positive (e.g.{" "}
-        <code>!Too salty</code>).
-      </p>
     </div>
   );
 }

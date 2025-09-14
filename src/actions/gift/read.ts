@@ -144,7 +144,7 @@ export async function getGiftIntent(intentId: string) {
       `
       id, status, created_at, expires_at, consumed_at,
       gift:gift (
-        id, title, description, image_url,
+        id, title, description,
         business!gift_business_id_fk ( id, name, image_url )
       ),
       customer:profile!gift_intent_customer_id_fk_profile ( user_id, name )

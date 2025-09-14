@@ -13,6 +13,8 @@ export default async function RespondPage({
   const { id } = await params;
 
   const survey = await getSurvey(id);
+
+   // Supabase may return smallint as number or string; normalize to number.
   if (!survey || survey.status !== "active") notFound();
 
   // Get auth status server-side and pass it to the client component

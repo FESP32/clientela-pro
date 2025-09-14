@@ -123,12 +123,7 @@ export async function markIntentClaimed(formData: FormData) {
   if (intent.status !== "pending" && intent.status !== "consumed") {
     throw new Error(`Cannot claim from status: ${intent.status}`);
   }
-
-  // (optional) restrict consumed→claimed to referrer only
-  if (intent.status === "consumed" && intent.referrer_id !== user.id) {
-    throw new Error("Only the referrer can finalize this referral.");
-  }
-
+  
   const { error: updErr } = await supabase
     .from("referral_intent")
     .update({

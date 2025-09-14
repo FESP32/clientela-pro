@@ -200,7 +200,6 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
-          image_url: string | null
           title: string
           updated_at: string
         }
@@ -209,7 +208,6 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
-          image_url?: string | null
           title: string
           updated_at?: string
         }
@@ -218,7 +216,6 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
-          image_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -834,6 +831,7 @@ export type Database = {
           ends_at: string
           id: string
           is_anonymous: boolean
+          max_responses: number
           product_id: string
           settings: Json
           starts_at: string
@@ -849,6 +847,7 @@ export type Database = {
           ends_at: string
           id?: string
           is_anonymous?: boolean
+          max_responses?: number
           product_id: string
           settings?: Json
           starts_at?: string
@@ -864,6 +863,7 @@ export type Database = {
           ends_at?: string
           id?: string
           is_anonymous?: boolean
+          max_responses?: number
           product_id?: string
           settings?: Json
           starts_at?: string
@@ -894,6 +894,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_responses_for_survey: {
+        Args: { p_survey_id: string }
+        Returns: number
+      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown

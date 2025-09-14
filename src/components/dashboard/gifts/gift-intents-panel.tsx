@@ -28,7 +28,6 @@ export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
         </div>
       }
       subtitle="Create, manage, and track usage windows for this gift."
-      contentClassName="space-y-4"
     >
       {/* Create form (moved to client component) */}
       <GiftIntentsCreateForm
@@ -43,7 +42,7 @@ export default async function GiftIntentsPanel({ giftId }: { giftId: string }) {
       <MerchantGiftIntentsTable intents={intents} />
 
       {/* Optional back action */}
-      <div className="mt-3">
+      <div className="my-8">
         <Button asChild variant="outline">
           <Link href="/dashboard/gifts">Back to Gifts</Link>
         </Button>

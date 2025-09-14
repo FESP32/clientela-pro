@@ -12,17 +12,6 @@ export const dynamic = "force-dynamic";
 export default async function LoyaltyCardsPage() {
   const { cards = [] } = await listStampCards();
 
-  const now = Date.now();
-  const total = cards.length;
-  const active = !!cards.filter((c: StampCardListItem) => c.status === "active");
-  const liveNow = cards.filter((c: StampCardListItem) => {
-    const start = c.valid_from ? new Date(c.valid_from).getTime() : undefined;
-    const end = c.valid_to ? new Date(c.valid_to).getTime() : undefined;
-    const afterStart = start === undefined || now >= start;
-    const beforeEnd = end === undefined || now <= end;
-    return afterStart && beforeEnd;
-  }).length;
-
   return (
     <MerchantListSection
       title={
@@ -37,17 +26,6 @@ export default async function LoyaltyCardsPage() {
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
               Stamp Cards
             </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              {total} total
-            </Badge>
-            <Badge variant="secondary" className="gap-1.5">
-              {active} active
-            </Badge>
-            <Badge variant="secondary" className="gap-1.5">
-              {liveNow} live now
-            </Badge>
           </div>
         </div>
       }

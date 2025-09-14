@@ -3,11 +3,11 @@ import { createClient } from "@/utils/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Stamp } from "lucide-react";
 import CustomerJoinStamp from "./customer-join-stamp";
+import { StampCardRow } from "@/types";
+import { notFound } from "next/navigation";
 
 export default async function StampMembershipCreate({
   cardId,
-  // title = "Add this card to my account",
-  // cta = "Create my card",
   action,
 }: {
   cardId: string;
@@ -71,11 +71,48 @@ export default async function StampMembershipCreate({
       </section>
     );
   }
+  const { data: card, error: cardErr } = await supabase
+    .from("stamp_card")
+    .select("id, title, business_id, valid_to")
+    .eq("id", cardId)
+    .maybeSingle()
+    .overrideTypes<Pick<StampCardRow, "id" | "title" | "valid_to"> | null>();
 
-  // Create view (animated, welcoming)
+  if (!card || cardErr) {
+    notFound();
+  }
+
+  if (card.valid_to && new Date(card.valid_to) < new Date()) {
+    return (
+      <section
+        aria-labelledby="stamp-expired"
+        className="space-y-3 flex justify-center"
+      >
+        <div className="flex flex-col justify-center items-center space-y-4">
+          <h2
+            id="stamp-expired"
+            className="text-xl font-semibold flex items-center gap-2"
+          >
+            <Stamp className="h-5 w-5 text-destructive" aria-hidden />
+            Card expired
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            This stamp card is no longer available.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/services/stamps`}>View my cards</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
   return (
     <CustomerJoinStamp
       cardId={cardId}
+      title={card.title}
       action={action}
     />
   );

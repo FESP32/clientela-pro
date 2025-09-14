@@ -1,5 +1,5 @@
 -- =========================================================
--- GIFTS — Tables + RLS + Policies (fresh migration)
+-- GIFTS — Tables + RLS + Policies
 -- =========================================================
 
 create extension if not exists pgcrypto;
@@ -24,7 +24,6 @@ create table public.gift (
   business_id  uuid not null,     -- FK added below
   title        text not null,
   description  text,
-  image_url    text,
   created_at   timestamptz not null default timezone('utc', now()),
   updated_at   timestamptz not null default timezone('utc', now())
 );

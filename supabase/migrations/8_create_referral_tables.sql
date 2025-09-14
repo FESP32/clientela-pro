@@ -1,7 +1,3 @@
--- =========================================================
--- REFERRALS — Tables (yours) + RLS + Commented Policies
--- =========================================================
-
 -- =========================
 -- Programs
 -- =========================
@@ -15,7 +11,7 @@ create table if not exists public.referral_program (
   referred_reward  text,
   valid_from       timestamptz not null default now(),
   valid_to         timestamptz not null,
-  code             text not null,                         -- business-scoped program code
+  code             text not null,
   per_referrer_cap integer check (per_referrer_cap is null or per_referrer_cap >= 1),
   created_at       timestamptz not null default timezone('utc', now()),
   updated_at       timestamptz not null default timezone('utc', now()),
@@ -24,14 +20,13 @@ create table if not exists public.referral_program (
   )
 );
 
--- Explicit FK: referral_program.business_id → business(id)
+-- referral_program.business_id → business(id)
 alter table public.referral_program
   drop constraint if exists referral_program_business_id_fk,
   add constraint referral_program_business_id_fk
   foreign key (business_id) references public.business(id)
   on delete cascade;
 
--- Make program code unique per business
 create unique index if not exists uq_referral_program_code
   on public.referral_program(business_id, code);
 
@@ -57,7 +52,6 @@ create table if not exists public.referral_program_participant (
   unique (program_id, customer_id)                      -- one row per customer per program
 );
 
--- Explicit FKs
 alter table public.referral_program_participant
   drop constraint if exists referral_program_participant_program_id_fk,
   add constraint referral_program_participant_program_id_fk
@@ -83,9 +77,9 @@ for each row execute procedure public.set_updated_at();
 -- =========================
 create table if not exists public.referral_intent (
   id           uuid primary key default gen_random_uuid(),
-  program_id   uuid not null,  -- FK added below
-  referrer_id  uuid not null,  -- FK added below
-  referred_id  uuid,           -- FK added below (nullable for ON DELETE SET NULL)
+  program_id   uuid not null, 
+  referrer_id  uuid not null, 
+  referred_id  uuid,     
   status       text not null default 'pending'
                check (status in ('pending','consumed','canceled','claimed')),
   expires_at   timestamptz,
@@ -320,7 +314,6 @@ for select
 to authenticated
 using (
   public.is_user_customer()
-  and public.referral_intent.status = 'pending'
   and (
     public.referral_intent.expires_at is null
     or public.referral_intent.expires_at >= timezone('utc', now())

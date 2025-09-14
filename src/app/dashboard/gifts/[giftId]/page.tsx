@@ -6,8 +6,6 @@ export const dynamic = "force-dynamic";
 export default async function Page({ params }: { params: Promise<{ giftId: string }> }) {
   const { giftId } = await params;
   return (
-    <div className="p-4">
       <GiftIntentsPanel giftId={giftId} />
-    </div>
   );
 }

@@ -25,10 +25,12 @@ import {
   Rows,
   StretchHorizontal,
   Info,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import MerchantProductsTable from "@/components/dashboard/products/merchant-products-table";
 import { ProductRow } from "@/types";
-
 
 export default function ProductsExplorer({
   products,
@@ -39,10 +41,19 @@ export default function ProductsExplorer({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za">("newest");
-  const [compact, setCompact] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false); // collapsed on mobile by default
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcut: press "/" to focus search (like Spotlight)
+  // Keep panel always open on md+; collapsible on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setPanelOpen(mq.matches ? true : false);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -54,10 +65,9 @@ export default function ProductsExplorer({
 
       if (!editing && e.key === "/") {
         e.preventDefault();
-        inputRef.current?.focus();
-      }
-      if (!editing && (e.key === "c" || e.key === "C")) {
-        setCompact((v) => !v);
+        setPanelOpen(true); // auto-open on mobile
+        // focus after open
+        setTimeout(() => inputRef.current?.focus(), 0);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -89,10 +99,35 @@ export default function ProductsExplorer({
 
   return (
     <TooltipProvider>
-      {/* Command Bar */}
+      {/* Mobile header with toggle */}
+      <div className="mb-2 flex items-center justify-between md:hidden">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="products-explorer-controls"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Search & Filters
+          {panelOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="text-foreground">{filtered.length}</span> of{" "}
+          <span className="text-foreground">{products.length}</span>
+        </div>
+      </div>
+
+      {/* Command Bar (collapsible on mobile, always open on md+) */}
       <div
-        className="rounded-xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md"
-        data-compact={compact ? "true" : "false"}
+        id="products-explorer-controls"
+        className={`${
+          panelOpen ? "block" : "hidden"
+        } md:block rounded-xl border bg-card/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md`}
       >
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
           {/* Left: Search */}
@@ -100,7 +135,7 @@ export default function ProductsExplorer({
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder="Search products (press / to focus)"
+              placeholder="Search products"
               className="pl-9"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -132,7 +167,7 @@ export default function ProductsExplorer({
               </Tooltip>
               <Select
                 value={sort}
-                onValueChange={(v: typeof sort) => setSort(v)}
+                onValueChange={(v) => setSort(v as typeof sort)}
               >
                 <SelectTrigger className="h-9 w-[160px]">
                   <SelectValue placeholder="Sort by" />
@@ -147,31 +182,6 @@ export default function ProductsExplorer({
             </div>
 
             <Separator orientation="vertical" className="hidden h-6 md:block" />
-
-            {/* Density */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCompact((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm hover:bg-muted"
-                  aria-pressed={compact}
-                  aria-label="Toggle compact density (c)"
-                >
-                  {compact ? (
-                    <>
-                      <Rows className="h-4 w-4" />
-                      Compact
-                    </>
-                  ) : (
-                    <>
-                      <StretchHorizontal className="h-4 w-4" />
-                      Comfortable
-                    </>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Press “c” to toggle</TooltipContent>
-            </Tooltip>
 
             {/* Primary action */}
             <Button asChild className="ml-1">
@@ -189,15 +199,11 @@ export default function ProductsExplorer({
             Showing <span className="text-foreground">{filtered.length}</span>{" "}
             of <span className="text-foreground">{products.length}</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1">
-            <Info className="h-3.5 w-3.5" />
-            Use metadata for variants, sizes, or internal tags.
-          </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className={compact ? "text-sm" : ""}>
+      <div className={"text-sm mb-16"}>
         {filtered.length === 0 ? (
           <div className="rounded-lg border p-6 text-sm text-muted-foreground">
             No products match your filters.

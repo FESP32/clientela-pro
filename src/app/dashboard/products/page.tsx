@@ -25,11 +25,6 @@ export default async function ProductsPage() {
               Products
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              {data.length} total
-            </Badge>
-          </div>
         </div>
       }
       subtitle={

@@ -11,8 +11,6 @@ export const dynamic = "force-dynamic";
 export default async function GiftsPage() {
   const { gifts = [] } = await listGifts();
   const total = gifts.length;
-  const withImages = gifts.filter((g: GiftRow) => Boolean(g.image_url)).length;
-  const withoutImages = total - withImages;
 
   return (
     <MerchantListSection
@@ -25,22 +23,6 @@ export default async function GiftsPage() {
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
               Gifts
             </h1>
-          </div>
-
-          {/* Badges (Apple-like, but using shadcn Badge) */}
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              <Package className="h-3.5 w-3.5" />
-              {total} total
-            </Badge>
-            <Badge className="gap-1.5">
-              <ImageIcon className="h-3.5 w-3.5" />
-              {withImages} with images
-            </Badge>
-            <Badge variant="outline" className="gap-1.5">
-              <ImageIcon className="h-3.5 w-3.5 opacity-60" />
-              {withoutImages} without images
-            </Badge>
           </div>
         </div>
       }

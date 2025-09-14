@@ -13,12 +13,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, UserPlus, QrCode, Trash2, ToggleLeft, ToggleRight, ListCheck } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  UserPlus,
+  QrCode,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  ListCheck,
+} from "lucide-react";
 
 import { ReferralJoinLinkDialog } from "@/components/dashboard/referrals/referral-join-link-dialog";
 import { fmt } from "@/lib/utils";
 import type { ReferralProgramRow } from "@/types";
-import { deleteReferralProgram, finishReferralProgram, toggleReferralProgramActive } from "@/actions";
+import {
+  deleteReferralProgram,
+  finishReferralProgram,
+  toggleReferralProgramActive,
+} from "@/actions";
 
 import ResponsiveListTable, {
   type Column,
@@ -26,6 +39,172 @@ import ResponsiveListTable, {
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/common/status-badge";
 
+/* -------------------------------------------
+ * Mobile-only, thumb-friendly QR button
+ * ------------------------------------------- */
+function MobileQRButton({
+  title,
+  joinPath,
+  onShowLink,
+  className,
+}: {
+  title: string;
+  joinPath: string;
+  onShowLink: (title: string, path: string) => void;
+  className?: string;
+}) {
+  return (
+    <Button
+      type="button"
+      aria-label={`Show QR for ${title}`}
+      aria-haspopup="dialog"
+      onClick={() => onShowLink(title, joinPath)}
+      variant="secondary"
+      className={`md:hidden h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
+        className ?? ""
+      }`}
+    >
+      <QrCode className="h-5 w-5 mr-2" />
+      Show QR
+    </Button>
+  );
+}
+
+/* -------------------------------------------
+ * Reusable actions menu (desktop + mobile)
+ * ------------------------------------------- */
+type ReferralProgramActionsMenuProps = {
+  program: ReferralProgramRow;
+  onShowLink: (title: string, path: string) => void;
+  align?: "start" | "end";
+  buttonClassName?: string;
+};
+
+function ReferralProgramActionsMenu({
+  program,
+  onShowLink,
+  align = "end",
+  buttonClassName,
+}: ReferralProgramActionsMenuProps) {
+  const viewPath = `/dashboard/referrals/${program.id}`;
+  const joinPath = `/services/referrals/referrer/${program.id}`;
+  const isActive = program.status === "active";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Open actions for ${program.title}`}
+          className={buttonClassName}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align={align} className="w-56">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+        {/* View participants (primary) */}
+        <DropdownMenuItem
+          asChild
+          className="text-primary data-[highlighted]:bg-primary/10"
+        >
+          <Link href={viewPath} className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            View participants
+          </Link>
+        </DropdownMenuItem>
+
+        {/* Join as referrer (emerald) */}
+        <DropdownMenuItem
+          asChild
+          className="text-emerald-600 data-[highlighted]:bg-emerald-50 dark:data-[highlighted]:bg-emerald-950/30"
+        >
+          <Link href={joinPath} className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Join as referrer
+          </Link>
+        </DropdownMenuItem>
+
+        {/* Show join URL (amber) */}
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-amber-600 data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/30"
+          onSelect={() =>
+            setTimeout(() => onShowLink(program.title, joinPath), 0)
+          }
+        >
+          <QrCode className="h-4 w-4" />
+          Show join URL
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        {/* Finish (violet) */}
+        <form action={finishReferralProgram.bind(null, program.id)}>
+          <DropdownMenuItem
+            asChild
+            className="text-violet-600 data-[highlighted]:bg-violet-50 dark:data-[highlighted]:bg-violet-950/30"
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              <ListCheck className="h-4 w-4" />
+              Finish
+            </button>
+          </DropdownMenuItem>
+        </form>
+
+        {/* Toggle Active/Inactive (green when activating, zinc when deactivating) */}
+        <form action={toggleReferralProgramActive.bind(null, program.id)}>
+          <DropdownMenuItem
+            asChild
+            className={
+              isActive
+                ? "text-zinc-700 data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-zinc-900"
+                : "text-green-600 data-[highlighted]:bg-green-50 dark:data-[highlighted]:bg-green-950/30"
+            }
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              {isActive ? (
+                <ToggleLeft className="h-4 w-4" />
+              ) : (
+                <ToggleRight className="h-4 w-4" />
+              )}
+              {isActive ? "Set inactive" : "Set active"}
+            </button>
+          </DropdownMenuItem>
+        </form>
+
+        {/* Delete (destructive) */}
+        <form action={deleteReferralProgram}>
+          <input type="hidden" name="id" value={program.id} />
+          <DropdownMenuItem
+            asChild
+            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* -------------------------------------------
+ * Main table
+ * ------------------------------------------- */
 export default function MerchantReferralProgramsTable({
   programs,
 }: {
@@ -60,8 +239,7 @@ export default function MerchantReferralProgramsTable({
       key: "status",
       header: "Status",
       headClassName: "w-[12%]",
-      cell: (p) =>
-        <StatusBadge status={p.status} endsAt={p.valid_to}/>
+      cell: (p) => <StatusBadge status={p.status} endsAt={p.valid_to} />,
     },
     {
       key: "referrer_reward",
@@ -91,90 +269,14 @@ export default function MerchantReferralProgramsTable({
       key: "actions",
       header: <span className="sr-only">Actions</span>,
       headClassName: "w-[10%] text-right",
-      cell: (p) => {
-        const viewPath = `/dashboard/referrals/${p.id}`;
-        const joinPath = `/services/referrals/referrer/${p.id}`;
-        return (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open actions">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                <DropdownMenuItem asChild>
-                  <Link href={viewPath} className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    View participants
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link href={joinPath} className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Join as referrer
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onSelect={() =>
-                    setTimeout(
-                      () => setDlg({ title: p.title, path: joinPath }),
-                      0
-                    )
-                  }
-                >
-                  <QrCode className="h-4 w-4" />
-                  Show join URL
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <form action={deleteReferralProgram}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-
-                <form action={finishReferralProgram.bind(null, p.id)}>
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
-                    >
-                      <ListCheck />
-                      Finish
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-
-                <form action={toggleReferralProgramActive.bind(null, p.id)}>
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
-                    >
-                      {p.status === "active" ? <ToggleLeft /> : <ToggleRight />}
-                      {p.status === "active" ? "Set inactive" : "Set active"}
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
+      cell: (p) => (
+        <div className="text-right">
+          <ReferralProgramActionsMenu
+            program={p}
+            onShowLink={(title, path) => setDlg({ title, path })}
+          />
+        </div>
+      ),
     },
   ];
 
@@ -232,64 +334,20 @@ export default function MerchantReferralProgramsTable({
                   </div>
                 </div>
 
-                {/* Actions */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Open actions"
-                      className="shrink-0"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                    <DropdownMenuItem asChild>
-                      <Link href={viewPath} className="flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        View participants
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem asChild>
-                      <Link href={joinPath} className="flex items-center gap-2">
-                        <UserPlus className="h-4 w-4" />
-                        Join as referrer
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      className="flex items-center gap-2"
-                      onSelect={() =>
-                        setTimeout(
-                          () => setDlg({ title: p.title, path: joinPath }),
-                          0
-                        )
-                      }
-                    >
-                      <QrCode className="h-4 w-4" />
-                      Show join URL
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    <form action={deleteReferralProgram}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <DropdownMenuItem asChild>
-                        <button
-                          type="submit"
-                          className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Actions (mobile gets big QR + kebab) */}
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <MobileQRButton
+                    title={p.title}
+                    joinPath={joinPath}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                  />
+                  <ReferralProgramActionsMenu
+                    program={p}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                    align="end"
+                    buttonClassName="shrink-0"
+                  />
+                </div>
               </div>
             </div>
           );

@@ -306,13 +306,7 @@ export default async function ProfilePage() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex justify-between">
-            <Button asChild variant="ghost" size="sm" className="sm:hidden">
-              <Link href="/services">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Services
-              </Link>
-            </Button>
+          <CardFooter className="flex justify-between flex-col md:flex-row">
             <SignOut />
           </CardFooter>
         </Card>

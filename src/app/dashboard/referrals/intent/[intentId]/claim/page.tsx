@@ -21,10 +21,6 @@ export default async function ClaimIntentPage({
   const { intentId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { data: intent, error } = await supabase
     .from("referral_intent")
     .select(
@@ -79,15 +75,7 @@ export default async function ClaimIntentPage({
           )}
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          {!user ? (
-            <Button asChild className="w-full">
-              <Link
-                href={`/login?next=/dashboard/referral/intent/${intentId}/claim`}
-              >
-                Sign in to continue
-              </Link>
-            </Button>
-          ) : isExpired ? (
+          {isExpired ? (
             <p className="text-sm text-muted-foreground w-full text-center">
               This referral is expired.
             </p>

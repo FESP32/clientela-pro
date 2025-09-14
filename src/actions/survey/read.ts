@@ -53,7 +53,7 @@ export async function getSurveyWithResponses(
     .from("survey")
     .select(
       `
-      id, title, description, is_anonymous, status, starts_at, ends_at, created_at,
+      id, title, description, is_anonymous, status, starts_at, ends_at, created_at, max_responses,
       responses:response!response_survey_id_fk (
         id, rating, selected_traits, comment, submitted_at,
         respondent:profile!response_respondent_id_fk_profile ( user_id, name )
@@ -62,7 +62,7 @@ export async function getSurveyWithResponses(
     )
     .eq("id", surveyId)
     .single()
-    .overrideTypes<SurveyWithResponses>(); // <-- use returns<T>(), not overrideTypes
+    .overrideTypes<SurveyWithResponses>();
 
   if (error) {
     console.error("Error fetching surveys:", error.message);
@@ -158,4 +158,29 @@ export async function getSurveyCountForBusiness(
 
   if (error) throw new Error(`Failed to count surveys: ${error.message}`);
   return count ?? 0;
+}
+
+export async function getSurveyResponseCount(
+  surveyId: string
+): Promise<number> {
+  if (!surveyId) throw new Error("surveyId is required");
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc(
+    "count_responses_for_survey",
+    { p_survey_id: surveyId }
+  );
+
+  if (error) {
+    throw new Error(
+      `count_responses_for_survey_norls failed: ${error.message}`
+    );
+  }
+
+  // Supabase may return smallint as number or string; normalize to number.
+  const n = typeof data === "number" ? data : Number(data ?? 0);
+
+  // Extra safety: clamp to [0, 250]
+  return Math.max(0, Math.min(250, n));
 }

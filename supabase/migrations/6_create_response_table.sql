@@ -114,13 +114,12 @@ create policy response_insert_customer
 on public.response                        -- << target table: response
 for insert                                -- << applies to INSERT
 to authenticated                          -- << only signed-in users
-with check (                              -- << the NEW row must satisfy this predicate
-  public.is_user_customer()                               -- << current user is a 'customer'
-  and exists (
+with check (
+  exists (
     select 1
     from public.survey s
     where s.id = public.response.survey_id                -- << the target survey exists
-      and s.status = 'active'                              -- << survey marked active
+      and s.status = 'active'                             -- << survey marked active
       and (s.starts_at is null or s.starts_at <= now())   -- << has started (or no start time)
       and (s.ends_at   is null or s.ends_at   >= now())   -- << not ended yet (or no end time)
       and (
@@ -156,20 +155,6 @@ with check (                              -- << the NEW row must satisfy this pr
   and public.response.respondent_id is null               -- << enforce strict anonymity for anon callers
 );
 
--- -----------------------------------------------------------------------------
--- DELETE (self & merchant moderation):
---  • A customer can delete their own response.
---  • A merchant (member/owner) can delete responses to surveys in their business.
---  (Anon users cannot delete because there is no identity link.)
--- -----------------------------------------------------------------------------
-create policy response_delete_self
-on public.response                        -- << target table: response
-for delete                                -- << applies to DELETE
-to authenticated                          -- << only signed-in users
-using (
-  respondent_id = auth.uid()              -- << customer deleting their own response
-);
-
 create policy response_delete_merchant
 on public.response                        -- << target table: response
 for delete                                -- << applies to DELETE
@@ -190,9 +175,21 @@ using (
   )
 );
 
--- -----------------------------------------------------------------------------
--- (No UPDATE policy)
--- By omitting UPDATE policies, responses are immutable by default.
--- If you need edits (e.g., allow respondent to edit within 10 minutes),
--- add a narrowly-scoped UPDATE policy with a time condition.
--- -----------------------------------------------------------------------------
+
+-- Count responses (ignores RLS), capped at 250, returns SMALLINT
+create or replace function public.count_responses_for_survey(p_survey_id uuid)
+returns smallint
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select least(count(*)::int, 250)::smallint
+  from public.response r
+  where r.survey_id = p_survey_id;
+$$;
+
+revoke all on function public.count_responses_for_survey(uuid) from public;
+grant execute on function public.count_responses_for_survey(uuid) to authenticated;
+grant execute on function public.count_responses_for_survey(uuid) to anon; -- if you want public access
+

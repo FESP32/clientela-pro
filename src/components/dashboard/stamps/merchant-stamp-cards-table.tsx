@@ -18,7 +18,7 @@ import {
   Trash2,
   ExternalLink,
   QrCode,
-  Stamp,
+  Stamp as StampIcon,
   ToggleLeft,
   ToggleRight,
   ListCheck,
@@ -35,6 +35,194 @@ import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/common/status-badge";
 import { finishStampCard, toggleStampCardActive } from "@/actions";
 
+/* -------------------------------------------
+ * Reusable actions menu (desktop + mobile)
+ * ------------------------------------------- */
+type StampCardActionsMenuProps = {
+  card: StampCardListItem;
+  deleteStampCard: (formData: FormData) => Promise<void>;
+  onShowLink: (title: string, path: string) => void;
+  align?: "start" | "end";
+  buttonClassName?: string;
+};
+
+function StampCardActionsMenu({
+  card,
+  deleteStampCard,
+  onShowLink,
+  align = "end",
+  buttonClassName,
+}: StampCardActionsMenuProps) {
+  const joinPath = `/services/stamps/${card.id}/join`;
+  const isActive = card.status === "active";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Open actions for ${card.title}`}
+          className={buttonClassName}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align={align} className="w-56">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+        {/* Open join page (primary) */}
+        <DropdownMenuItem
+          asChild
+          className="text-primary data-[highlighted]:bg-primary/10"
+        >
+          <Link href={joinPath} className="flex items-center gap-2">
+            <ExternalLink className="h-4 w-4" />
+            Open join page
+          </Link>
+        </DropdownMenuItem>
+
+        {/* Show join URL (amber) */}
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-amber-600 data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/30"
+          onSelect={() => setTimeout(() => onShowLink(card.title, joinPath), 0)}
+        >
+          <QrCode className="h-4 w-4" />
+          Show join URL
+        </DropdownMenuItem>
+
+        {/* Create Stamp Punch (indigo) */}
+        <DropdownMenuItem
+          asChild
+          className="text-indigo-600 data-[highlighted]:bg-indigo-50 dark:data-[highlighted]:bg-indigo-950/30"
+        >
+          <Link
+            href={`/dashboard/stamps/${card.id}`}
+            className="flex items-center gap-2"
+          >
+            <StampIcon className="size-4" />
+            Create Stamp Punch
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        {/* Finish (violet) */}
+        <form action={finishStampCard.bind(null, card.id)}>
+          <DropdownMenuItem
+            asChild
+            className="text-violet-600 data-[highlighted]:bg-violet-50 dark:data-[highlighted]:bg-violet-950/30"
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              <ListCheck className="h-4 w-4" />
+              Finish
+            </button>
+          </DropdownMenuItem>
+        </form>
+
+        {/* Toggle Active/Inactive (green when activating, zinc when deactivating) */}
+        <form action={toggleStampCardActive.bind(null, card.id)}>
+          <DropdownMenuItem
+            asChild
+            className={
+              isActive
+                ? "text-zinc-700 data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-zinc-900"
+                : "text-green-600 data-[highlighted]:bg-green-50 dark:data-[highlighted]:bg-green-950/30"
+            }
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              {isActive ? (
+                <ToggleLeft className="h-4 w-4" />
+              ) : (
+                <ToggleRight className="h-4 w-4" />
+              )}
+              {isActive ? "Set inactive" : "Set active"}
+            </button>
+          </DropdownMenuItem>
+        </form>
+
+        {/* Delete (destructive) */}
+        <form action={deleteStampCard}>
+          <input type="hidden" name="cardId" value={card.id} />
+          <DropdownMenuItem
+            asChild
+            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
+          >
+            <button
+              type="submit"
+              className="w-full text-left flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* -------------------------------------------
+ * Mobile quick-action buttons (Join + Punch)
+ * ------------------------------------------- */
+function MobileJoinButton({
+  cardId,
+  className,
+}: {
+  cardId: string;
+  className?: string;
+}) {
+  return (
+    <Button
+      asChild
+      variant="secondary"
+      aria-label="Join stamp card"
+      className={`md:hidden w-full h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
+        className ?? ""
+      }`}
+    >
+      <Link href={`/services/stamps/${cardId}/join`}>
+        <ExternalLink className="h-5 w-5 mr-2" />
+        Join
+      </Link>
+    </Button>
+  );
+}
+
+function MobilePunchButton({
+  cardId,
+  className,
+}: {
+  cardId: string;
+  className?: string;
+}) {
+  return (
+    <Button
+      asChild
+      variant="default"
+      aria-label="Create stamp punch"
+      className={`md:hidden w-full h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
+        className ?? ""
+      }`}
+    >
+      <Link href={`/dashboard/stamps/${cardId}`}>
+        <StampIcon className="h-5 w-5 mr-2" />
+        Punch
+      </Link>
+    </Button>
+  );
+}
+
+/* -------------------------------------------
+ * Main table
+ * ------------------------------------------- */
 export default function MerchantStampCardsTable({
   cards,
   deleteStampCard,
@@ -47,7 +235,9 @@ export default function MerchantStampCardsTable({
   const emptyState = (
     <Card>
       <CardContent className="py-10 text-center">
-        <p className="mb-2 text-sm text-muted-foreground">No stamp cards yet.</p>
+        <p className="mb-2 text-sm text-muted-foreground">
+          No stamp cards yet.
+        </p>
       </CardContent>
     </Card>
   );
@@ -56,16 +246,24 @@ export default function MerchantStampCardsTable({
     {
       key: "title",
       header: "Title",
-      headClassName: "w-[26%]",
+      headClassName: "w-[22%]",
       cell: (c) => <span className="font-medium">{c.title}</span>,
     },
     {
       key: "goal",
       header: "Goal",
-      headClassName: "w-[26%]",
+      headClassName: "w-[30%]",
       cell: (c) => (
-        <span className="text-sm text-muted-foreground">{c.goal_text}</span>
+        <span className="text-sm text-muted-foreground whitespace-normal">
+          {c.goal_text}
+        </span>
       ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      headClassName: "w-[8%]",
+      cell: (c) => <StatusBadge status={c.status} endsAt={c.valid_to} />,
     },
     {
       key: "stamps",
@@ -90,103 +288,18 @@ export default function MerchantStampCardsTable({
       ),
     },
     {
-      key: "status",
-      header: "Status",
-      headClassName: "w-[8%]",
-      cell: (c) =>
-        <StatusBadge status={c.status} endsAt={c.valid_to}/>
-    },
-    {
       key: "actions",
       header: <span className="sr-only">Actions</span>,
       headClassName: "w-[10%] text-right",
-      cell: (c) => {
-        const joinPath = `/services/stamps/${c.id}/join`;
-        return (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open actions">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                <DropdownMenuItem asChild>
-                  <Link href={joinPath} className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    Open join page
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onSelect={() =>
-                    setTimeout(
-                      () => setDlg({ title: c.title, path: joinPath }),
-                      0
-                    )
-                  }
-                >
-                  <QrCode className="h-4 w-4" />
-                  Show join URL
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={`/dashboard/stamps/${c.id}`}
-                    className="flex items-center gap-2"
-                  >
-                    <Stamp className="size-4" />
-                    Create Stamp Punch
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <form action={deleteStampCard}>
-                  <input type="hidden" name="cardId" value={c.id} />
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-                <form action={finishStampCard.bind(null, c.id)}>
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
-                    >
-                      <ListCheck />
-                      Finish
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-
-                <form action={toggleStampCardActive.bind(null, c.id)}>
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-400 focus:text-red-600"
-                    >
-                      {c.status === "active" ? <ToggleLeft /> : <ToggleRight />}
-                      {c.status === "active" ? "Set inactive" : "Set active"}
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
+      cell: (c) => (
+        <div className="text-right">
+          <StampCardActionsMenu
+            card={c}
+            deleteStampCard={deleteStampCard}
+            onShowLink={(title, path) => setDlg({ title, path })}
+          />
+        </div>
+      ),
     },
   ];
 
@@ -209,7 +322,7 @@ export default function MerchantStampCardsTable({
         renderMobileCard={(c) => {
           const joinPath = `/services/stamps/${c.id}/join`;
           return (
-            <div key={c.id} className="rounded-lg border bg-card p-4">
+            <div key={c.id} className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{c.title}</div>
@@ -236,69 +349,18 @@ export default function MerchantStampCardsTable({
                   </div>
                 </div>
 
-                {/* Actions */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Open actions"
-                      className="shrink-0"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                    <DropdownMenuItem asChild>
-                      <Link href={joinPath} className="flex items-center gap-2">
-                        <ExternalLink className="h-4 w-4" />
-                        Open join page
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      className="flex items-center gap-2"
-                      onSelect={() =>
-                        setTimeout(
-                          () => setDlg({ title: c.title, path: joinPath }),
-                          0
-                        )
-                      }
-                    >
-                      <QrCode className="h-4 w-4" />
-                      Show join URL
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/dashboard/stamps/${c.id}`}
-                        className="flex items-center gap-2"
-                      >
-                        <Stamp className="size-4" />
-                        Create Stamp Punch
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    <form action={deleteStampCard}>
-                      <input type="hidden" name="cardId" value={c.id} />
-                      <DropdownMenuItem asChild>
-                        <button
-                          type="submit"
-                          className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Actions (mobile: Join + Punch buttons + kebab) */}
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <MobileJoinButton cardId={c.id} />
+                  <MobilePunchButton cardId={c.id} />
+                  <StampCardActionsMenu
+                    card={c}
+                    deleteStampCard={deleteStampCard}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                    align="end"
+                    buttonClassName="shrink-0"
+                  />
+                </div>
               </div>
             </div>
           );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   Store,
 } from "lucide-react";
 import MonoIcon from "@/components/common/mono-icon";
+import SubmitButton from "@/components/common/submit-button";
 
 type ActionResult = { error?: string } | void;
 
@@ -36,21 +37,6 @@ type InitialData = {
   is_active: boolean;
 } | null;
 
-function SubmitButton({
-  label,
-  pendingLabel,
-}: {
-  label: string;
-  pendingLabel?: string;
-}) {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? pendingLabel ?? "Saving..." : label}
-    </Button>
-  );
-}
-
 export default function BusinessCreate({
   action,
   initialData = null,
@@ -61,10 +47,65 @@ export default function BusinessCreate({
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(initialData?.id);
 
+  // --- Image preview state ---
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const removeImageRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   async function clientAction(formData: FormData) {
     setError(null);
     const res = (await action(formData)) as { error?: string } | void;
     if (res && "error" in res && res.error) setError(res.error);
+  }
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+
+    // Clean up previous preview object URL
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setSelectedFileName(null);
+
+    // No file selected (or an empty placeholder)
+    if (!file || file.size === 0 || !file.name || file.name === "undefined") {
+      return;
+    }
+
+    // Only preview image/* types
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    // If "remove current image" was checked, uncheck it when a new image is chosen
+    if (removeImageRef.current && removeImageRef.current.checked) {
+      removeImageRef.current.checked = false;
+    }
+
+    setSelectedFileName(file.name);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  }
+
+  function handleRemoveImageToggle(e: React.ChangeEvent<HTMLInputElement>) {
+    // If user chooses to remove, clear any selected preview (stays safe & unambiguous)
+    if (e.target.checked && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      setSelectedFileName(null);
+      // Also clear the file input’s files so the server won’t receive it
+      const inputEl = document.getElementById(
+        "image"
+      ) as HTMLInputElement | null;
+      if (inputEl) inputEl.value = "";
+    }
   }
 
   return (
@@ -75,10 +116,7 @@ export default function BusinessCreate({
           <div>
             <div className="flex items-center gap-2">
               <MonoIcon>
-                <Store
-                  className="size-4"
-                  aria-hidden="true"
-                />
+                <Store className="size-4" aria-hidden="true" />
               </MonoIcon>
               <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
                 {isEditing ? "Edit business" : "Create business"}
@@ -91,10 +129,6 @@ export default function BusinessCreate({
               </span>
             </p>
           </div>
-
-          <Button asChild variant="outline">
-            <Link href="/dashboard/businesses">Cancel</Link>
-          </Button>
         </header>
 
         {/* Body */}
@@ -231,7 +265,8 @@ export default function BusinessCreate({
               Branding
             </h3>
 
-            {isEditing && initialData?.image_url ? (
+            {/* Current image (edit) */}
+            {isEditing && initialData?.image_url && !previewUrl ? (
               <div className="space-y-2">
                 <Label className="inline-flex items-center gap-2">
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -248,6 +283,8 @@ export default function BusinessCreate({
                     name="remove_image"
                     type="checkbox"
                     className="size-4"
+                    ref={removeImageRef}
+                    onChange={handleRemoveImageToggle}
                   />
                   <Label htmlFor="remove_image">Remove current image</Label>
                 </div>
@@ -257,6 +294,7 @@ export default function BusinessCreate({
               </div>
             ) : null}
 
+            {/* New image upload + live preview */}
             <div className="space-y-2">
               <Label htmlFor="image" className="inline-flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -264,10 +302,33 @@ export default function BusinessCreate({
                   ? "Replace cover image (optional)"
                   : "Cover image (optional)"}
               </Label>
-              <Input id="image" name="image" type="file" accept="image/*" />
-              <p className="text-[11px] text-muted-foreground">
-                JPG/PNG up to 5MB. Use a wide image for best results.
-              </p>
+              <Input
+                id="image"
+                name="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+
+              {/* Selected file name (if any) */}
+              {selectedFileName ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Selected: {selectedFileName}
+                </p>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  JPG/PNG up to 5MB. Use a wide image for best results.
+                </p>
+              )}
+
+              {/* Live preview when a file is chosen */}
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="New image preview"
+                  className="mt-2 h-28 w-auto rounded-md border object-cover"
+                />
+              ) : null}
             </div>
           </section>
 
@@ -283,7 +344,6 @@ export default function BusinessCreate({
                   Make this the active business for your dashboard.
                 </p>
               </div>
-              {/* Keep checkbox for reliable form submission */}
               <Input
                 id="is_active"
                 name="is_active"
@@ -301,8 +361,7 @@ export default function BusinessCreate({
               <Link href="/dashboard/businesses">Cancel</Link>
             </Button>
             <SubmitButton
-              label={isEditing ? "Save changes" : "Create Business"}
-              pendingLabel={isEditing ? "Saving..." : "Creating..."}
+              displayText={isEditing ? "Save changes" : "Create Business"}
             />
           </div>
         </section>
