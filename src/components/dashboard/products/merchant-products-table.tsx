@@ -1,14 +1,13 @@
+// components/dashboard/products/merchant-products-table.tsx
 "use client";
 
 import { format } from "date-fns";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,8 +16,55 @@ import type { ProductRow } from "@/types";
 import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
 
 type ProductItem = Pick<ProductRow, "id" | "name" | "metadata" | "created_at">;
+
+/* -------------------------------------------
+ * Reusable actions menu (desktop + mobile)
+ * ------------------------------------------- */
+function ProductActionsMenu({
+  product,
+  deleteProduct,
+  align = "end",
+  buttonClassName,
+}: {
+  product: ProductItem;
+  deleteProduct: (formData: FormData) => Promise<void>;
+  align?: "start" | "end";
+  buttonClassName?: string;
+}) {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Open actions for ${product.name}`}
+          className={buttonClassName}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align={align} className="w-48">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+        {/* Delete with shadcn AlertDialog confirm + loading state */}
+        <ConfirmDeleteMenuItem
+          action={deleteProduct}
+          hiddenFields={{ id: product.id }}
+          label="Delete"
+          title="Delete product"
+          description="This action cannot be undone. This will permanently delete the product"
+          resourceLabel={product.name}
+          // keep nonModal behavior to avoid inert issues when closing from a dropdown
+          nonModal={true}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function MerchantProductsTable({
   products,
@@ -67,28 +113,7 @@ export default function MerchantProductsTable({
       headClassName: "w-[12%] text-right",
       cell: (p) => (
         <div className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open actions">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <form action={deleteProduct}>
-                <input type="hidden" name="id" value={p.id} />
-                <DropdownMenuItem asChild>
-                  <button
-                    type="submit"
-                    className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                </DropdownMenuItem>
-              </form>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ProductActionsMenu product={p} deleteProduct={deleteProduct} />
         </div>
       ),
     },
@@ -99,6 +124,7 @@ export default function MerchantProductsTable({
       items={products}
       getRowKey={(p) => p.id}
       emptyState={emptyState}
+      /* Mobile cards */
       renderMobileCard={(p) => (
         <div key={p.id} className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
@@ -112,37 +138,17 @@ export default function MerchantProductsTable({
               </div>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open actions"
-                  className="shrink-0"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <form action={deleteProduct}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <DropdownMenuItem asChild>
-                    <button
-                      type="submit"
-                      className="w-full text-left flex items-center gap-2 text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </DropdownMenuItem>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Reused actions (mobile) */}
+            <ProductActionsMenu
+              product={p}
+              deleteProduct={deleteProduct}
+              align="end"
+              buttonClassName="shrink-0"
+            />
           </div>
         </div>
       )}
+      /* Desktop columns */
       columns={columns}
     />
   );

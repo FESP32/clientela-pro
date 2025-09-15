@@ -30,7 +30,7 @@ export async function listGifts() {
   // fetch gifts for current owner
   const { data, error } = await supabase
     .from("gift")
-    .select("id, title, business_id, description, image_url, created_at, updated_at")
+    .select("id, title, business_id, description, created_at, updated_at")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .overrideTypes<GiftRow[]>();
@@ -65,7 +65,7 @@ export async function listGiftIntents(giftId: string): Promise<{
 
   const { data: gift, error: gErr } = await supabase
     .from("gift")
-    .select("id, business_id, title, description, image_url, created_at")
+    .select("id, business_id, title, description, created_at")
     .eq("id", giftId)
     .eq("business_id", business.id)
     .maybeSingle<GiftRow>();

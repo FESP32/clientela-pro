@@ -18,90 +18,52 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, QrCode } from "lucide-react";
-import { IntentLinkDialog } from "@/components/dashboard/stamps/intent-link-dialog";
+import QRLinkDialog from "@/components/common/qr-link-dialog";
+import MobileQRButton from "@/components/common/mobile-qr-button";
 
-function MobileQRButton({
-  href,
-  className,
+function IntentActionsMenu({
+  intentId,
+  onShowLink,
+  align = "end",
+  buttonClassName,
 }: {
-  href: string;
-  className?: string;
+  intentId: string;
+  onShowLink: (title: string, path: string) => void;
+  align?: "start" | "end";
+  buttonClassName?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
-
+  const viewPath = `/services/stamps/intents/${intentId}`;
   return (
-    <>
-      <Button
-        type="button"
-        aria-label="Show QR"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-        variant="secondary"
-        className={`md:hidden h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
-          className ?? ""
-        }`}
-      >
-        <QrCode className="h-5 w-5 mr-2" />
-        Show QR
-      </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Open actions">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-      {open && (
-        <IntentLinkDialog
-          open={open}
-          onOpenChange={setOpen}
-          href={href}
-          title="Scan to open"
-        />
-      )}
-    </>
-  );
-}
+        <DropdownMenuItem
+          asChild
+          className="text-primary data-[highlighted]:bg-primary/10"
+        >
+          <Link href={viewPath} className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            View
+          </Link>
+        </DropdownMenuItem>
 
-function IntentActionsMenu({ href }: { href: string }) {
-  const [open, setOpen] = React.useState(false);
+        <DropdownMenuSeparator />
 
-  return (
-    <>
-      {open && (
-        <IntentLinkDialog
-          open={open}
-          onOpenChange={(o) => setOpen(o)}
-          href={href}
-          title={"Scan to open"}
-        />
-      )}
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Open actions">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-          <DropdownMenuItem
-            asChild
-            className="text-primary data-[highlighted]:bg-primary/10"
-          >
-            <Link href={href} className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              View
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-amber-600 data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/30"
-            onSelect={() => setTimeout(() => setOpen(true), 0)}
-          >
-            <QrCode className="h-4 w-4" />
-            Show QR
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-amber-600 data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/30"
+          onSelect={() => setTimeout(() => onShowLink(intentId, viewPath), 0)}
+        >
+          <QrCode className="h-4 w-4" />
+          Show QR
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -110,6 +72,9 @@ export default function StampIntentsTable({
 }: {
   intents: StampIntentListItem[];
 }) {
+  const [dlg, setDlg] = React.useState<{ title: string; path: string } | null>(
+    null
+  );
   const emptyState = (
     <div className="rounded-lg border p-6">
       <p className="mb-1 font-medium">No intents yet</p>
@@ -202,60 +167,91 @@ export default function StampIntentsTable({
       headClassName: "w-[10%] text-right",
       cell: (i) => (
         <div className="text-right">
-          <IntentActionsMenu href={`/services/stamps/intents/${i.id}`} />
+          <IntentActionsMenu
+            intentId={i.id}
+            onShowLink={(title, path) => setDlg({ title, path })}
+          />
         </div>
       ),
     },
   ];
 
   return (
-    <ResponsiveListTable<StampIntentListItem>
-      items={intents}
-      getRowKey={(i) => i.id}
-      emptyState={emptyState}
-      renderMobileCard={(i) => (
-        <div key={i.id} className="rounded-lg border bg-card p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary">{i.qty}</Badge>
-                <span className="text-xs text-muted-foreground">
-                  {fmt(i.created_at)}
-                </span>
-              </div>
-
-              <div className="mt-2">{<StatusBadge status={i.status} />}</div>
-
-              <div className="mt-2 grid grid-cols-1 gap-1 text-xs">
-                <div className="text-muted-foreground">
-                  <span className="mr-1">Customer:</span>
-                  <span className="text-foreground">
-                    {i.customer_name ?? i.customer_id ?? "—"}
-                  </span>
-                </div>
-                <div className="text-muted-foreground">
-                  <span className="mr-1">Expires:</span>
-                  <span className="text-foreground">{fmt(i.expires_at)}</span>
-                </div>
-                <div className="text-muted-foreground">
-                  <span className="mr-1">Consumed:</span>
-                  <span className="text-foreground">{fmt(i.consumed_at)}</span>
-                </div>
-                <div className="text-muted-foreground">
-                  <span className="mr-1">Note:</span>
-                  <span className="text-foreground">{i.note ?? "—"}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <MobileQRButton href={`/services/stamps/intents/${i.id}`} />
-              <IntentActionsMenu href={`/services/stamps/intents/${i.id}`} />
-            </div>
-          </div>
-        </div>
+    <>
+      {dlg && (
+        <QRLinkDialog
+          open
+          onOpenChange={(open) => !open && setDlg(null)}
+          title={dlg.title}
+          path={dlg.path}
+        />
       )}
-      columns={columns}
-    />
+      <ResponsiveListTable<StampIntentListItem>
+        items={intents}
+        getRowKey={(i) => i.id}
+        emptyState={emptyState}
+        renderMobileCard={(i) => {
+          const viewPath = `/services/stamps/intents/${i.id}`;
+          return (
+            <div key={i.id} className="rounded-lg border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">{i.qty}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {fmt(i.created_at)}
+                    </span>
+                  </div>
+
+                  <div className="mt-2">
+                    {<StatusBadge status={i.status} />}
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-1 gap-1 text-xs">
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Customer:</span>
+                      <span className="text-foreground">
+                        {i.customer_name ?? i.customer_id ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Expires:</span>
+                      <span className="text-foreground">
+                        {fmt(i.expires_at)}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Consumed:</span>
+                      <span className="text-foreground">
+                        {fmt(i.consumed_at)}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      <span className="mr-1">Note:</span>
+                      <span className="text-foreground">{i.note ?? "—"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <MobileQRButton
+                    title={i.id}
+                    viewPath={viewPath}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                  />
+                  <IntentActionsMenu
+                    intentId={i.id}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                    align="end"
+                    buttonClassName="shrink-0"
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }}
+        columns={columns}
+      />
+    </>
   );
 }

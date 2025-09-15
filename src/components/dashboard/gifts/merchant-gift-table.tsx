@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, UserPlus } from "lucide-react";
+import { MoreHorizontal, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,10 +18,8 @@ import ResponsiveListTable, {
 } from "@/components/common/responsive-list-table";
 import { deleteGift } from "@/actions";
 import type { GiftRow } from "@/types";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
 
-/* -------------------------------------------
- * Mobile-only, thumb-friendly "Give gift" button
- * ------------------------------------------- */
 function MobileGiveButton({
   id,
   className,
@@ -50,16 +48,16 @@ function MobileGiveButton({
  * Reusable actions menu (desktop + mobile)
  * ------------------------------------------- */
 function GiftActionsMenu({
-  id,
+  gift,
   align = "end",
   buttonClassName,
 }: {
-  id: string;
+  gift: GiftRow;
   align?: "start" | "end";
   buttonClassName?: string;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -79,7 +77,7 @@ function GiftActionsMenu({
           className="text-primary data-[highlighted]:bg-primary/10"
         >
           <Link
-            href={`/dashboard/gifts/${id}`}
+            href={`/dashboard/gifts/${gift.id}`}
             className="flex items-center gap-2"
           >
             <UserPlus className="h-4 w-4" />
@@ -90,21 +88,14 @@ function GiftActionsMenu({
         <DropdownMenuSeparator />
 
         {/* Delete (destructive) */}
-        <form action={deleteGift}>
-          <input type="hidden" name="id" value={id} />
-          <DropdownMenuItem
-            asChild
-            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
-          >
-            <button
-              type="submit"
-              className="w-full text-left flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <ConfirmDeleteMenuItem
+          action={deleteGift}
+          hiddenFields={{ id: gift.id }}
+          label="Delete"
+          title="Delete stamp card"
+          description="This action cannot be undone. This will permanently delete the stamp card"
+          resourceLabel={gift.title}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -132,7 +123,7 @@ export default function MerchantGiftsTable({ gifts }: { gifts: GiftRow[] }) {
       headClassName: "min-w-[20%] text-right",
       cell: (g) => (
         <div className="text-right">
-          <GiftActionsMenu id={g.id} />
+          <GiftActionsMenu gift={g} />
         </div>
       ),
     },
@@ -164,7 +155,7 @@ export default function MerchantGiftsTable({ gifts }: { gifts: GiftRow[] }) {
             <div className="shrink-0 flex flex-col items-end gap-2">
               <MobileGiveButton id={g.id} />
               <GiftActionsMenu
-                id={g.id}
+                gift={g}
                 align="end"
                 buttonClassName="shrink-0"
               />

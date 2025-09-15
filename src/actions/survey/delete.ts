@@ -5,7 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { getActiveBusiness } from "@/actions/business/read";
 
-export async function deleteSurvey(surveyId: string) {
+export async function deleteSurvey(formData: FormData): Promise<void> {
+  const surveyId = formData.get("surveyId") as string;
+  if (!surveyId) throw new Error("Missing cardId");
+
   const supabase = await createClient();
 
   const {

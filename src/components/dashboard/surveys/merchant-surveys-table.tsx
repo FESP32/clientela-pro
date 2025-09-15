@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 
 import type { SurveyWithProduct } from "@/types/surveys";
-import { RespondLinkDialog } from "./respond-link-dialog";
 import { fmt } from "@/lib/utils";
 
 import ResponsiveListTable, {
@@ -34,10 +33,9 @@ import ResponsiveListTable, {
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/common/status-badge";
 import { finishSurvey, toggleSurveyActive } from "@/actions";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
+import QRLinkDialog from "@/components/common/qr-link-dialog";
 
-/* -------------------------------------------
- * Mobile-only, thumb-friendly QR button
- * ------------------------------------------- */
 function MobileQRButton({
   title,
   respondPath,
@@ -68,7 +66,7 @@ function MobileQRButton({
 
 type SurveyActionsMenuProps = {
   survey: SurveyWithProduct;
-  deleteSurvey: (id: string) => Promise<void>;
+  deleteSurvey: (formData: FormData) => Promise<void>;
   onShowLink: (title: string, path: string) => void;
   align?: "start" | "end";
   buttonClassName?: string;
@@ -85,7 +83,7 @@ function SurveyActionsMenu({
   const isActive = survey.status === "active";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -177,22 +175,14 @@ function SurveyActionsMenu({
             </button>
           </DropdownMenuItem>
         </form>
-
-        {/* Delete (destructive) */}
-        <form action={deleteSurvey.bind(null, survey.id)}>
-          <DropdownMenuItem
-            asChild
-            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
-          >
-            <button
-              type="submit"
-              className="w-full text-left flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <ConfirmDeleteMenuItem
+          action={deleteSurvey}
+          hiddenFields={{ surveyId: survey.id }}
+          label="Delete"
+          title="Delete Survey"
+          description="This action cannot be undone. This will permanently delete the survey and it's responses"
+          resourceLabel={survey.title}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -203,12 +193,9 @@ export default function MerchantSurveysTable({
   deleteSurvey,
 }: {
   surveys: SurveyWithProduct[];
-  deleteSurvey: (id: string) => Promise<void>; // used via form bind
+  deleteSurvey: (formData: FormData) => Promise<void>;
 }) {
-  const [linkDialog, setLinkDialog] = useState<{
-    title: string;
-    path: string;
-  } | null>(null);
+  const [dlg, setDlg] = useState<{ title: string; path: string } | null>(null);
 
   const emptyState = (
     <Card>
@@ -273,7 +260,7 @@ export default function MerchantSurveysTable({
           <SurveyActionsMenu
             survey={s}
             deleteSurvey={deleteSurvey}
-            onShowLink={(title, path) => setLinkDialog({ title, path })}
+            onShowLink={(title, path) => setDlg({ title, path })}
           />
         </div>
       ),
@@ -282,13 +269,12 @@ export default function MerchantSurveysTable({
 
   return (
     <>
-      {/* Dialog (mounted only when needed) */}
-      {linkDialog && (
-        <RespondLinkDialog
+      {dlg && (
+        <QRLinkDialog
           open
-          onOpenChange={(open) => !open && setLinkDialog(null)}
-          surveyTitle={linkDialog.title}
-          respondPath={linkDialog.path}
+          onOpenChange={(open) => !open && setDlg(null)}
+          title={dlg.title}
+          path={dlg.path}
         />
       )}
 
@@ -339,12 +325,12 @@ export default function MerchantSurveysTable({
                   <MobileQRButton
                     title={s.title}
                     respondPath={respondPath}
-                    onShowLink={(title, path) => setLinkDialog({ title, path })}
+                    onShowLink={(title, path) => setDlg({ title, path })}
                   />
                   <SurveyActionsMenu
                     survey={s}
                     deleteSurvey={deleteSurvey}
-                    onShowLink={(title, path) => setLinkDialog({ title, path })}
+                    onShowLink={(title, path) => setDlg({ title, path })}
                     align="end"
                     buttonClassName="shrink-0"
                   />

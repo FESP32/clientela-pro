@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
-  Trash2,
   ExternalLink,
   QrCode,
   Stamp as StampIcon,
@@ -24,7 +23,7 @@ import {
   ListCheck,
 } from "lucide-react";
 
-import { StampJoinLinkDialog } from "@/components/dashboard/stamps/stamp-join-link-dialog";
+// import { StampJoinLinkDialog } from "@/components/dashboard/stamps/stamp-join-link-dialog";
 import { fmt } from "@/lib/utils";
 import type { StampCardListItem } from "@/types";
 
@@ -34,10 +33,10 @@ import ResponsiveListTable, {
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/common/status-badge";
 import { finishStampCard, toggleStampCardActive } from "@/actions";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
+import QRLinkDialog from "@/components/common/qr-link-dialog";
+import MobileQRButton from "@/components/common/mobile-qr-button";
 
-/* -------------------------------------------
- * Reusable actions menu (desktop + mobile)
- * ------------------------------------------- */
 type StampCardActionsMenuProps = {
   card: StampCardListItem;
   deleteStampCard: (formData: FormData) => Promise<void>;
@@ -57,7 +56,7 @@ function StampCardActionsMenu({
   const isActive = card.status === "active";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -149,50 +148,16 @@ function StampCardActionsMenu({
         </form>
 
         {/* Delete (destructive) */}
-        <form action={deleteStampCard}>
-          <input type="hidden" name="cardId" value={card.id} />
-          <DropdownMenuItem
-            asChild
-            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
-          >
-            <button
-              type="submit"
-              className="w-full text-left flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <ConfirmDeleteMenuItem
+          action={deleteStampCard}
+          hiddenFields={{ cardId: card.id }}
+          label="Delete"
+          title="Delete stamp card"
+          description="This action cannot be undone. This will permanently delete the stamp card"
+          resourceLabel={card.title}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-/* -------------------------------------------
- * Mobile quick-action buttons (Join + Punch)
- * ------------------------------------------- */
-function MobileJoinButton({
-  cardId,
-  className,
-}: {
-  cardId: string;
-  className?: string;
-}) {
-  return (
-    <Button
-      asChild
-      variant="secondary"
-      aria-label="Join stamp card"
-      className={`md:hidden w-full h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
-        className ?? ""
-      }`}
-    >
-      <Link href={`/services/stamps/${cardId}/join`}>
-        <ExternalLink className="h-5 w-5 mr-2" />
-        Join
-      </Link>
-    </Button>
   );
 }
 
@@ -220,9 +185,6 @@ function MobilePunchButton({
   );
 }
 
-/* -------------------------------------------
- * Main table
- * ------------------------------------------- */
 export default function MerchantStampCardsTable({
   cards,
   deleteStampCard,
@@ -306,11 +268,11 @@ export default function MerchantStampCardsTable({
   return (
     <>
       {dlg && (
-        <StampJoinLinkDialog
+        <QRLinkDialog
           open
           onOpenChange={(open) => !open && setDlg(null)}
-          cardTitle={dlg.title}
-          joinPath={dlg.path}
+          title={dlg.title}
+          path={dlg.path}
         />
       )}
 
@@ -318,7 +280,6 @@ export default function MerchantStampCardsTable({
         items={cards}
         getRowKey={(c) => c.id}
         emptyState={emptyState}
-        /* Mobile cards */
         renderMobileCard={(c) => {
           const joinPath = `/services/stamps/${c.id}/join`;
           return (
@@ -351,7 +312,11 @@ export default function MerchantStampCardsTable({
 
                 {/* Actions (mobile: Join + Punch buttons + kebab) */}
                 <div className="shrink-0 flex flex-col items-end gap-2">
-                  <MobileJoinButton cardId={c.id} />
+                  <MobileQRButton
+                    title={c.title}
+                    viewPath={joinPath}
+                    onShowLink={(title, path) => setDlg({ title, path })}
+                  />
                   <MobilePunchButton cardId={c.id} />
                   <StampCardActionsMenu
                     card={c}

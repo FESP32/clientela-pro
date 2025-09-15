@@ -35,6 +35,7 @@ import RoleBadge from "@/components/dashboard/businesses/role-badge";
 import BusinessInvite from "@/components/dashboard/businesses/business-invite";
 import InvitesTable from "@/components/dashboard/businesses/invites-table";
 import { Eye } from "lucide-react";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +66,7 @@ export default async function BusinessDetailPage({
   const initial = detail.name?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
+    <div className="mx-auto w-full max-w-6xl p-4">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
@@ -119,18 +120,19 @@ export default async function BusinessDetailPage({
             </Button>
           </form>
 
-          {/* Delete business (owner only) */}
           {isOwner && (
-            <form action={deleteBusiness} className="col-span-2 sm:col-span-1">
-              <input type="hidden" name="business_id" value={detail.id} />
-              <Button
-                type="submit"
-                variant="destructive"
-                className="w-full sm:w-auto"
-              >
-                Delete
-              </Button>
-            </form>
+            <ConfirmDeleteMenuItem
+              action={deleteBusiness}
+              hiddenFields={{ business_id: businessId }}
+              label="Delete"
+              title="Delete stamp card"
+              description="This action cannot be undone. This will permanently delete the Business"
+              resourceLabel={detail.name}
+              mode="button"
+              className="w-full sm:w-auto"
+              buttonVariant={"destructive"}
+              buttonSize={"default"}
+            />
           )}
         </div>
       </div>

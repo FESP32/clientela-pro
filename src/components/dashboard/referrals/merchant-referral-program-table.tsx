@@ -18,7 +18,6 @@ import {
   Eye,
   UserPlus,
   QrCode,
-  Trash2,
   ToggleLeft,
   ToggleRight,
   ListCheck,
@@ -38,10 +37,9 @@ import ResponsiveListTable, {
 } from "@/components/common/responsive-list-table";
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/common/status-badge";
+import { ConfirmDeleteMenuItem } from "@/components/common/confirm-delete-menu-item";
+import QRLinkDialog from "@/components/common/qr-link-dialog";
 
-/* -------------------------------------------
- * Mobile-only, thumb-friendly QR button
- * ------------------------------------------- */
 function MobileQRButton({
   title,
   joinPath,
@@ -70,9 +68,6 @@ function MobileQRButton({
   );
 }
 
-/* -------------------------------------------
- * Reusable actions menu (desktop + mobile)
- * ------------------------------------------- */
 type ReferralProgramActionsMenuProps = {
   program: ReferralProgramRow;
   onShowLink: (title: string, path: string) => void;
@@ -91,7 +86,7 @@ function ReferralProgramActionsMenu({
   const isActive = program.status === "active";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -182,29 +177,19 @@ function ReferralProgramActionsMenu({
         </form>
 
         {/* Delete (destructive) */}
-        <form action={deleteReferralProgram}>
-          <input type="hidden" name="id" value={program.id} />
-          <DropdownMenuItem
-            asChild
-            className="text-red-600 data-[highlighted]:bg-red-50 dark:data-[highlighted]:bg-red-950/30"
-          >
-            <button
-              type="submit"
-              className="w-full text-left flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <ConfirmDeleteMenuItem
+          action={deleteReferralProgram}
+          hiddenFields={{ id: program.id }}
+          label="Delete"
+          title="Delete stamp card"
+          description="This action cannot be undone. This will permanently delete the stamp card"
+          resourceLabel={program.title}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-/* -------------------------------------------
- * Main table
- * ------------------------------------------- */
 export default function MerchantReferralProgramsTable({
   programs,
 }: {
@@ -283,11 +268,11 @@ export default function MerchantReferralProgramsTable({
   return (
     <>
       {dlg && (
-        <ReferralJoinLinkDialog
+        <QRLinkDialog
           open
           onOpenChange={(open) => !open && setDlg(null)}
-          programTitle={dlg.title}
-          joinPath={dlg.path}
+          title={dlg.title}
+          path={dlg.path}
         />
       )}
 
@@ -295,7 +280,6 @@ export default function MerchantReferralProgramsTable({
         items={programs}
         getRowKey={(p) => p.id}
         emptyState={emptyState}
-        /* Mobile cards */
         renderMobileCard={(p) => {
           const viewPath = `/dashboard/referrals/${p.id}`;
           const joinPath = `/services/referrals/referrer/${p.id}`;

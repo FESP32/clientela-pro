@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ExternalLink, QrCode } from "lucide-react";
@@ -19,36 +18,9 @@ import type { GiftIntentRow } from "@/types";
 import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
-import { GiftIntentLinkDialog } from "@/components/dashboard/gifts/gift-intent-link-dialog";
 import { fmt } from "@/lib/utils";
-
-function MobileQRButton({
-  title,
-  viewPath,
-  onShowLink,
-  className,
-}: {
-  title: string;
-  viewPath: string;
-  onShowLink: (title: string, path: string) => void;
-  className?: string;
-}) {
-  return (
-    <Button
-      type="button"
-      aria-label={`Show QR for ${title}`}
-      aria-haspopup="dialog"
-      onClick={() => onShowLink(title, viewPath)}
-      variant="secondary"
-      className={`md:hidden h-11 px-4 rounded-full shadow-sm active:scale-[0.98] ${
-        className ?? ""
-      }`}
-    >
-      <QrCode className="h-5 w-5 mr-2" />
-      Show QR
-    </Button>
-  );
-}
+import QRLinkDialog from "@/components/common/qr-link-dialog";
+import MobileQRButton from "@/components/common/mobile-qr-button";
 
 function GiftIntentActionsMenu({
   intentId,
@@ -196,11 +168,11 @@ export default function GiftIntentsTable({
   return (
     <>
       {dlg && (
-        <GiftIntentLinkDialog
+        <QRLinkDialog
           open
-          onOpenChange={(o) => !o && setDlg(null)}
-          intentTitle={dlg.title}
-          intentPath={dlg.path}
+          onOpenChange={(open) => !open && setDlg(null)}
+          title={dlg.title}
+          path={dlg.path}
         />
       )}
 

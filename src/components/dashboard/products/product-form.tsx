@@ -374,14 +374,6 @@ export default function ProductForm({
                 );
               })}
             </div>
-
-            {/* Subtle tip */}
-            <p className="text-xs text-muted-foreground">
-              Keys support letters, numbers, <code>_</code> and <code>-</code>,
-              and must start with a letter. Values are auto-typed:{" "}
-              <code>true</code>/<code>false</code>, numbers, <code>null</code>,
-              JSON objects/arrays, or strings.
-            </p>
           </div>
         ) : (
           <div className="space-y-2">

@@ -20,7 +20,6 @@ import {
   Search,
   Plus,
   ArrowUpDown,
-  Info,
   Filter,
   Shield,
   SlidersHorizontal,
@@ -34,7 +33,7 @@ export default function SurveysExplorer({
   deleteSurvey,
 }: {
   surveys: SurveyWithProduct[];
-  deleteSurvey: (id: string) => Promise<void>;
+  deleteSurvey: (formData: FormData) => Promise<void>;
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za">("newest");
