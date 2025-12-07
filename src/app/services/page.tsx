@@ -51,11 +51,9 @@ export default function CustomerMenu() {
   const t = useTranslations("ServicePage");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/40 via-black/35 to-black/40 backdrop-blur-3xl ">
-      {/* Card */}
-      <div className="relative rounded-3xl bg-white/90 shadow-2xl ring-1 ring-black/5 dark:bg-neutral-900/90">
-        {/* Brand bar with logo + theme toggle */}
-        <div className="flex items-center justify-between px-6 pt-6">
+    <div className="flex-1 min-h-screen inset-0 z-50 flex  justify-center bg-gradient-to-br">
+      <div className="mt-20">
+        <div className="flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <Logo hideText/>
             <div className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -93,7 +91,7 @@ export default function CustomerMenu() {
               <div
                 className="mb-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-neutral-200/80 transition
                               group-hover:from-primary/20 group-hover:to-primary/10 group-hover:ring-primary/30
-                              dark:ring-neutral-700/60"
+                              dark:ring-neutral-700/10"
               >
                 <Icon className="h-7 w-7 text-primary transition group-hover:scale-105" />
               </div>
@@ -109,20 +107,7 @@ export default function CustomerMenu() {
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="px-6">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-neutral-200 to-transparent dark:via-neutral-700" />
-        </div>
 
-        {/* Footer: Back to Home + Support */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-6 py-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-          >
-            <Home className="h-4 w-4" /> Back to Home
-          </Link>
-        </div>
       </div>
     </div>
   );

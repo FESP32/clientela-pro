@@ -60,7 +60,7 @@ export async function getActiveBusiness() {
     return { business: null, role: null, set_at: null as string | null };
   }
 
-  // Fetch the business (RLS will ensure the user can read it)
+  // Fetch the business
   const { data: business, error: bizErr } = await supabase
     .from("business")
     .select(

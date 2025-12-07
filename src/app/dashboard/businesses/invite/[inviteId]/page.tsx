@@ -9,28 +9,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmt } from "@/lib/utils";
 import RoleBadge from "@/components/dashboard/businesses/role-badge";
 
-async function getInviteWithContext(inviteId: string) {
+async function getBusinessInvite(inviteId: string) {
   const supabase = await createClient();
 
-  // who is browsing?
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // invite + business (need owner for checks)
   const { data: invite, error } = await supabase
     .from("business_invite")
     .select(
       `
       id, status, created_at, updated_at, role,
-      business:business ( id, name, image_url, owner_id ),
-      inviter:profile!business_invite_invited_by_fk_profile ( user_id, name )
+      business:business ( id, name, image_url, owner_id )
     `
     )
     .eq("id", inviteId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  // if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);  
   if (!invite)
     return { user, invite: null, alreadyOwner: false, alreadyMember: false };
 
@@ -61,14 +59,15 @@ export default async function InvitePage({
   params: Promise<{ inviteId: string }>;
 }) {
   const { inviteId } = await params;
-
-  const { user, invite, alreadyOwner, alreadyMember } =
-    await getInviteWithContext(inviteId).catch(() => ({
-      user: null,
-      invite: null,
-      alreadyOwner: false,
-      alreadyMember: false,
-    }));
+  
+  const { user, invite, alreadyOwner, alreadyMember } = await getBusinessInvite(
+    inviteId
+  ).catch(() => ({
+    user: null,
+    invite: null,
+    alreadyOwner: false,
+    alreadyMember: false,
+  }));
 
   if (!invite) notFound();
 
@@ -114,7 +113,6 @@ export default async function InvitePage({
               )}
             </div>
             <div className="text-sm text-muted-foreground">
-              Invited by {invite.inviter?.name ?? "—"} • Created{" "}
               {fmt(invite.created_at)}
             </div>
             <div>
@@ -130,15 +128,6 @@ export default async function InvitePage({
               {disabled ? disabledReason : "Accept invite"}
             </Button>
           </form>
-
-          <div className="text-sm">
-            <Link
-              href="/dashboard/businesses"
-              className="text-primary underline"
-            >
-              Go to my businesses
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

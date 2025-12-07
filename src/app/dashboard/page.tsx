@@ -14,7 +14,6 @@ import { listLatestSurveys, listLatestStamps } from "@/actions";
 import { fmt } from "@/lib/utils";
 import { MotionSection, MotionItem } from "@/components/motion/fade-up";
 
-// --- actions config ---
 const quickActions = [
   {
     href: "/dashboard/businesses/new",

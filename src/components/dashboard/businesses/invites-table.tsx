@@ -40,7 +40,6 @@ export default function InvitesTable({
 }: {
   invites: InviteItem[];
   businessName: string;
-  /** Public route used for sharing, e.g. "/invite" → "/invite/[inviteId]" */
   publicLinkPrefix?: string;
 }) {
   const [linkDialog, setLinkDialog] = useState<{
@@ -82,24 +81,23 @@ export default function InvitesTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[220px]">Invite</TableHead>
+              <TableHead className="w-[10px]">#</TableHead>
               <TableHead className="w-[120px]">Role</TableHead>
               <TableHead className="w-[140px]">Status</TableHead>
               <TableHead className="w-[200px]">Invited by</TableHead>
               <TableHead className="w-[200px]">Accepted by</TableHead>
               <TableHead className="w-[160px]">Created</TableHead>
-              <TableHead className="w-[160px]">Updated</TableHead>
               <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invites.map((i) => {
+            {invites.map((i, idx) => {
               const openHref = `${publicLinkPrefix}/${i.id}`;
               const copied = copiedId === i.id;
 
               return (
                 <TableRow key={i.id}>
-                  <TableCell className="font-medium">{i.id}</TableCell>
+                  <TableCell className="text-xs">{idx + 1}</TableCell>
                   <TableCell className="capitalize">
                     <RoleBadge role={i.role} />
                   </TableCell>
@@ -107,7 +105,6 @@ export default function InvitesTable({
                   <TableCell>{i.inviter?.name ?? "—"}</TableCell>
                   <TableCell>{i.invitee?.name ?? "—"}</TableCell>
                   <TableCell>{fmt(i.created_at)}</TableCell>
-                  <TableCell>{fmt(i.updated_at)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

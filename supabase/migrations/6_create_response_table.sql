@@ -1,27 +1,15 @@
--- =========================================================
--- public.response — full migration with RLS and comments
--- (supports anonymous submissions from non-authenticated users)
--- =========================================================
-
--- Enable UUID generation (safe if already enabled)
 create extension if not exists pgcrypto;
 
--- =========================================================
--- Table: response
--- =========================================================
 create table if not exists public.response (
   id              uuid primary key default gen_random_uuid(),
-  survey_id       uuid not null,                         -- FK to survey
-  respondent_id   uuid,                                  -- nullable to support anonymous responses
+  survey_id       uuid not null,                        
+  respondent_id   uuid,
   rating          smallint not null check (rating between 1 and 5),
   selected_traits text[] not null default '{}'::text[],
   comment         text,
   submitted_at    timestamptz not null default now()
 );
 
--- -------------------------
--- Foreign keys (idempotent)
--- -------------------------
 alter table public.response
   drop constraint if exists response_survey_id_fk,
   add constraint response_survey_id_fk
@@ -35,32 +23,25 @@ alter table public.response
     on delete set null;
 
 -- ---------------
--- Helpful indexes
+-- Indexes
 -- ---------------
 create index if not exists idx_response_survey       on public.response (survey_id);
 create index if not exists idx_response_respondent   on public.response (respondent_id);
 create index if not exists idx_response_submitted_at on public.response (submitted_at);
 
 -- =========================================================
--- Enable Row Level Security
+-- RLS
 -- =========================================================
 alter table public.response enable row level security;
 -- Optional hardening:
 -- alter table public.response force row level security;
 
--- =========================================================
--- Remove prior policies (so this file is idempotent)
--- =========================================================
 drop policy if exists response_select_merchant     on public.response;
 drop policy if exists response_select_self         on public.response;
 drop policy if exists response_insert_customer     on public.response;
 drop policy if exists response_insert_anon         on public.response;
 drop policy if exists response_delete_self         on public.response;
 drop policy if exists response_delete_merchant     on public.response;
-
--- =========================================================
--- POLICIES (with line-by-line comments)
--- =========================================================
 
 -- -----------------------------------------------------------------------------
 -- READ for MERCHANTS:

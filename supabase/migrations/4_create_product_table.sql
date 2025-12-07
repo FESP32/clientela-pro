@@ -18,10 +18,7 @@ alter table public.product
     on delete cascade;
 
 -- Keep updated_at fresh
-drop trigger if exists set_timestamp_on_product on public.product;
-create trigger set_timestamp_on_product
-before update on public.product
-for each row execute function trigger_set_timestamp();
+
 
 -- Helpful index
 create index if not exists product_business_id_idx on public.product (business_id);

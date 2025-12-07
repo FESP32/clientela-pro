@@ -49,6 +49,37 @@ export async function signInWithFacebook() {
   }
 }
 
+export async function sendMagicLink(
+  prevState: { ok?: boolean; error?: string } | null,
+  formData: FormData
+) {
+  const email = String(formData.get("email") || "").trim();
+  const next = String(formData.get("next") || ""); // optional
+
+  if (!email) return { ok: false, error: "Please enter your email." };
+
+  const supabase = await createClient();
+
+  // Build the redirect target for the link the user will click in the email
+  const base = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  const redirectTo = `${base}/auth/callback${
+    next ? `?next=${encodeURIComponent(next)}` : ""
+  }`;
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      // If you enable Captcha in Supabase, include captchaToken here
+      emailRedirectTo: redirectTo,
+      shouldCreateUser: true, // set false if you want login-only
+    },
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  return { ok: true };
+}
+
 export async function logout() {
   const supabase = await createClient();
   // revokes session & clears cookies

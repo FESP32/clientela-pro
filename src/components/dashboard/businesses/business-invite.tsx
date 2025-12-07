@@ -1,47 +1,52 @@
 // components/dashboard/businesses/invite-create.tsx
 "use client";
 
-
-import { useFormStatus } from "react-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useId } from "react";
+import SubmitButton from "@/components/common/submit-button";
 
 type CreateInviteAction = (formData: FormData) => Promise<void>;
-
-function SubmitBtn() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Creating…" : "Create invite"}
-    </Button>
-  );
-}
 
 export default function InviteCreate({
   businessId,
   action,
-  title = "Create invite link",
 }: {
   businessId: string;
   action: CreateInviteAction;
-  title?: string;
 }) {
+  const emailId = useId();
+  const roleId = useId();
 
-    const roleId = useId();
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>Create invite link</CardTitle>
       </CardHeader>
       <CardContent>
         <form
           action={action}
-          className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end"
+          className="grid gap-4 sm:grid-cols-[1fr_240px_auto] sm:items-end"
         >
           <input type="hidden" name="business_id" value={businessId} />
+          <div className="grid gap-2">
+            <Label htmlFor={emailId}>Email</Label>
+            <input
+              id={emailId}
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              inputMode="email"
+              placeholder="name@example.com"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground">
+              We’ll send the invite to this address.
+            </p>
+          </div>
 
+          {/* Role */}
           <div className="grid gap-2">
             <Label htmlFor={roleId}>Role</Label>
             <select
@@ -59,7 +64,7 @@ export default function InviteCreate({
           </div>
 
           <div className="sm:justify-self-end">
-            <SubmitBtn />
+            <SubmitButton />
           </div>
         </form>
       </CardContent>

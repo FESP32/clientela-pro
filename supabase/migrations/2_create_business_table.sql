@@ -1,33 +1,10 @@
--- =========================================================
--- Extensions (safe if already enabled)
--- =========================================================
 create extension if not exists pg_trgm;
 create extension if not exists "uuid-ossp";
-create extension if not exists pgcrypto;  -- for gen_random_uuid()
+create extension if not exists pgcrypto; 
 
--- =========================================================
--- Timestamp trigger for updated_at
--- =========================================================
-create or replace function trigger_set_timestamp()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
--- =========================================================
--- Tables
--- =========================================================
-
--- =========================
--- business
--- =========================
 create table if not exists public.business (
   id                uuid primary key default gen_random_uuid(),
-  owner_id          uuid not null,                              -- FK added below
+  owner_id          uuid not null,
   name              text not null,
   description       text,
   website_url       text,
@@ -40,18 +17,12 @@ create table if not exists public.business (
   updated_at        timestamptz not null default now()
 );
 
--- FK: business.owner_id → profile(user_id)
+-- Business.owner_id → profile(user_id)
 alter table public.business
   drop constraint if exists business_owner_id_fk_profile,
   add constraint business_owner_id_fk_profile
     foreign key (owner_id) references public.profile(user_id)
     on delete cascade;
-
--- Keep updated_at fresh
-drop trigger if exists set_timestamp_on_business on public.business;
-create trigger set_timestamp_on_business
-before update on public.business
-for each row execute function trigger_set_timestamp();
 
 -- Indexes
 create index if not exists business_owner_idx on public.business (owner_id);
@@ -69,7 +40,6 @@ create table if not exists public.business_user (
   primary key (business_id, user_id)
 );
 
--- FKs for junction table
 alter table public.business_user
   drop constraint if exists business_user_business_id_fk,
   add constraint business_user_business_id_fk
@@ -86,16 +56,12 @@ alter table public.business_user
 create index if not exists business_user_business_id_idx on public.business_user (business_id);
 create index if not exists business_user_user_id_idx     on public.business_user (user_id);
 
--- =========================
--- business_current
--- =========================
 create table if not exists public.business_current (
   user_id     uuid primary key,
   business_id uuid not null,
   set_at      timestamptz not null default timezone('utc', now())
 );
 
--- FKs
 alter table public.business_current
   drop constraint if exists business_current_user_id_fk_profile,
   add constraint business_current_user_id_fk_profile
@@ -144,22 +110,58 @@ alter table public.business_invite
     foreign key (invited_user) references public.profile(user_id)
     on delete set null;
 
--- Keep updated_at fresh
-drop trigger if exists set_timestamp_on_business_invite on public.business_invite;
-create trigger set_timestamp_on_business_invite
-before update on public.business_invite
-for each row execute function trigger_set_timestamp();
 
 -- Indexes to speed up queries
 create index if not exists business_invites_business_idx      on public.business_invite (business_id);
 create index if not exists business_invites_invited_user_idx  on public.business_invite (invited_user);
 create index if not exists business_invites_status_idx        on public.business_invite (status);
 
+-- email lookups (case-insensitive) for invited-by-email access
+create index if not exists business_invite_email_lc_idx
+  on public.business_invite (lower(email));
+--
+
 -- =========================================================
 -- Helper functions for RLS  (SECURITY DEFINER to break RLS recursion)
 -- =========================================================
 -- These helpers run with the function owner's privileges (table owner),
 -- bypassing RLS inside the function body. Lock search_path for safety.
+
+create or replace function public.shares_business_with(target_user uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  -- Case 1: both are members of the same business
+  select exists (
+    select 1
+    from public.business_user bu_me
+    join public.business_user bu_tgt
+      on bu_me.business_id = bu_tgt.business_id
+    where bu_me.user_id = auth.uid()
+      and bu_tgt.user_id = target_user
+  )
+  -- OR Case 2: I own a business where the target is a member
+  or exists (
+    select 1
+    from public.business b
+    join public.business_user bu_tgt
+      on bu_tgt.business_id = b.id
+    where b.owner_id = auth.uid()
+      and bu_tgt.user_id = target_user
+  )
+  -- OR Case 3: target owns a business where I’m a member
+  or exists (
+    select 1
+    from public.business b
+    join public.business_user bu_me
+      on bu_me.business_id = b.id
+    where b.owner_id = target_user
+      and bu_me.user_id = auth.uid()
+  );
+$$;
 
 create or replace function public.is_business_member(biz_id uuid)
 returns boolean
@@ -191,8 +193,29 @@ as $$
   );
 $$;
 
--- NEW: identify customers (profile.user_type = 'customer')
-create or replace function public.is_user_customer()
+revoke all on function public.is_business_member(uuid) from public;
+revoke all on function public.is_business_owner(uuid)  from public;
+revoke all on function public.is_user_customer()       from public;
+
+grant execute on function public.is_business_member(uuid) to authenticated;
+grant execute on function public.is_business_owner(uuid)  to authenticated;
+grant execute on function public.is_user_customer()       to authenticated;
+
+-- helper to fetch current user's email from auth.users
+create or replace function public.current_user_email()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select (select u.email::text from auth.users u where u.id = auth.uid());
+$$;
+
+revoke all on function public.current_user_email() from public;
+grant execute on function public.current_user_email() to authenticated;
+
+create or replace function public.is_merchant_invited_by_email(biz_id uuid)
 returns boolean
 language sql
 stable
@@ -201,30 +224,26 @@ set search_path = public
 as $$
   select exists (
     select 1
-    from public.profile p
-    where p.user_id = auth.uid()
-      and p.user_type = 'customer'
+    from public.business_invite bi
+    where bi.business_id = biz_id
+      and bi.email is not null
+      and lower(bi.email) = lower(public.current_user_email())
+      and public.is_user_merchant()
+      and bi.status <> 'canceled'
   );
 $$;
 
--- Tighten who can execute these helpers (avoid PUBLIC)
-revoke all on function public.is_business_member(uuid) from public;
-revoke all on function public.is_business_owner(uuid)  from public;
-revoke all on function public.is_user_customer()       from public;
-
-grant execute on function public.is_business_member(uuid) to authenticated;
-grant execute on function public.is_business_owner(uuid)  to authenticated;
-grant execute on function public.is_user_customer()       to authenticated;
--- (Add: grant to anon if you ever call these from anon policies)
+revoke all on function public.is_merchant_invited_by_email(uuid) from public;
+grant execute on function public.is_merchant_invited_by_email(uuid) to authenticated;
 
 -- =========================================================
--- Enable Row Level Security
+-- RLS
 -- =========================================================
 alter table public.business          enable row level security;
 alter table public.business_user     enable row level security;
 alter table public.business_current  enable row level security;
 alter table public.business_invite   enable row level security;
--- Optional hardening:
+
 -- alter table public.business          force row level security;
 -- alter table public.business_user     force row level security;
 -- alter table public.business_current  force row level security;
@@ -236,13 +255,12 @@ alter table public.business_invite   enable row level security;
 
 -- ---------- business ----------
 drop policy if exists biz_select on public.business;
-drop policy if exists biz_select_customer_active on public.business; -- NEW drop guard
+drop policy if exists biz_select_customer_active on public.business;
 drop policy if exists biz_insert on public.business;
 drop policy if exists biz_update on public.business;
 drop policy if exists biz_delete on public.business;
 
 -- Members (or owner) can read the business
--- (is_business_member()/owner are SECDEF now, so no RLS recursion)
 create policy biz_select
 on public.business
 for select
@@ -252,7 +270,7 @@ using (
   or owner_id = auth.uid()
 );
 
--- NEW: Customers can read ACTIVE businesses
+-- Customers can read ACTIVE businesses
 create policy biz_select_customer_active
 on public.business
 for select
@@ -261,6 +279,14 @@ using (
   public.is_user_customer()
   and is_active = true
 );
+
+-- Merchants can read businesses they’re invited to (by email)
+drop policy if exists biz_select_invited_by_email on public.business;
+create policy biz_select_invited_by_email
+on public.business
+for select
+to authenticated
+using ( public.is_merchant_invited_by_email(id) );
 
 -- Only the signed-in user can create a business they own
 create policy biz_insert
@@ -309,6 +335,7 @@ using (
     where b.id = business_user.business_id
       and b.owner_id = auth.uid()
   )
+  or public.shares_business_with(user_id)
 );
 
 -- Insert membership rows: only the business owner
@@ -318,9 +345,24 @@ for insert
 to authenticated
 with check (
   exists (
-    select 1 from public.business b
+    select 1
+    from public.business b
     where b.id = business_user.business_id
       and b.owner_id = auth.uid()
+  )
+  -- OR the invited user may add themselves (self-join)
+  or (
+    business_user.user_id = auth.uid()
+    and exists (
+      select 1
+      from public.business_invite bi
+      where bi.business_id = business_user.business_id
+        and bi.status <> 'canceled'  -- tighten to '= ''accepted''' if you prefer
+        and (
+          bi.invited_user = auth.uid()
+          or (bi.email is not null and lower(bi.email) = lower(public.current_user_email()))
+        )
+    )
   )
 );
 
@@ -344,7 +386,6 @@ with check (
   )
 );
 
--- Delete membership rows: owner can remove anyone; a user may remove self (leave)
 create policy bu_delete
 on public.business_user
 for delete
@@ -401,6 +442,7 @@ drop policy if exists binvite_select on public.business_invite;
 drop policy if exists binvite_insert on public.business_invite;
 drop policy if exists binvite_update on public.business_invite;
 drop policy if exists binvite_delete on public.business_invite;
+drop policy if exists profile_select_same_business on public.profile;
 
 -- Members of the business (any role) can see invites;
 -- invited_user and invited_by can also see theirs.
@@ -412,6 +454,19 @@ using (
   public.is_business_member(business_id)
   or invited_user = auth.uid()
   or invited_by = auth.uid()
+);
+
+-- Merchants can read invites that target their email
+drop policy if exists binvite_select_by_email on public.business_invite;
+create policy binvite_select_by_email
+on public.business_invite
+for select
+to authenticated
+using (
+  public.is_user_merchant()
+  and email is not null
+  and lower(email) = lower(public.current_user_email())
+  and status <> 'canceled'
 );
 
 -- Only business owner can create invites
@@ -443,3 +498,15 @@ on public.business_invite
 for delete
 to authenticated
 using ( public.is_business_owner(business_id) );
+
+revoke all on function public.shares_business_with(uuid) from public;
+grant execute on function public.shares_business_with(uuid) to authenticated;
+
+-- Users can read profiles of members of the same business
+create policy profile_select_same_business
+on public.profile
+for select
+to authenticated
+using (
+  public.shares_business_with(user_id)
+);

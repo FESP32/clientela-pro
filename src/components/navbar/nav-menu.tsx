@@ -12,7 +12,7 @@ export const NavMenu = (props: NavigationMenuProps) => {
   const t = useTranslations("Navigation");
   return (
     <NavigationMenu {...props}>
-      <NavigationMenuList className="gap-6 space-x-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start">
+      <NavigationMenuList className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link href="#features">{t("features")}</Link>

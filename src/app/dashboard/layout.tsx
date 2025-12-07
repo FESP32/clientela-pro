@@ -15,6 +15,10 @@ import ThemeToggle from "@/components/common/theme-toggle";
 import LocaleSwitcher from "@/components/i18n/locale-switcher";
 import { getActiveBusiness } from "@/actions";
 import Background from "@/components/common/background";
+import {
+  CurrentBusinessProvider,
+} from "@/app/providers/business-context";
+
 
 export default async function DashboardLayout({
   children,
@@ -40,30 +44,30 @@ export default async function DashboardLayout({
   const { business } = await getActiveBusiness();
   return (
     <SidebarProvider>
-      <AppSidebar user={userForNav} activeBusiness={business} />
-      <SidebarInset>
-        <Background />
+        <AppSidebar user={userForNav} activeBusiness={business} />
+        <SidebarInset>
+          <Background />
 
-        <header
-          className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
+          <header
+            className="flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
                            sticky top-0 z-10 border-b bg-background/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md"
-        >
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <ClientBreadcrumbs />
-          </div>
-          <div className="pr-6 flex space-x-2">
-            <LocaleSwitcher />
-            <ThemeToggle />
-          </div>
-        </header>
+          >
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-[orientation=vertical]:h-4"
+              />
+              <ClientBreadcrumbs />
+            </div>
+            <div className="pr-6 flex space-x-2">
+              <LocaleSwitcher />
+              <ThemeToggle />
+            </div>
+          </header>
 
-        {children}
-      </SidebarInset>
+          {children}
+        </SidebarInset>
     </SidebarProvider>
   );
 }

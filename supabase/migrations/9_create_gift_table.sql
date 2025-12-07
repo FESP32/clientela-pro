@@ -1,49 +1,21 @@
--- =========================================================
--- GIFTS — Tables + RLS + Policies
--- =========================================================
-
 create extension if not exists pgcrypto;
 
--- ---------------------------------------------------------
--- Helper to auto-update updated_at
--- ---------------------------------------------------------
-create or replace function public.touch_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := timezone('utc', now());
-  return new;
-end$$;
-
--- =========================
--- Gift
--- =========================
 create table public.gift (
   id           uuid primary key default gen_random_uuid(),
-  business_id  uuid not null,     -- FK added below
+  business_id  uuid not null,
   title        text not null,
   description  text,
   created_at   timestamptz not null default timezone('utc', now()),
   updated_at   timestamptz not null default timezone('utc', now())
 );
 
--- FK: gift.business_id → business(id)
 alter table public.gift
   add constraint gift_business_id_fk
     foreign key (business_id) references public.business(id)
     on delete cascade;
 
--- Index + trigger
 create index idx_gift_business_id on public.gift(business_id);
 
-create trigger trig_touch_gift
-before update on public.gift
-for each row execute procedure public.touch_updated_at();
-
--- =========================
--- Gift Intents
--- =========================
 create table public.gift_intent (
   id           uuid primary key default gen_random_uuid(),
   gift_id      uuid not null,     -- FK added below
@@ -59,7 +31,6 @@ create table public.gift_intent (
   updated_at   timestamptz not null default timezone('utc', now())
 );
 
--- FKs (separate clauses)
 alter table public.gift_intent
   add constraint gift_intent_gift_id_fk
     foreign key (gift_id) references public.gift(id)
@@ -93,14 +64,6 @@ begin
   end if;
   return new;
 end$$;
-
-create trigger trig_set_consumed_at_gift_intent
-before update on public.gift_intent
-for each row execute procedure public.gift_intent_set_consumed_at();
-
-create trigger trig_touch_gift_intent
-before update on public.gift_intent
-for each row execute procedure public.touch_updated_at();
 
 -- =========================================================
 -- Enable Row Level Security

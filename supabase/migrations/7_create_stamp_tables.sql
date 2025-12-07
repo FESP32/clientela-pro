@@ -1,19 +1,10 @@
--- =========================================================
--- STAMP MODULE — Tables + RLS + Policies (with customer read + consume)
--- =========================================================
-
 create extension if not exists pgcrypto;
 
--- ---------------------------------------------------------
--- TABLES (originals, with idempotent FK/trigger guards)
--- ---------------------------------------------------------
-
--- 1) Merchant-defined stamp card
 create table if not exists public.stamp_card (
   id               uuid primary key default gen_random_uuid(),
-  business_id      uuid not null,                     -- FK below
-  title            text not null,                     -- e.g., "Coffee Card"
-  goal_text        text not null,                     -- e.g., "Free Coffee", "10% off"
+  business_id      uuid not null,
+  title            text not null,
+  goal_text        text not null,
   stamps_required  integer not null check (stamps_required >= 1),
   status       text not null default 'active' 
     check (status in ('active', 'inactive', 'finished')),
@@ -32,9 +23,9 @@ alter table public.stamp_card
 create index if not exists idx_stamp_business_id on public.stamp_card(business_id);
 create index if not exists idx_stamp_card_status on public.stamp_card(status);
 
--- 2) Card ↔ Product mapping (M:N)
+-- Card ↔ Product mapping (M:N)
 create table if not exists public.stamp_card_product (
-  card_id     uuid not null,                          -- FKs below
+  card_id     uuid not null,
   product_id  uuid not null,
   primary key (card_id, product_id)
 );
@@ -53,11 +44,10 @@ alter table public.stamp_card_product
 
 create index if not exists idx_stamp_card_products_product on public.stamp_card_product(product_id);
 
--- 3) Punching events (awarded to a customer for a card)
 create table if not exists public.stamp_punch (
   id           uuid primary key default gen_random_uuid(),
-  card_id      uuid not null,                          -- FKs below
-  customer_id  uuid not null,                          -- who received the punch
+  card_id      uuid not null,
+  customer_id  uuid not null,
   qty          integer not null default 1 check (qty >= 1),
   note         text,
   created_at   timestamptz not null default timezone('utc', now())
@@ -79,17 +69,16 @@ create index if not exists idx_stamp_punch_card          on public.stamp_punch(c
 create index if not exists idx_stamp_punch_customer      on public.stamp_punch(customer_id);
 create index if not exists idx_stamp_punch_card_customer on public.stamp_punch(card_id, customer_id);
 
--- 4) Intents (grant N punches later; claimable)
 create table if not exists public.stamp_intent (
   id           uuid primary key default gen_random_uuid(),
-  card_id      uuid not null,                          -- FKs below
+  card_id      uuid not null,
   business_id  uuid not null,
-  customer_id  uuid,                                   -- optional target
+  customer_id  uuid,
   qty          integer not null check (qty >= 1),
   status       text not null default 'pending' check (status in ('pending','consumed','canceled')),
   note         text,
   expires_at   timestamptz,
-  consumed_at  timestamptz,                            -- set when used
+  consumed_at  timestamptz,
   created_at   timestamptz not null default timezone('utc', now()),
   updated_at   timestamptz not null default timezone('utc', now())
 );
@@ -117,28 +106,9 @@ create index if not exists idx_stamp_intent_customer   on public.stamp_intent(cu
 create index if not exists idx_stamp_intent_status     on public.stamp_intent(status);
 create index if not exists idx_stamp_intent_expires_at on public.stamp_intent(expires_at);
 
--- Touch updated_at on update
-create or replace function public.touch_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := timezone('utc', now());
-  return new;
-end$$;
-
-drop trigger if exists trig_touch_stamp_intent on public.stamp_intent;
-create trigger trig_touch_stamp_intent
-before update on public.stamp_intent
-for each row execute procedure public.touch_updated_at();
-
-drop trigger if exists trig_touch_stamp_card on public.stamp_card;
-create trigger trig_touch_stamp_card
-before update on public.stamp_card
-for each row execute procedure public.touch_updated_at();
 
 -- ---------------------------------------------------------
--- ENABLE RLS
+-- RLS
 -- ---------------------------------------------------------
 alter table public.stamp_card         enable row level security;
 alter table public.stamp_card_product enable row level security;

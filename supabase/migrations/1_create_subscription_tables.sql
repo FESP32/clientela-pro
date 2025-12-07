@@ -1,15 +1,5 @@
 create extension if not exists pgcrypto;
 
--- Touch updated_at helper
-create or replace function public.touch_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := timezone('utc', now());
-  return new;
-end$$;
-
 create table if not exists public.subscription_plan (
   id            uuid primary key default gen_random_uuid(),
   code          text not null,
@@ -26,12 +16,6 @@ create table if not exists public.subscription_plan (
 -- Indexes
 create unique index if not exists subscription_plan_code_uq on public.subscription_plan (code);
 create index if not exists subscription_plan_active_idx     on public.subscription_plan (is_active);
-
--- Keep updated_at fresh
-drop trigger if exists trig_touch_subscription_plan on public.subscription_plan;
-create trigger trig_touch_subscription_plan
-before update on public.subscription_plan
-for each row execute procedure public.touch_updated_at();
 
 -- ---------------------------------------------------------
 -- subscription table
@@ -69,12 +53,6 @@ create index if not exists subscription_interval_idx on public.subscription (int
 create unique index if not exists subscription_one_active_per_user
   on public.subscription (user_id)
   where (status = 'active' and expires_at is null);
-
--- Keep updated_at fresh
-drop trigger if exists trig_touch_subscription on public.subscription;
-create trigger trig_touch_subscription
-before update on public.subscription
-for each row execute procedure public.touch_updated_at();
 
 -- ---------------------------------------------------------
 -- Seed / upsert plans WITH metadata limits

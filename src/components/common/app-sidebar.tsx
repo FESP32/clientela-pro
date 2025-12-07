@@ -19,7 +19,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  useSidebar, // ⬅️ import the hook
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { BusinessSwitcher } from "@/components/common/business-switcher";
 import type { BusinessRow } from "@/types/business";
@@ -27,7 +27,7 @@ import type { BusinessRow } from "@/types/business";
 export type NavUserData = {
   name: string;
   email: string;
-  avatar: string; // URL
+  avatar: string;
 };
 
 const navData = {

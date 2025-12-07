@@ -17,7 +17,6 @@ import {
   MoreHorizontal,
   MessageSquare,
   Eye,
-  Trash2,
   QrCode,
   ToggleLeft,
   ToggleRight,

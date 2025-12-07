@@ -3,7 +3,6 @@ import { LoginForm } from "@/components/auth/login-form";
 import { Logo } from "@/components/navbar/logo";
 import Link from "next/link";
 
-
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
 

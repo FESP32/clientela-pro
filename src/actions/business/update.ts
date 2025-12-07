@@ -187,11 +187,7 @@ export async function acceptBusinessInvite(formData: FormData) {
 
   const { error: updErr } = await supabase
     .from("business_invite")
-    .update({
-      invited_user: user.id,
-      status: "accepted",
-      updated_at: new Date().toISOString(),
-    })
+    .delete()
     .eq("id", inviteId);
   if (updErr) throw new Error(updErr.message);
 

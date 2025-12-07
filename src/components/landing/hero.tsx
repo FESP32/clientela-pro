@@ -26,13 +26,6 @@ const Hero = () => {
                 {t('getStarted')} <ArrowUpRight className="!h-5 !w-5" />
               </Link>
             </Button>
-            {/* <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto rounded-full text-base shadow-none"
-            >
-              <CirclePlay className="!h-5 !w-5" /> Watch Demo
-            </Button> */}
           </div>
         </div>
       </div>

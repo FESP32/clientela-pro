@@ -33,18 +33,13 @@ create unique index if not exists uq_referral_program_code
 create index if not exists idx_referral_business_id on public.referral_program(business_id);
 create index if not exists idx_referral_program_status on public.referral_program(status);
 
-drop trigger if exists trig_touch_referral_program on public.referral_program;
-create trigger trig_touch_referral_program
-before update on public.referral_program
-for each row execute procedure public.set_updated_at();
-
 -- =========================
 -- Participants (per referrer in a program)
 -- =========================
 create table if not exists public.referral_program_participant (
   id           uuid primary key default gen_random_uuid(),
-  program_id   uuid not null,  -- FK added below
-  customer_id  uuid not null,  -- FK added below (the referrer)
+  program_id   uuid not null, 
+  customer_id  uuid not null,
   referred_qty integer not null default 0 check (referred_qty >= 0),
   note         text,
   created_at   timestamptz not null default timezone('utc', now()),
@@ -67,11 +62,6 @@ alter table public.referral_program_participant
 create index if not exists idx_ref_participant_program  on public.referral_program_participant(program_id);
 create index if not exists idx_ref_participant_customer on public.referral_program_participant(customer_id);
 
-drop trigger if exists trig_touch_referral_program_participant on public.referral_program_participant;
-create trigger trig_touch_referral_program_participant
-before update on public.referral_program_participant
-for each row execute procedure public.set_updated_at();
-
 -- =========================
 -- Intents (invite/claim object tied to the program & referrer)
 -- =========================
@@ -88,7 +78,6 @@ create table if not exists public.referral_intent (
   updated_at   timestamptz not null default timezone('utc', now())
 );
 
--- Explicit FKs
 alter table public.referral_intent
   drop constraint if exists referral_intent_program_id_fk,
   add constraint referral_intent_program_id_fk
@@ -113,11 +102,6 @@ create index if not exists idx_ref_intent_referred on public.referral_intent(ref
 create index if not exists idx_ref_intent_status   on public.referral_intent(status);
 create index if not exists idx_ref_intent_expires  on public.referral_intent(expires_at);
 
-drop trigger if exists trig_touch_referral_intent on public.referral_intent;
-create trigger trig_touch_referral_intent
-before update on public.referral_intent
-for each row execute procedure public.set_updated_at();
-
 -- =========================================================
 -- Enable Row Level Security
 -- =========================================================
@@ -130,11 +114,11 @@ alter table public.referral_intent              enable row level security;
 -- alter table public.referral_intent              force row level security;
 
 -- =========================================================
--- POLICIES (drop old, then recreate with comments)
+-- POLICIES
 -- =========================================================
 
 -- ------------------------------------
--- referral_program (program definition)
+-- referral_program
 -- ------------------------------------
 drop policy if exists refprog_select_merchant  on public.referral_program;
 drop policy if exists refprog_select_customer  on public.referral_program;
@@ -281,9 +265,10 @@ drop policy if exists refint_select_referred                 on public.referral_
 drop policy if exists refint_insert                          on public.referral_intent;
 drop policy if exists refint_update_merchant                 on public.referral_intent;
 drop policy if exists refint_update_referrer                 on public.referral_intent;
-drop policy if exists refint_update_referred_consume         on public.referral_intent; -- NEW
+drop policy if exists refint_update_referred_consume         on public.referral_intent;
 drop policy if exists refint_delete_merchant                 on public.referral_intent;
 drop policy if exists refint_delete_referrer                 on public.referral_intent;
+drop policy if exists refint_update_referred_consume         on public.referral_intent;
 
 -- MERCHANT READ: see intents for programs in your business
 create policy refint_select_merchant
@@ -406,7 +391,7 @@ with check (
 -- NEW: UPDATE (referred customer claim/consume)
 -- Allow an authenticated customer to claim an open invite by assigning themselves
 -- (referred_id := auth.uid()), setting status := 'consumed', and providing consumed_at.
-drop policy if exists refint_update_referred_consume on public.referral_intent;
+
 
 create policy refint_update_referred_consume
 on public.referral_intent

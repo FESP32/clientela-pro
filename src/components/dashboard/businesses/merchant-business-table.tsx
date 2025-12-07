@@ -31,9 +31,6 @@ import ResponsiveListTable, {
   type Column,
 } from "@/components/common/responsive-list-table";
 
-/* -------------------------------------------
- * Reusable actions menu (desktop + mobile)
- * ------------------------------------------- */
 type SetActiveAction = (formData: FormData) => Promise<void>;
 
 function BusinessActionsMenu({
@@ -163,9 +160,6 @@ function MobileSetCurrentButton({
   );
 }
 
-/* -------------------------------------------
- * Main table
- * ------------------------------------------- */
 export default function MerchantBusinessTable({
   items,
   setActiveAction,

@@ -106,7 +106,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html suppressHydrationWarning lang={locale}>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.className} antialiased min-h-screen`}>
         <NextTopLoader color="#6366f1" />
         <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

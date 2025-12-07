@@ -5,7 +5,7 @@ import StampPunchesResponsive from "@/components/services/stamps/stamp-punch-tab
 import { Badge } from "@/components/ui/badge";
 import { Ticket, CheckCircle2 } from "lucide-react";
 
-export default async function MyStampPunches() {
+export default async function StampPunchesPage() {
   const items = await listMyStampPunchesGroupedInCode();
 
   const cardsCount = items.length;

@@ -1,4 +1,3 @@
-// components/dashboard/businesses/businesses-explorer.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -24,8 +23,6 @@ import {
 import {
   Search,
   Plus,
-  Rows,
-  StretchHorizontal,
   ArrowUpDown,
   Filter,
   Shield,
@@ -46,11 +43,11 @@ export default function BusinessesExplorer({
   items: BusinessWithMembership[];
   setActiveAction: SetActiveAction;
 }) {
+
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za">("newest");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
   const [role, setRole] = useState<"any" | "owner" | "admin" | "member">("any");
-  const [compact, setCompact] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false); // NEW: collapsible on mobile
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -77,9 +74,6 @@ export default function BusinessesExplorer({
         e.preventDefault();
         setPanelOpen(true); // auto-open on mobile
         setTimeout(() => inputRef.current?.focus(), 0);
-      }
-      if (!editing && (e.key === "c" || e.key === "C")) {
-        setCompact((v) => !v);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -258,29 +252,6 @@ export default function BusinessesExplorer({
             <Separator orientation="vertical" className="hidden h-6 md:block" />
 
             {/* Density */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCompact((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-white/60 px-3 py-1 text-sm shadow-sm backdrop-blur hover:bg-white/70 dark:bg-white/5 dark:hover:bg-white/10"
-                  aria-pressed={compact}
-                  aria-label="Toggle compact density (c)"
-                >
-                  {compact ? (
-                    <>
-                      <Rows className="h-4 w-4 opacity-80" />
-                      Compact
-                    </>
-                  ) : (
-                    <>
-                      <StretchHorizontal className="h-4 w-4 opacity-80" />
-                      Comfortable
-                    </>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Press “c” to toggle density</TooltipContent>
-            </Tooltip>
 
             {/* Primary action */}
             <Button asChild className="ml-1">
@@ -300,13 +271,13 @@ export default function BusinessesExplorer({
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
             <Info className="h-3.5 w-3.5" />
-            Use “Set as current” in the row menu to switch context.
+            Use “Set as current” in the actions menu to switch context.
           </div>
         </div>
       </div>
 
       {/* Results */}
-      <div className={compact ? "text-sm" : ""}>
+      <div className={"text-sm"}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border p-6 text-sm text-muted-foreground">
             No businesses match your filters.

@@ -1,14 +1,5 @@
--- =========================================================
--- public.survey — full migration with RLS and comments
--- (adds anon SELECT for anonymous, active, in-window surveys)
--- =========================================================
-
--- Enable UUIDs (safe if already enabled)
 create extension if not exists pgcrypto;
 
--- =========================================================
--- survey table
--- =========================================================
 create table if not exists public.survey (
   id           uuid primary key default gen_random_uuid(),
   product_id   uuid not null,
@@ -27,7 +18,6 @@ create table if not exists public.survey (
   updated_at   timestamptz not null default now()
 );
 
--- FKs
 alter table public.survey
   drop constraint if exists survey_product_id_fk,
   add constraint survey_product_id_fk
@@ -40,18 +30,11 @@ alter table public.survey
     foreign key (business_id) references public.business(id)
     on delete cascade;
 
--- Helpful indexes
+-- Indexes
 create index if not exists survey_product_id_idx  on public.survey (product_id);
 create index if not exists survey_business_id_idx on public.survey (business_id);
 
--- Keep updated_at fresh (assumes public.trigger_set_timestamp() exists)
-drop trigger if exists set_timestamp_on_survey on public.survey;
-create trigger set_timestamp_on_survey
-before update on public.survey
-for each row execute function public.trigger_set_timestamp();
-
--- =========================================================
--- Enable Row Level Security
+-- RLS
 -- =========================================================
 alter table public.survey enable row level security;
 -- Optional hardening:
@@ -62,10 +45,6 @@ drop policy if exists survey_select_merchant        on public.survey;
 drop policy if exists survey_select_customer_active on public.survey;
 drop policy if exists survey_select_anon_active     on public.survey;
 drop policy if exists survey_cud_merchant           on public.survey;
-
--- ========
--- POLICIES 
--- ========
 
 -- -----------------------------------------------------------------------------
 -- READ for MERCHANTS (business members/owners)

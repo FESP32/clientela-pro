@@ -1,7 +1,5 @@
--- Enable required extensions
-create extension if not exists "uuid-ossp";
+ create extension if not exists "uuid-ossp";
 
--- Profiles table (extends Supabase auth.users)
 create table if not exists public.profile (
   user_id uuid not null,
   name text,
@@ -25,23 +23,8 @@ begin
 end;
 $$ language plpgsql;
 
-do $$
-begin
-  if exists (
-    select 1 from pg_trigger
-    where tgname = 'set_profiles_updated_at'
-  ) then
-    drop trigger set_profiles_updated_at on public.profile;
-  end if;
-end$$;
-
-create trigger set_profiles_updated_at
-before update on public.profile
-for each row
-execute procedure public.set_updated_at();
-
 -- ---------------------------------------------------------
--- SAFE HELPERS for RLS (SECURITY DEFINER to avoid recursion)
+-- SAFE HELPERS for RLS
 -- ---------------------------------------------------------
 create or replace function public.is_user_customer()
 returns boolean
@@ -79,29 +62,30 @@ grant execute on function public.is_user_merchant() to authenticated;
 -- (Grant to anon as well if you will call these in anon policies)
 
 -- -----------------------------
--- Row Level Security + Policies
+-- RLS + Policies
 -- -----------------------------
 
 -- Enable RLS (deny-by-default)
 alter table public.profile enable row level security;
+
 -- Optional hardening:
 -- alter table public.profile force row level security;
 
--- Clean up any old policies (safe if they don't exist)
+-- Clean up any old policies
 drop policy if exists profile_select_self on public.profile;
 drop policy if exists profile_insert_self on public.profile;
 drop policy if exists profile_update_self on public.profile;
 drop policy if exists profile_delete_self on public.profile;
 drop policy if exists profile_select_merchants_read_customers on public.profile;
 
--- SELECT: users can read their own profile
+-- users can read their own profile
 create policy profile_select_self
 on public.profile
 for select
 to authenticated
 using ( user_id = auth.uid() );
 
--- NEW: merchants can read ONLY customer profiles (not other merchants)
+-- merchants can read ONLY customer profiles
 create policy profile_select_merchants_read_customers
 on public.profile
 for select
@@ -111,14 +95,14 @@ using (
   and user_type = 'customer'
 );
 
--- INSERT: users can create their own profile row
+-- users can create their own profile row
 create policy profile_insert_self
 on public.profile
 for insert
 to authenticated
 with check ( user_id = auth.uid() );
 
--- UPDATE: users can update only their own profile row
+-- users can update only their own profile row
 create policy profile_update_self
 on public.profile
 for update
@@ -126,7 +110,7 @@ to authenticated
 using ( user_id = auth.uid() )
 with check ( user_id = auth.uid() );
 
--- DELETE: users can delete only their own profile row
+-- users can delete only their own profile row
 create policy profile_delete_self
 on public.profile
 for delete

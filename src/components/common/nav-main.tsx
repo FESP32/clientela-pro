@@ -18,6 +18,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 export function NavMain({
   items,
@@ -95,11 +96,11 @@ export function NavMain({
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild>
-                            <a
+                            <Link
                               href={subItem.url}
                               aria-current={subActive ? "page" : undefined}
                               className={cn(
-                                "flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors",
+                                "flex items-center gap-2 rounded-md px-2 py-4 transition-colors",
                                 subActive
                                   ? "bg-muted text-foreground"
                                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -114,7 +115,7 @@ export function NavMain({
                                 />
                               )}
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       );

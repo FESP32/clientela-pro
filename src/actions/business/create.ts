@@ -4,8 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getBool } from "@/lib/utils";
-import { getActiveBusiness, getMyOwnedBusinessCount, getMyPlan } from "@/actions";
+import {
+  getActiveBusiness,
+  getMyOwnedBusinessCount,
+  getMyPlan,
+} from "@/actions";
 import { SubscriptionMetadata } from "@/types/subscription";
+import { Resend } from "resend";
+
+
 
 export async function createBusiness(formData: FormData) {
   const supabase = await createClient();
@@ -122,9 +129,6 @@ export async function createBusiness(formData: FormData) {
 
   const { business: activeBusiness } = await getActiveBusiness();
 
-  console.log(activeBusiness, businessCount, is_active);
-  
-
   if (businessCount === 0 && !activeBusiness && is_active) {
     const { error } = await supabase.from("business_current").upsert(
       {
@@ -136,7 +140,7 @@ export async function createBusiness(formData: FormData) {
     );
 
     if (error) {
-      console.error('Unable to set new business as current');
+      console.error("Unable to set new business as current");
     }
   }
 
@@ -156,19 +160,24 @@ export async function createBusinessInvite(formData: FormData) {
   const role = String(formData.get("role") ?? "member")
     .trim()
     .toLowerCase();
+  const email = String(formData.get("email") ?? "").trim();
 
   if (!businessId) throw new Error("Missing business id");
   if (!["member", "admin"].includes(role)) throw new Error("Invalid role.");
+  if (!email) throw new Error("Missing email.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new Error("Invalid email.");
 
+  // Auth
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("You must be logged in.");
 
-  // Fetch business owner
+  // Fetch business (include name for email)
   const { data: biz, error: bizErr } = await supabase
     .from("business")
-    .select("id, owner_id")
+    .select("id, owner_id, name")
     .eq("id", businessId)
     .maybeSingle();
   if (bizErr) throw new Error(bizErr.message);
@@ -198,12 +207,14 @@ export async function createBusinessInvite(formData: FormData) {
     throw new Error("Only the owner can invite admins.");
   }
 
+  // Create invite
   const { data: created, error: insErr } = await supabase
     .from("business_invite")
     .insert({
       business_id: businessId,
       invited_by: user.id,
       status: "pending",
+      email,
       role,
     })
     .select("id")
@@ -212,7 +223,71 @@ export async function createBusinessInvite(formData: FormData) {
   if (insErr) throw new Error(insErr.message);
   if (!created?.id) throw new Error("Could not create invite.");
 
+  const inviteId = created.id;
+
+  // Build the invite URL (same route you redirect to below)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const inviteUrl = `${baseUrl}/dashboard/businesses/invite/${inviteId}`;
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const from = "Clientela Pro <onboarding@resend.dev>";
+
+  // Fire-and-forget email (don't block redirect if send fails)
+  // You can choose to `await` this; here we do await but swallow errors.
+  try {
+    await resend.emails.send({
+      from,
+      to: email,
+      subject: `You're invited to join ${biz.name ?? "a business"} as ${role}`,
+      text: `You've been invited to join ${biz.name ?? "a business"} as ${role}.
+        Accept your invite: ${inviteUrl}
+        If you weren’t expecting this, you can ignore this email.`,
+      html: emailTemplate({
+        businessName: biz.name ?? "Our business",
+        role,
+        inviteUrl,
+      }),
+    });
+  } catch (e) {
+    // Intentionally do not fail the action if email sending fails.
+    // Optionally log to your observability tool here.
+    console.error("Resend email error:", e);
+  }
+
   revalidatePath(`/dashboard/businesses/${businessId}`);
-  redirect(`/dashboard/businesses/invite/${created.id}`);
 }
 
+function emailTemplate({
+  businessName,
+  role,
+  inviteUrl,
+}: {
+  businessName: string;
+  role: string;
+  inviteUrl: string;
+}) {
+  return `
+  <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6; color:#0a0a0a;">
+    <h2 style="margin:0 0 12px;">You're invited to join ${escapeHtml(
+      businessName
+    )}</h2>
+    <p style="margin:0 0 16px;">You've been invited to join <strong>${escapeHtml(
+      businessName
+    )}</strong> as <strong>${escapeHtml(role)}</strong>.</p>
+    <p style="margin:0 0 20px;">
+      <a href="${inviteUrl}" style="display:inline-block;padding:10px 16px;text-decoration:none;border-radius:10px;border:1px solid #111;">
+        Accept your invite
+      </a>
+    </p>
+    <p style="margin:0;color:#555;">If you weren’t expecting this, you can ignore this email.</p>
+  </div>
+  `;
+}
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
